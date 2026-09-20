@@ -279,6 +279,27 @@
   .srows .srow .amt4.inm{color:var(--grn)}
   .dt-viewall{width:100%;margin-top:8px;background:#101014;border:1px solid #232329;border-radius:12px;color:var(--cy);font-weight:650;font-size:11.5px;padding:11px 0;font-family:inherit}
   .dt-imp{width:100%;margin-top:9px;background:rgba(101,220,255,.07);border:1px dashed rgba(101,220,255,.35);border-radius:11px;color:#8fe8ff;font-weight:650;font-size:11.5px;padding:9px 0;font-family:inherit}
+  .ptag{font-size:8.5px;color:#f5b943;border:1px solid rgba(245,185,67,.4);border-radius:99px;padding:0 6px;margin-left:6px;font-weight:600}
+  /* ---------- v3.2: นำเข้า statement (bottom sheet) ---------- */
+  .impov{position:fixed;inset:0;background:rgba(3,3,5,.62);z-index:90;display:none}
+  .impov.on{display:block}
+  .impsh{position:absolute;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--bd);border-radius:20px 20px 0 0;padding:14px 14px calc(16px + env(safe-area-inset-bottom));max-height:86vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .imp-t{font-size:13.5px;font-weight:700;margin-bottom:3px}
+  .imp-s{font-size:10.5px;color:var(--dim);line-height:1.6;margin-bottom:9px}
+  .imp-tx{width:100%;min-height:112px;background:var(--card);border:1px solid var(--bd);border-radius:12px;color:var(--tx);font-family:inherit;font-size:16px;line-height:1.5;padding:10px 11px;outline:none;resize:vertical;box-sizing:border-box}
+  .impbtns{display:flex;gap:8px;margin-top:9px}
+  .impbtn{flex:1;background:var(--card);border:1px solid var(--bd);border-radius:12px;color:var(--tx);font-family:inherit;font-size:12px;font-weight:650;padding:11px 0;cursor:pointer}
+  .impbtn.pri{background:rgba(101,220,255,.12);border-color:rgba(101,220,255,.4);color:#8fe8ff}
+  .imp-list{margin-top:8px}
+  .improw{display:flex;align-items:center;gap:8px;padding:7px 2px;border-bottom:1px dashed #232329;font-size:11.5px}
+  .improw:last-child{border-bottom:0}
+  .improw .d{color:var(--dim);font-size:10px;min-width:56px;font-variant-numeric:tabular-nums}
+  .improw .n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .improw .a{font-variant-numeric:tabular-nums;font-weight:650}
+  .improw .a.inm{color:#7ee2a8}
+  .improw .tag{font-size:8.5px;color:#8fe8ff;border:1px solid rgba(101,220,255,.35);border-radius:99px;padding:1px 6px}
+  .imp-sum{margin-top:10px;font-size:11px;color:var(--mut)}
+  .imp-warn{color:#ff8f8f;font-size:11px;margin-top:7px}
   .conncard{display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid rgba(126,226,168,.35);border-radius:15px;padding:11px 13px;margin-top:8px}
   .conncard.warm{border-color:var(--bd);border-style:dashed}
   .conncard img{width:24px;height:24px;border-radius:7px}
@@ -328,6 +349,8 @@
   </main>
 
   <div class="detail" id="detail"></div>
+  <div class="impov" id="impov"><div class="impsh" id="impsh"></div></div>
+  <input type="file" id="impFileIn" accept=".txt,.csv,text/plain,text/csv" style="display:none">
 
   <nav class="tabbar">
     <button class="nv on" data-act="tab" data-i="0"><span class="ic"><svg><use href="#i-sum"/></svg></span>ภาพรวม</button>
@@ -404,8 +427,8 @@ if (!NKF_TOKEN && /^https?:$/.test(location.protocol) &&
 }
 /* ---------- /static-host bridge ---------- */
 var IS_DEMO = !(typeof google !== 'undefined' && google.script && google.script.run);
-var APP_BUILD = 'v3.1.6-dev';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json
-var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, fxOpen:{}, view:null };
+var APP_BUILD = 'v3.2.0';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json
+var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, fxOpen:{}, view:null, imp:null };
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
 var SW = { OPEN:112, COMMIT:160, MAX:210, EASE:'cubic-bezier(.22,.8,.24,1)' };
@@ -936,7 +959,7 @@ function htmlSettings(d){
   }).join('');
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v3.1.7</span></div>'
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v3.2.0</span></div>'
     + '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>'
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
     + '<div class="irow"><span class="k">รอยืนยัน</span><span class="v">'+d.summary.pendingCount+' · ฿'+fmtBaht(d.summary.pendingSum)+'</span></div>'
@@ -1172,7 +1195,25 @@ document.addEventListener('click', function(e){
     if (ms2[ni]) { S.view.m = ms2[ni].m; paint(); el('detail').scrollTop = 0; }
     return;
   }
-  if (act === 'vimp') { toast('ยังไม่เปิดใช้งาน — เฟสถัดไปครับ'); return; }
+  if (act === 'vimp') {
+    S.imp = { acct: (S.view && S.view.a) ? S.view.a : 'kplus', text: '', rows: null, err: '' };
+    el('impov').classList.add('on');
+    renderImp();
+    focusInput('impTx');
+    return;
+  }
+  if (act === 'impClose') { el('impov').classList.remove('on'); S.imp = null; return; }
+  if (act === 'impFile') { var fi2 = el('impFileIn'); if (fi2) fi2.click(); return; }
+  if (act === 'impParse') {
+    var ta2 = el('impTx');
+    S.imp.text = ta2 ? ta2.value : (S.imp.text || '');
+    var rr = impParseText(S.imp.text);
+    if (!rr.length) { S.imp.rows = null; S.imp.err = 'แกะไม่ได้ — ต้องมีวันที่ + จำนวนเงินในบรรทัด'; }
+    else { S.imp.rows = rr; S.imp.err = ''; }
+    renderImp();
+    return;
+  }
+  if (act === 'impGo') { impGo(); return; }
   if (act === 'vall') {
     var sc2 = S.view;            // ย้ายไปหน้าของตัวเอง — โชว์เฉพาะลิสต์ของหน้านี้ ไม่กางยาวในหน้าเดิม
     S.prev = sc2;
@@ -1316,6 +1357,9 @@ function connChip(a){
   try { var lt = (S.data.meta.logTail || [])[0]; ok = !!(lt && lt.ok === 'OK'); } catch (e) {}
   if (a === 'kplus' && ok) return '<div class="con"><span class="sdot"></span>AUTO CONNECTED</div>';
   if (a === 'kplus') return '<div class="con2"><span class="sdot"></span>รอสแกนรอบถัดไป</div>';
+  var hasTm = false;
+  try { hasTm = (S.data.history || []).concat(S.data.pending || []).some(function(x){ return (x.acct || 'kplus') === 'truemoney'; }); } catch (e2) {}
+  if (hasTm) return '<div class="con2"><span class="sdot"></span>นำเข้าเอง</div>';
   return '<div class="con2"><span class="sdot"></span>รอเชื่อม · นำเข้าเอง</div>';
 }
 function detailMonths(){ return (S.data && S.data.mdet) || []; }
@@ -1379,8 +1423,9 @@ function detailRows(list, max2){
     var sub = fmtWhen(it.at) + ' · ' + (it.direction === 'in' ? 'รายรับ' : (xf ? 'ย้ายเข้ากระเป๋า' : catMeta(it.category).t));
     var amtCls = it.direction === 'in' ? ' inm' : (xf ? ' xm' : '');
     var amtTxt = (it.direction === 'in' ? '+' : '−') + '฿' + fmtBaht(it.amount_minor);
+    var ptag = (it.status === 'new') ? ' <span class="ptag">รอหมวด</span>' : '';
     return '<div class="srow"><div class="icw2">' + rowIcon(it) + '</div>'
-      + '<div class="mid2"><div class="nm2">' + esc(shortName(it)) + '</div><div class="dt2">' + sub + '</div></div>'
+      + '<div class="mid2"><div class="nm2">' + esc(shortName(it)) + ptag + '</div><div class="dt2">' + sub + '</div></div>'
       + '<div class="amt4' + amtCls + '">' + amtTxt + '</div></div>';
   }).join('');
 }
@@ -1388,7 +1433,9 @@ function rowsOfMonth(mp){
   return (S.data.history || []).filter(function(it){ return it.at.slice(0, 7) === mp; });
 }
 function rowsOfAcct(a){
-  return (S.data.history || []).filter(function(it){ return (it.acct || 'kplus') === a; });
+  var all = (S.data.history || []).concat(S.data.pending || []);
+  return all.filter(function(it){ return (it.acct || 'kplus') === a; })
+    .sort(function(x, y){ return x.at < y.at ? 1 : (x.at > y.at ? -1 : 0); });
 }
 function viewMonthHtml(d){
   var months = detailMonths();
@@ -1443,22 +1490,31 @@ function viewAcctHtml(d, a){
   var meta = metas[a] || { name: a, img: '', sub: '' };
   var ok = false;
   try { var lt0 = (d.meta.logTail || [])[0]; ok = !!(a === 'kplus' && lt0 && lt0.ok === 'OK'); } catch (e) {}
+  var arows = rowsOfAcct(a);
   var conn = '<div class="conncard' + (ok ? '' : ' warm') + '">'
     + (LOGO_URL(meta.img) ? '<img src="' + LOGO_URL(meta.img) + '" alt="">' : '')
-    + '<div><div class="c1">' + meta.name + '</div><div class="c2">' + meta.sub + (ok ? ' · เชื่อมผ่านอีเมล' : ' · ยังไม่เชื่อม — เลือกวิธี: เมล (auto) หรือ นำเข้าเอง') + '</div></div>'
-    + '<span class="cc">' + (ok ? '<span class="con"><span class="sdot"></span>AUTO CONNECTED</span>' : '<span class="con2"><span class="sdot"></span>รอเชื่อม</span>') + '</span></div>';
+    + '<div><div class="c1">' + meta.name + '</div><div class="c2">' + meta.sub + (ok ? ' · เชื่อมผ่านอีเมล'
+        : (arows.length ? ' · นำเข้าเอง · ล่าสุด ' + fmtWhen(arows[0].at) : ' · ยังไม่เชื่อม — เลือกวิธี: เมล (auto) หรือ นำเข้าเอง')) + '</div></div>'
+    + '<span class="cc">' + (ok ? '<span class="con"><span class="sdot"></span>AUTO CONNECTED</span>'
+        : (arows.length ? '<span class="con2"><span class="sdot"></span>นำเข้าเอง</span>' : '<span class="con2"><span class="sdot"></span>รอเชื่อม</span>')) + '</span></div>';
   var items = ringItemsFromCats(acct.cats);
   if (acct.transfer_minor > 0) items.push({ e: '↪', t: 'ย้ายเข้ากระเป๋า', n: acct.transfer_minor });
+  /* (arows คำนวณด้านบนแล้ว) */
   var billRem = 0;
   (d.bills || []).forEach(function(b){ billRem += Math.max(0, (b.bill_expect || 0) - (b.bill_returned || 0)); });
   if (billRem > 0) items.push({ e: '💸', t: 'รอเงินคืน', n: billRem });
   items.sort(function(x, y){ return y.n - x.n; });
   var totalOut = 0;
   items.forEach(function(x){ totalOut += x.n; });
-  var ring = (a === 'truemoney' && !items.length)
-    ? '<div class="card"><div class="hint" style="margin:6px 2px">ยังไม่มี statement ของกระเป๋า — เลือกวิธีเชื่อมด้านบน</div></div>'
-    : '<div class="card" style="padding:8px 6px 4px">' + ringHtml(items, 'ออกจากบัญชี', '−฿' + fmtBaht(totalOut)) + '</div>';
-  var arows = rowsOfAcct(a);
+  var ring;
+  if (a === 'truemoney' && !items.length){
+    var pendT = arows.filter(function(x2){ return x2.status === 'new'; }).length;
+    ring = '<div class="card"><div class="hint" style="margin:6px 2px">'
+      + (pendT ? 'รอรีวิว ' + pendT + ' รายการ — กดหมวดแล้ววงจะขึ้น' : 'ยังไม่มี statement ของกระเป๋า — เลือกวิธีเชื่อมด้านบน')
+      + '</div></div>';
+  } else {
+    ring = '<div class="card" style="padding:8px 6px 4px">' + ringHtml(items, 'ออกจากบัญชี', '−฿' + fmtBaht(totalOut)) + '</div>';
+  }
   return '<div class="dt-top"><button class="dt-back" data-act="vclose"><svg><use href="#i-back"/></svg></button><div class="ttl">รายละเอียดบัญชี</div></div>'
     + conn
     + '<div class="sec-t">ออกจากบัญชีนี้ไปไหน <span style="color:var(--dim);font-weight:400;font-size:10px">เดือนนี้</span></div>' + ring
@@ -1675,6 +1731,130 @@ var DEMO = {
   meta:{ total:24, savedCount:6, skippedCount:0, sheetUrl:'#', logTail:[{time:'2026-09-18 09:20:00',ok:'OK',scanned:20,parsed:0,dup:19,skipped:1,appended:0}], genAt:'2026-09-18T09:35:00', triggerMinutes:10, memCount:24, llmOn:true }
 };
 
+/* ---------- v3.2: นำเข้า statement เอง ---------- */
+/* == NKF-IMPORT-PARSER-START == */
+/* แกะข้อความ statement → แถวดิบ [{at, direction, amount_minor, detail, wallet}]
+   - แบบกระเป๋า TrueMoney: dd/mm/yyyy HH:MM:SS เงินเข้า|เงินออก ยอด รายละเอียด (wallet = true)
+     กติกาเดียวกับ personal_finance/tmn_statement.py: แถวยอดคงเหลือ/หัวกระดาษ = ข้าม,
+     รายละเอียดที่ตัดบรรทัด = ต่อกัน (เพื่อให้ ref ตรงกับฝั่งคอม → กันซ้ำข้ามทาง)
+   - แบบบรรทัดทั่วไป: วันที่ + รายละเอียด + ยอด (ตัวเลขท้ายบรรทัด) — ใช้กับ .txt/.csv/พิมพ์เอง */
+var IMP_TMN_RE = /^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}:\d{2}:\d{2})\s+(เงินเข้า|เงินออก)\s+(-?[\d,]+(?:\.\d+)?)\s*(.*)$/;
+var IMP_BAL_RE = /^-?[\d,]+\.\d{2}(?:\s+-?[\d,]+\.\d{2})?$/;
+var IMP_HDR = ['ใบแสดงรายการ','statement of account','ชื่อบัญชี','เลขที่บัญชี','รอบรายการ','ยอดคงเหลือ','วันที่ ประเภท','account name','account no','statement date'];
+var IMP_SAMPLE = '12/09/2569 7-Eleven 45.00\n13/09/2569 รับเงิน โอนเข้า 2,500.00\n01/09/2026 13:47:26 เงินออก 224.00 im_onlinepayment_010000000000278672970\n02/09/2026 11:24:29 เงินออก 144.12 prepaidcard_master';
+function impPad_(v){ return (v < 10 ? '0' : '') + v; }
+function impParseText(text){
+  var out = [], cur = null;
+  var lines = String(text || '').split(/\r?\n/);
+  for (var i = 0; i < lines.length; i++){
+    var line = lines[i].replace(/^\s+|\s+$/g, '');
+    if (!line) continue;
+    var m = line.match(IMP_TMN_RE);
+    if (m){
+      var amt = Math.round(Math.abs(parseFloat(m[6].replace(/,/g, ''))) * 100);
+      var rest = m[7].replace(/\s+-?[\d,]+\.\d{2}(?:\s+-?[\d,]+\.\d{2})?$/, '').replace(/\s+$/, '');
+      cur = { at: m[3] + '-' + m[2] + '-' + m[1] + 'T' + m[4], direction: (m[5] === 'เงินเข้า') ? 'in' : 'out',
+              amount_minor: amt, detail: rest, wallet: true };
+      out.push(cur);
+      continue;
+    }
+    if (cur){
+      var g2 = impParseGeneric_(line);   // ขึ้นต้นด้วยวันที่ + มียอด = แถวใหม่ ไม่ใช่บรรทัดต่อ
+      if (g2){ out.push(g2); cur = null; continue; }
+      var low = line.toLowerCase(), isHdr = false;
+      for (var h = 0; h < IMP_HDR.length; h++){ if (low.indexOf(IMP_HDR[h]) === 0){ isHdr = true; break; } }
+      if (isHdr || IMP_BAL_RE.test(line)) continue;
+      if (cur.detail.length < 160) cur.detail = cur.detail + line;
+      continue;
+    }
+    var g = impParseGeneric_(line);
+    if (g) out.push(g);
+  }
+  return out;
+}
+function impParseGeneric_(line){
+  if (line.length > 200) return null;
+  if (/(ยอดคงเหลือ|รอบรายการ|ใบแสดง|statement|ชื่อบัญชี|เลขที่บัญชี)/i.test(line)) return null;   // บรรทัดหัวกระดาษ ไม่ใช่รายการ
+  var m = line.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?\s+(.+)$/);
+  var y, mo, dd, hh, mi, ss, rest;
+  if (m){
+    dd = parseInt(m[1], 10); mo = parseInt(m[2], 10); y = parseInt(m[3], 10);
+    if (m[3].length === 2) y = (y >= 50) ? (2500 + y - 543) : (2000 + y);   // 69 → พ.ศ. 2569 → 2026
+    else if (y >= 2400 && y <= 2600) y -= 543;                              // 2569 → ค.ศ. 2026
+    hh = m[4] ? parseInt(m[4], 10) : 12; mi = m[5] ? parseInt(m[5], 10) : 0; ss = m[6] ? parseInt(m[6], 10) : 0;
+    rest = m[7];
+  } else {
+    m = line.match(/^(\d{4})-(\d{2})-(\d{2})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?\s+(.+)$/);
+    if (!m) return null;
+    y = parseInt(m[1], 10); mo = parseInt(m[2], 10); dd = parseInt(m[3], 10);
+    hh = m[4] ? parseInt(m[4], 10) : 12; mi = m[5] ? parseInt(m[5], 10) : 0; ss = m[6] ? parseInt(m[6], 10) : 0;
+    rest = m[7];
+  }
+  if (!(mo >= 1 && mo <= 12 && dd >= 1 && dd <= 31 && y >= 2000 && y <= 2100)) return null;
+  var nums = rest.match(/-?[\d,]+(?:\.\d{1,2})?/g);
+  if (!nums || !nums.length) return null;
+  var last = nums[nums.length - 1];
+  var baht = parseFloat(last.replace(/,/g, ''));
+  if (!isFinite(baht) || baht <= 0 || baht > 1000000) return null;
+  var li = rest.lastIndexOf(last);
+  var desc = rest.slice(0, li).replace(/[\s,;:\-–—|]+$/, '').replace(/^\s+/, '');
+  if (!/[ก-๙a-zA-Z]/.test(desc)) return null;   // ไม่มีชื่อรายการ = ไม่ใช่แถวรายการ (เช่นบรรทัดช่วงวันที่)
+  var dirIn = /(เงินเข้า|รับเข้า|รับเงิน|โอนเข้า)/.test(rest);
+  var dirOut = /(เงินออก|จ่าย|ชำระ|ซื้อ|โอนออก|ถอน)/.test(rest);
+  var direction = dirOut ? 'out' : (dirIn ? 'in' : 'out');
+  if (direction === 'in') desc = desc.replace(/(เงินเข้า|รับเข้า|รับเงิน|โอนเข้า)/g, ' ').replace(/\s+/g, ' ').replace(/^\s+|\s+$/g, '');
+  return { at: y + '-' + impPad_(mo) + '-' + impPad_(dd) + 'T' + impPad_(hh) + ':' + impPad_(mi) + ':' + impPad_(ss),
+           direction: direction, amount_minor: Math.round(baht * 100), detail: desc || 'รายการนำเข้า', wallet: false };
+}
+/* == NKF-IMPORT-PARSER-END == */
+function impAcctLabel(a){ return a === 'truemoney' ? 'TrueMoney' : 'K PLUS'; }
+function renderImp(){
+  var box = el('impsh'); if (!box) return;
+  var imp = S.imp || {};
+  var h = '<div class="imp-t">นำเข้า statement</div>'
+    + '<div class="imp-s">วางข้อความจาก statement หรือเลือกไฟล์ .txt/.csv — 1 ก้อนใส่ได้หลายรายการ<br>'
+    + 'บัญชีปลายทาง: <b>' + esc(impAcctLabel(imp.acct)) + '</b> · รูปแบบกระเป๋า TrueMoney เข้ากระเป๋าอัตโนมัติ (PDF ใช้ผ่านคอม)</div>'
+    + '<textarea class="imp-tx" id="impTx" placeholder="ตัวอย่าง&#10;12/09/2569 7-Eleven 45.00&#10;01/09/2026 13:47:26 เงินออก 224.00 im_onlinepayment_…"></textarea>'
+    + '<div class="impbtns"><button class="impbtn" data-act="impFile">เลือกไฟล์ .txt/.csv</button>'
+    + '<button class="impbtn pri" data-act="impParse">วิเคราะห์</button></div>';
+  if (imp.rows && imp.rows.length){
+    var tot = 0, inN = 0, i, j;
+    for (i = 0; i < imp.rows.length; i++){ if (imp.rows[i].direction !== 'in') tot += imp.rows[i].amount_minor; else inN++; }
+    h += '<div class="imp-sum">พบ ' + imp.rows.length + ' รายการ · จ่ายรวม ฿' + fmtBaht(tot) + (inN ? ' · รับเข้า ' + inN + ' รายการ' : '') + '</div><div class="imp-list">';
+    for (j = 0; j < imp.rows.length && j < 60; j++){
+      var r = imp.rows[j];
+      h += '<div class="improw"><span class="d">' + esc(fmtWhen(r.at)) + '</span>'
+        + '<span class="n">' + esc(r.detail) + '</span>'
+        + (r.wallet ? '<span class="tag">กระเป๋า</span>' : '')
+        + '<span class="a' + (r.direction === 'in' ? ' inm' : '') + '">' + (r.direction === 'in' ? '+' : '−') + '฿' + fmtBaht(r.amount_minor) + '</span></div>';
+    }
+    if (imp.rows.length > 60) h += '<div class="imp-sum">… และอีก ' + (imp.rows.length - 60) + ' รายการ</div>';
+    h += '</div><div class="impbtns"><button class="impbtn" data-act="impClose">ยกเลิก</button>'
+      + '<button class="impbtn pri" data-act="impGo">นำเข้า ' + imp.rows.length + ' รายการ</button></div>';
+  }
+  if (imp.err) h += '<div class="imp-warn">' + esc(imp.err) + '</div>';
+  box.innerHTML = h;
+  var ta = el('impTx');
+  if (ta && imp.text) ta.value = imp.text;
+}
+function impGo(){
+  if (!S.imp || !S.imp.rows || !S.imp.rows.length) return;
+  var acct = S.imp.acct || 'kplus';
+  var payload = S.imp.rows.map(function(r){
+    return { at: r.at, direction: r.direction, amount_minor: r.amount_minor, detail: r.detail, wallet: !!r.wallet };
+  });
+  el('impov').classList.remove('on');
+  S.imp = null;
+  if (IS_DEMO){ toast('เดโม่: นำเข้า ' + payload.length + ' รายการ (ไม่บันทึกจริง)'); return; }
+  google.script.run.withSuccessHandler(function(res){
+    if (res && res.ok){
+      toast('นำเข้า ' + res.added + ' รายการ' + (res.dup ? ' · ข้ามซ้ำ ' + res.dup : '') + ' ✓');
+      reload(true);
+    } else toast((res && res.msg) || 'นำเข้าไม่สำเร็จ', true);
+  }).withFailureHandler(function(){ toast('เชื่อมต่อไม่ได้', true); }).importStatement(acct, payload);
+}
+/* ---------- /v3.2 ---------- */
+
 /* ---------- pose ไว้ถ่ายภาพสถานะ (เดโม่เท่านั้น): ?pose=grid|left|right|bill|inc ---------- */
 function applyPose(p){
   var refs = S.data.pending.map(function(x){ return x.ref; });
@@ -1695,8 +1875,17 @@ function applyPose(p){
     paint(); return;
   }
   if (p === 'vacct'){ S.view = { t: 'acct', a: 'kplus' }; paint(); return; }
+  if (p === 'vtmn'){ S.view = { t: 'acct', a: 'truemoney' }; paint(); return; }
   if (p === 'vall'){ var msV2 = (S.data && S.data.mdet) || []; S.view = { t: 'all', scope: 'month', m: msV2.length ? msV2[0].m : '' }; paint(); return; }
   if (p === 'valla'){ S.view = { t: 'all', scope: 'acct', a: 'kplus' }; paint(); return; }
+  if (p === 'imp'){
+    S.view = { t: 'acct', a: 'truemoney' }; paint();
+    S.imp = { acct: 'truemoney', text: IMP_SAMPLE, rows: null, err: '' };
+    S.imp.rows = impParseText(S.imp.text);
+    el('impov').classList.add('on');
+    renderImp();
+    return;
+  }
   if (p === 'hist'){ S.tab = 3; paint(); el('main').scrollTop = 0; return; }
   if (p === 'set'){ S.tab = 4; paint(); el('main').scrollTop = 0; return; }
   paint();
@@ -1729,6 +1918,25 @@ el('main').addEventListener('scroll', function(){
 (function(){
   var m = /[?&]tab=([0-4])/.exec(location.search);
   if (m) S.tab = parseInt(m[1], 10);
+})();
+/* v3.2: ไฟล์ .txt/.csv ของหน้าต่างนำเข้า statement */
+(function(){
+  var fi = el('impFileIn');
+  if (fi) fi.addEventListener('change', function(){
+    var f = fi.files && fi.files[0];
+    if (!f) return;
+    var rd = new FileReader();
+    rd.onload = function(){
+      if (!S.imp) S.imp = { acct: 'kplus', text: '', rows: null, err: '' };
+      S.imp.text = String(rd.result || '');
+      S.imp.rows = null; S.imp.err = '';
+      renderImp();
+    };
+    rd.readAsText(f, 'utf-8');
+    fi.value = '';
+  });
+  var ov = el('impov');
+  if (ov) ov.addEventListener('click', function(e){ if (e.target === ov){ ov.classList.remove('on'); S.imp = null; } });
 })();
 /* เช็คอัปเดตเองทุกครั้งที่เปิด: iOS จำ HTML ของแอปหน้าจอโฮมไว้ ถ้าเจอเวอร์ชันใหม่ → เปิด URL ?v= ใหม่ (แคชคีย์ใหม่) ให้เลย */
 (function(){
