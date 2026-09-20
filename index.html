@@ -260,14 +260,18 @@
   .quick3 .qi{flex:1;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:8px 9px;min-width:0}
   .quick3 .qi .k{font-size:8.5px;color:var(--dim)}
   .quick3 .qi .v{font-size:11.5px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .ringw{position:relative;margin:4px auto 2px}
-  .rring{position:absolute;inset:65px;border-radius:50%}
-  .rring::after{content:'';position:absolute;inset:36px;border-radius:50%;background:var(--card)}
-  .rctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2;pointer-events:none}
+  .ringw{position:relative;margin:2px auto 0;width:100%;height:196px}
+  .rring{position:absolute;left:50%;top:50%;width:186px;height:186px;border-radius:50%;transform:translate(-50%,-50%)}
+  .rring::after{content:'';position:absolute;inset:37px;border-radius:50%;background:var(--card)}
+  .rctr{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2;pointer-events:none;width:110px;text-align:center}
   .rctr span{font-size:9.5px;color:var(--dim)}
-  .rctr strong{font-size:19px;font-weight:750;font-variant-numeric:tabular-nums;margin-top:1px}
-  .rpill{position:absolute;transform:translate(-50%,-50%);background:#0f0f12f0;border:1px solid #26262b;border-radius:99px;padding:2px 7px;font-size:10px;font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap;z-index:3;display:flex;align-items:center;gap:4px}
-  .rpill i{font-style:normal;font-size:11px}
+  .rctr strong{font-size:17px;font-weight:750;font-variant-numeric:tabular-nums;margin-top:1px}
+  .rchip{position:absolute;left:50%;top:50%;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;background:#0f0f12;border:1px solid #2c2c33;display:flex;align-items:center;justify-content:center;font-size:12px;z-index:3;box-shadow:0 1px 5px #000b}
+  .rlg{display:flex;flex-wrap:wrap;justify-content:center;gap:5px 8px;padding:9px 2px 2px}
+  .rlg span{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;color:var(--mut);font-variant-numeric:tabular-nums;background:#101014;border:1px solid #212127;border-radius:99px;padding:4px 9px;max-width:100%}
+  .rlg i{width:6px;height:6px;border-radius:99px;flex:none}
+  .rlg em{font-style:normal;font-size:11px}
+  .rlg b{font-weight:700;color:var(--tx)}
   .srows .srow{display:flex;align-items:center;gap:9px;padding:9px 0;border-top:1px solid #1e1e23;font-size:12px}
   .srows .srow:first-child{border-top:none}
   .srows .srow .icw2{width:28px;height:28px;border-radius:9px;background:#101014;border:1px solid #232329;display:flex;align-items:center;justify-content:center;font-size:13px;flex:none;overflow:hidden}
@@ -279,7 +283,7 @@
   .srows .srow .amt4.xm{color:var(--dim)}
   .srows .srow .amt4.inm{color:var(--grn)}
   .dt-viewall{width:100%;margin-top:8px;background:#101014;border:1px solid #232329;border-radius:12px;color:var(--cy);font-weight:650;font-size:11.5px;padding:11px 0;font-family:inherit}
-  .dt-imp{width:100%;margin-top:10px;background:rgba(101,220,255,.1);border:1px solid rgba(101,220,255,.4);border-radius:13px;color:#8fe8ff;font-weight:650;font-size:12px;padding:12px 0;font-family:inherit}
+  .dt-imp{width:100%;margin-top:9px;background:rgba(101,220,255,.07);border:1px dashed rgba(101,220,255,.35);border-radius:11px;color:#8fe8ff;font-weight:650;font-size:11.5px;padding:9px 0;font-family:inherit}
   .conncard{display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid rgba(126,226,168,.35);border-radius:15px;padding:11px 13px;margin-top:8px}
   .conncard.warm{border-color:var(--bd);border-style:dashed}
   .conncard img{width:24px;height:24px;border-radius:7px}
@@ -935,7 +939,7 @@ function htmlSettings(d){
   }).join('');
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v3.1.1</span></div>'
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v3.1.2</span></div>'
     + '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>'
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
     + '<div class="irow"><span class="k">รอยืนยัน</span><span class="v">'+d.summary.pendingCount+' · ฿'+fmtBaht(d.summary.pendingSum)+'</span></div>'
@@ -1326,27 +1330,38 @@ function ringHtml(items, cTop, cSub){
   var total = 0;
   for (var i = 0; i < items.length; i++) total += items[i].n;
   if (!total || !items.length) return '<div class="hint" style="margin:8px 6px">— ยังไม่มีข้อมูลเดือนนี้ —</div>';
-  var W2 = 300, cx = W2 / 2, cy = W2 / 2, R = 85;
-  var grads = [], pills = '', acc = 0, smallC = 0;
+  var grads = [], spots = [], acc = 0, RC = 74;
+  items = items.slice().sort(function(x, y){ return y.n - x.n; });
   for (var j = 0; j < items.length; j++){
     var it2 = items[j];
     var pct = it2.n / total * 100;
     var col = RING_PAL[j % RING_PAL.length];
     var a0 = acc, a1 = acc + pct;
     grads.push(col + ' ' + a0.toFixed(2) + '% ' + a1.toFixed(2) + '%');
-    var mid = (a0 + a1) / 2;
-    var rad = mid * Math.PI / 180;
-    var rr = pct < 9 ? R + 30 + (smallC % 2) * 15 : R + 16;
-    if (pct < 9) smallC++;
-    var x = cx + rr * Math.sin(rad);
-    var y = cy - rr * Math.cos(rad);
-    pills += '<span class="rpill" style="left:' + x.toFixed(1) + 'px;top:' + y.toFixed(1) + 'px"><i>' + it2.e + '</i>' + fmtShort(it2.n) + '</span>';
+    spots.push({ e: it2.e, t: it2.t, n: it2.n, col: col, mid: (a0 + a1) / 2 });
     acc = a1;
   }
-  return '<div class="ringw" style="width:' + W2 + 'px;height:' + W2 + 'px">'
-    + '<div class="rring" style="background:conic-gradient(' + grads.join(',') + ')"></div>'
+  var used = [], chipHtml = '';
+  for (var k = 0; k < spots.length; k++){
+    var s2 = spots[k];
+    var rad = s2.mid * Math.PI / 50;
+    var x = RC * Math.sin(rad), y = -RC * Math.cos(rad);
+    var clash = false;
+    for (var q = 0; q < used.length; q++){
+      var dx = x - used[q][0], dy = y - used[q][1];
+      if (dx * dx + dy * dy < 676){ clash = true; break; }
+    }
+    if (!clash){
+      used.push([x, y]);
+      chipHtml += '<span class="rchip" style="left:calc(50% + ' + x.toFixed(1) + 'px);top:calc(50% + ' + y.toFixed(1) + 'px)">' + s2.e + '</span>';
+    }
+  }
+  var legend = spots.map(function(s2){
+    return '<span><i style="background:' + s2.col + '"></i><em>' + s2.e + '</em>' + esc(s2.t) + ' <b>' + fmtShort(s2.n) + '</b></span>';
+  }).join('');
+  return '<div class="ringw"><div class="rring" style="background:conic-gradient(' + grads.join(',') + ')"></div>'
     + '<div class="rctr"><span>' + cTop + '</span><strong>' + cSub + '</strong></div>'
-    + pills + '</div>';
+    + chipHtml + '</div><div class="rlg">' + legend + '</div>';
 }
 function detailRows(list, max2){
   if (!list || !list.length) return '<div class="hint" style="margin:6px 2px">— ไม่มีรายการ —</div>';
@@ -1393,11 +1408,12 @@ function viewMonthHtml(d){
     + '<div class="qi"><div class="k">จ่ายบ่อยสุด</div><div class="v">' + (cur.top_merchant ? esc(cur.top_merchant.slice(0, 12)) : '—') + '</div></div>'
     + '</div>';
   var cats = ringItemsFromCats(cur.cats);
+  var mrows = rowsOfMonth(cur.m);
   return head + arrows + hero + quick
-    + '<div class="sec-t">สัดส่วนตามหมวด</div><div class="card" style="padding:6px 4px 2px">' + ringHtml(cats, 'ใช้ทั้งหมด', '฿' + fmtBaht(cur.total_minor)) + '</div>'
-    + '<div class="sec-t">statement · ' + monthLabelOf(cur.m) + '</div><div class="card srows" style="padding:7px 14px">'
-    + detailRows(rowsOfMonth(cur.m), 30)
-    + '<button class="dt-viewall" data-act="vall">ดูทั้งหมด →</button></div>';
+    + '<div class="sec-t">สัดส่วนตามหมวด</div><div class="card" style="padding:8px 6px 4px">' + ringHtml(cats, 'ใช้ทั้งหมด', '฿' + fmtBaht(cur.total_minor)) + '</div>'
+    + '<div class="sec-t">statement · ' + monthLabelOf(cur.m) + '</div><div class="card srows" style="padding:5px 14px 12px">'
+    + detailRows(mrows, 4)
+    + (mrows.length > 4 ? '<button class="dt-viewall" data-act="vall">ดูทั้งหมด ' + mrows.length + ' รายการ →</button>' : '') + '</div>';
 }
 function viewAcctHtml(d, a){
   var acct = (d.dacct || {})[a] || { total_minor: 0, transfer_minor: 0, cats: [] };
@@ -1419,14 +1435,15 @@ function viewAcctHtml(d, a){
   items.forEach(function(x){ totalOut += x.n; });
   var ring = (a === 'truemoney' && !items.length)
     ? '<div class="card"><div class="hint" style="margin:6px 2px">ยังไม่มี statement ของกระเป๋า — เลือกวิธีเชื่อมด้านบน</div></div>'
-    : '<div class="card" style="padding:6px 4px 2px">' + ringHtml(items, 'ออกจากบัญชี', '−฿' + fmtBaht(totalOut)) + '</div>';
+    : '<div class="card" style="padding:8px 6px 4px">' + ringHtml(items, 'ออกจากบัญชี', '−฿' + fmtBaht(totalOut)) + '</div>';
+  var arows = rowsOfAcct(a);
   return '<div class="dt-top"><button class="dt-back" data-act="vclose"><svg><use href="#i-back"/></svg></button><div class="ttl">รายละเอียดบัญชี</div></div>'
     + conn
     + '<div class="sec-t">ออกจากบัญชีนี้ไปไหน <span style="color:var(--dim);font-weight:400;font-size:10px">เดือนนี้</span></div>' + ring
-    + '<div class="sec-t">statement · ' + meta.name + '</div><div class="card srows" style="padding:7px 14px">'
-    + detailRows(rowsOfAcct(a), 30)
-    + '<button class="dt-viewall" data-act="vall">ดูทั้งหมด →</button></div>'
-    + '<button class="dt-imp" data-act="vimp">＋ นำเข้า statement เอง</button>';
+    + '<div class="sec-t">statement · ' + meta.name + '</div><div class="card srows" style="padding:5px 14px 12px">'
+    + detailRows(arows, 4)
+    + (arows.length > 4 ? '<button class="dt-viewall" data-act="vall">ดูทั้งหมด ' + arows.length + ' รายการ →</button>' : '')
+    + '<button class="dt-imp" data-act="vimp">＋ นำเข้า statement เอง</button></div>';
 }
 
 /* ---------- v2: ปฏิทินรายจ่ายประจำ ---------- */
@@ -1695,6 +1712,12 @@ if (IS_DEMO) {
   if (POSE) setTimeout(function(){ applyPose(POSE[1]); }, 140);
 } else {
   reload(false);
+  if (POSE){
+    var _pv = 0, _pi = setInterval(function(){
+      _pv++;
+      if ((typeof S !== 'undefined' && S.data && S.data.mdet) || _pv > 40){ clearInterval(_pi); try { applyPose(POSE[1]); } catch (e) {} }
+    }, 250);
+  }
 }
 </script>
 </body>
