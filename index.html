@@ -326,6 +326,22 @@ var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
 var SW = { OPEN:112, COMMIT:160, MAX:210, EASE:'cubic-bezier(.22,.8,.24,1)' };
 
+/* จังหวะนิ้ว (v2.1.2): กันวาดจอทับตอนนิ้วกำลังแตะ/ปัด/เลื่อน — ต้นเหตุ "กดแล้วดีเลย์/สะดุด"
+   นิ้วว่างเกิน 650ms ถึงยอมให้วาดข้อมูลใหม่ (ตัวแก้ local ขึ้นจอทันทีอยู่แล้ว) */
+var UI = { lastTouch: 0, swipe: 0, swipeT: 0 };
+function uiSwipeOn(){ UI.swipe++; UI.swipeT = Date.now(); }
+function uiSwipeOff(){ UI.swipe = Math.max(0, UI.swipe - 1); }
+UI.busy = function(){
+  if (UI.swipe > 0){
+    if (Date.now() - (UI.swipeT || 0) > 6000) UI.swipe = 0; // กันตัวนับค้างถ้า pointerup หายกลางทาง
+    else return true;
+  }
+  return (Date.now() - UI.lastTouch) < 650;
+};
+['pointerdown','pointermove','pointerup','pointercancel'].forEach(function(ev){
+  document.addEventListener(ev, function(){ UI.lastTouch = Date.now(); }, true);
+});
+
 var TH_M = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 var TH_D = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
 var KIND = { qr_merchant:'สแกนจ่ายร้าน', transfer:'โอน', promptpay:'พร้อมเพย์', topup:'เติมเงิน',
@@ -408,6 +424,17 @@ function reload(silent){
     .getData();
 }
 function render(data){
+  if (UI.busy()){ // นิ้วยังทำงาน — พักข้อมูลไว้ วาดต่อเมื่อนิ้วว่าง (กันแถวถูกสับกลางจังหวะปัด)
+    S._defer = data;
+    if (!S._deferT){
+      S._deferT = setTimeout(function(){
+        S._deferT = null;
+        var dd = S._defer; S._defer = null;
+        if (dd) render(dd);
+      }, 280);
+    }
+    return;
+  }
   S.data = data;
   el('loading').style.display = 'none';
   el('dateChip').textContent = thToday();
@@ -428,17 +455,24 @@ function callAction(method, argsArr, okMsg){
     .withSuccessHandler(function(res){
       if (res && !res.ok) toast(res.msg || 'ทำไม่สำเร็จ', true);
       else if (okMsg) toast(okMsg);
-      reload(true);
+      reloadSoon();
     })
-    .withFailureHandler(function(){ toast('เชื่อมต่อไม่ได้', true); reload(true); });
+    .withFailureHandler(function(){ toast('เชื่อมต่อไม่ได้', true); reloadSoon(); });
   r[method].apply(r, argsArr);
+}
+
+/* หลัง action: รอให้จังหวะนิ้วสงบก่อนค่อยดึงข้อมูลใหม่ — รวมหลาย action เป็นครั้งเดียว */
+var _rlTimer = null;
+function reloadSoon(){
+  if (_rlTimer) clearTimeout(_rlTimer);
+  _rlTimer = setTimeout(function(){ _rlTimer = null; reload(true); }, 1100);
 }
 
 /* ---------- render ---------- */
 function paint(){
   var d = S.data; if (!d) return;
-  el('pane0').innerHTML = htmlSummary(d);
-  el('pane1').innerHTML = htmlPending(d);
+  if (S.tab === 0) el('pane0').innerHTML = htmlSummary(d);
+  if (S.tab === 1) el('pane1').innerHTML = htmlPending(d);
   if (S.tab === 2) el('pane2').innerHTML = htmlCalendar(d);  // วาดเฉพาะแท็บที่ใช้อยู่ — เบาลงครึ่ง
   if (S.tab === 3) el('pane3').innerHTML = htmlHistory(d);
   if (S.tab === 4) el('pane4').innerHTML = htmlSettings(d);
@@ -766,7 +800,7 @@ function htmlSettings(d){
   }).join('');
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v2.1.1</span></div>'
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v2.1.2</span></div>'
     + '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>'
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
     + '<div class="irow"><span class="k">รอยืนยัน</span><span class="v">'+d.summary.pendingCount+' · ฿'+fmtBaht(d.summary.pendingSum)+'</span></div>'
@@ -826,7 +860,7 @@ function itemX(rowEl){
   return m ? parseFloat(m[1]) : 0;
 }
 function bindSwipeRow(rowEl, ref, sug){
-  var st = { active:false, dir:null, x0:0, y0:0, base:0, x:0, raw:0, vx:0, lastRaw:0, lastT:0 };
+  var st = { active:false, dir:null, x0:0, y0:0, base:0, x:0, raw:0, vx:0, lastRaw:0, lastT:0, held:false };
   rowEl.addEventListener('contextmenu', function(e){ e.preventDefault(); });
   rowEl.addEventListener('pointerdown', function(e){
     if (e.target.closest('.swact,.catgrid,.rowacts,.renbox,.billbox,button,input,a')) return;
@@ -835,6 +869,7 @@ function bindSwipeRow(rowEl, ref, sug){
     st.base = itemX(rowEl);
     st.x = st.base;
     st.dir = null; st.active = true;
+    if (!st.held){ st.held = true; uiSwipeOn(); }
     st.vx = 0; st.lastRaw = 0; st.lastT = 0;
     try { rowEl.setPointerCapture(e.pointerId); } catch (_e) {}
   });
@@ -871,6 +906,7 @@ function bindSwipeRow(rowEl, ref, sug){
   function finish(){
     if (!st.active) return;
     st.active = false;
+    if (st.held){ st.held = false; uiSwipeOff(); }
     if (st.dir !== 'h') return;
     var x = st.x;
     if (Date.now() - st.lastT > 150) st.vx = 0; // นิ้วหยุดก่อนปล่อย = ไม่นับเป็นปัดเร็ว (flick)
@@ -879,13 +915,13 @@ function bindSwipeRow(rowEl, ref, sug){
       setX(rowEl, -SW.MAX - 40, true);
       var item = rowEl.querySelector('.item');
       if (item){ item.style.transition = 'transform .18s ease-out, opacity .18s ease-out'; item.style.opacity = '0'; }
-      rowEl._swiped = true; setTimeout(function(){ rowEl._swiped = false; }, 500);
+      rowEl._swiped = true; setTimeout(function(){ rowEl._swiped = false; }, 800);
       setTimeout(function(){ doSkip(ref, null); }, 200);
       return;
     }
     if (st.raw >= SW.COMMIT){
       // ปัดแรงขวา → บันทึกด้วยหมวดแนะนำเลย
-      rowEl._swiped = true; setTimeout(function(){ rowEl._swiped = false; }, 500);
+      rowEl._swiped = true; setTimeout(function(){ rowEl._swiped = false; }, 800);
       setX(rowEl, 0, true);
       doSave(ref);
       return;
@@ -903,11 +939,12 @@ function bindSwipeRow(rowEl, ref, sug){
       rowEl.classList.remove('revL', 'revR');
       setX(rowEl, 0, true);
     }
-    rowEl._swiped = true; setTimeout(function(){ rowEl._swiped = false; }, 400);
+    rowEl._swiped = true; setTimeout(function(){ rowEl._swiped = false; }, 800);
   }
   rowEl.addEventListener('pointerup', finish);
   rowEl.addEventListener('pointercancel', function(){
     if (st.active){ st.active = false; }
+    if (st.held){ st.held = false; uiSwipeOff(); }
     setX(rowEl, itemX(rowEl) <= -SW.OPEN * 0.5 ? -SW.OPEN : (itemX(rowEl) >= SW.OPEN * 0.5 ? SW.OPEN : 0), true);
   });
 }
@@ -948,7 +985,18 @@ document.addEventListener('click', function(e){
     }
     S.open[ref] = !S.open[ref];
     if (!S.open[ref]){ S.renaming = null; delete S.billEdit[ref]; delete S.billRet[ref]; }
-    paint(); return;
+    paint();
+    if (S.open[ref]){ // กางแล้วเลื่อนให้เห็นทั้งกล่อง — กันแผงย้อยตกขอบล่าง
+      var _sel = '.swrow[data-ref="' + ref + '"]';
+      setTimeout(function(){
+        var rw = document.querySelector(_sel);
+        if (rw && rw.scrollIntoView){
+          try { rw.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+          catch (_e) { try { rw.scrollIntoView(); } catch (_e2) {} }
+        }
+      }, 60);
+    }
+    return;
   }
   if (act === 'more') { if (ref) { S.ext[ref] = !S.ext[ref]; paint(); } return; }
   if (act === 'goitem') { S.tab = 1; if (ref) S.open[ref] = true; paint(); el('main').scrollTop = 0; return; }
@@ -995,16 +1043,16 @@ function pick(ref, cat){
     if (!S.data.pending.some(function(x){ return x.ref === ref; })) S.data.pending.push(it);
     recalcSummary(); paint();
     toast('กู้คืนแล้ว');
-    if (!IS_DEMO) google.script.run.withSuccessHandler(function(){ reload(true); }).undoSkip(ref);
+    if (!IS_DEMO) google.script.run.withSuccessHandler(function(){ reloadSoon(); }).undoSkip(ref);
   });
   recalcSummary(); paint();
   if (IS_DEMO) return;
   google.script.run
     .withSuccessHandler(function(res){
-      if (!res || !res.ok) { toast('บันทึกไม่สำเร็จ' + (res && res.msg ? ' — ' + res.msg : ''), true); reload(true); return; }
-      reload(true);
+      if (!res || !res.ok) { toast('บันทึกไม่สำเร็จ' + (res && res.msg ? ' — ' + res.msg : ''), true); reloadSoon(); return; }
+      reloadSoon();
     })
-    .withFailureHandler(function(){ toast('บันทึกไม่สำเร็จ — เชื่อมต่อไม่ได้', true); reload(true); })
+    .withFailureHandler(function(){ toast('บันทึกไม่สำเร็จ — เชื่อมต่อไม่ได้', true); reloadSoon(); })
     .saveCategory(ref, cat);
 }
 function doSave(ref){
@@ -1043,7 +1091,7 @@ function saveRename(ref){
   google.script.run
     .withSuccessHandler(function(res){
       if (res && !res.ok) toast(res.msg || 'แก้ชื่อไม่สำเร็จ', true);
-      reload(true);
+      reloadSoon();
     })
     .withFailureHandler(function(){ toast('แก้ชื่อไม่สำเร็จ', true); })
     .renameMerchant(ref, name);
@@ -1058,13 +1106,13 @@ function doSkip(ref, animateEl){
       it.status = 'new';
       if (!S.data.pending.some(function(x){ return x.ref === ref; })) S.data.pending.push(it);
       recalcSummary(); paint();
-      if (!IS_DEMO) google.script.run.withSuccessHandler(function(){ reload(true); }).undoSkip(ref);
+      if (!IS_DEMO) google.script.run.withSuccessHandler(function(){ reloadSoon(); }).undoSkip(ref);
       toast('กู้คืนแล้ว');
     });
     if (!IS_DEMO) {
       google.script.run
-        .withSuccessHandler(function(){ reload(true); })
-        .withFailureHandler(function(){ toast('ลบไม่สำเร็จ', true); reload(true); })
+        .withSuccessHandler(function(){ reloadSoon(); })
+        .withFailureHandler(function(){ toast('ลบไม่สำเร็จ', true); reloadSoon(); })
         .skipItem(ref);
     }
   }
