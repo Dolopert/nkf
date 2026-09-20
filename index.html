@@ -180,7 +180,7 @@
   .wtr{display:flex;align-items:center;gap:7px;width:fit-content;margin-top:9px;background:rgba(101,220,255,.08);border:1px solid rgba(101,220,255,.3);color:#8fe8ff;border-radius:10px;padding:5px 10px;font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums}
   .wtr span{color:var(--mut);font-weight:400;font-size:10.5px}
   .accts{display:flex;gap:8px;overflow-x:auto;padding:1px 0 2px;-webkit-overflow-scrolling:touch}
-  .acct{flex:none;width:196px;background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:10px 12px}
+  .acct{flex:none;width:196px;background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:10px 12px;position:relative}
   .acct .a1{display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700}
   .acct .a2{font-size:9.5px;color:var(--dim);margin-top:3px}
   .acct .a3{font-size:17px;font-weight:650;font-variant-numeric:tabular-nums;margin-top:7px}
@@ -935,7 +935,7 @@ function htmlSettings(d){
   }).join('');
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v3.1.0</span></div>'
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v3.1.1</span></div>'
     + '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>'
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
     + '<div class="irow"><span class="k">รอยืนยัน</span><span class="v">'+d.summary.pendingCount+' · ฿'+fmtBaht(d.summary.pendingSum)+'</span></div>'
