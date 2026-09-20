@@ -934,7 +934,7 @@ function htmlSettings(d){
   }).join('');
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v3.1.3</span></div>'
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v3.1.4</span></div>'
     + '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>'
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
     + '<div class="irow"><span class="k">รอยืนยัน</span><span class="v">'+d.summary.pendingCount+' · ฿'+fmtBaht(d.summary.pendingSum)+'</span></div>'
@@ -1167,7 +1167,13 @@ document.addEventListener('click', function(e){
     return;
   }
   if (act === 'vimp') { toast('ยังไม่เปิดใช้งาน — เฟสถัดไปครับ'); return; }
-  if (act === 'vall') { S.view = null; S.tab = 3; paint(); el('main').scrollTop = 0; return; }
+  if (act === 'vall') {
+    S.view.sl = !S.view.sl;      // กาง/ย่อ statement ในหน้าเดิม (ไม่เด้งไปแท็บรวม — ดูแค่ของหน้านี้)
+    paint();
+    var scv = document.querySelector('#detail .srows');
+    if (scv) el('detail').scrollTop = Math.max(0, scv.offsetTop - 10);
+    return;
+  }
   if (act === 'fxToggle') {
     var fk = t.getAttribute('data-key');
     S.fxOpen = S.fxOpen || {};
@@ -1325,21 +1331,13 @@ function ringHtml(items, cTop, cSub){
   var total = 0;
   for (var i = 0; i < items.length; i++) total += items[i].n;
   if (!total || !items.length) return '<div class="hint" style="margin:8px 6px">— ยังไม่มีข้อมูลเดือนนี้ —</div>';
-  var SMALL_PCT = 5;
+  var SMALL_PCT = 3;   // หมวดเล็กกว่านี้ = slice ยังแยกแสดงครบ แต่ไม่ติดชิป (เลข/อีโมจิ)
   items = items.slice().sort(function(x, y){ return y.n - x.n; });
-  var shown = [], otherN = 0;
-  for (var h = 0; h < items.length; h++){
-    var item = items[h];
-    if (item.t === 'อื่นๆ' || item.n / total * 100 < SMALL_PCT) otherN += item.n;
-    else shown.push(item);
-  }
-  if (otherN > 0) shown.push({ e: '✨', t: 'อื่นๆ', n: otherN, other: true });
-  items = shown.sort(function(x, y){ return y.n - x.n; });
   var grads = [], spots = [], acc = 0, RC = 74;
   for (var j = 0; j < items.length; j++){
     var it2 = items[j];
     var pct = it2.n / total * 100;
-    var col = it2.other ? RING_PAL[RING_PAL.length - 1] : RING_PAL[j % RING_PAL.length];
+    var col = RING_PAL[j % RING_PAL.length];
     var a0 = acc, a1 = acc + pct;
     grads.push(col + ' ' + a0.toFixed(2) + '% ' + a1.toFixed(2) + '%');
     spots.push({ e: it2.e, t: it2.t, n: it2.n, col: col, mid: (a0 + a1) / 2 });
@@ -1348,6 +1346,7 @@ function ringHtml(items, cTop, cSub){
   var used = [], chipHtml = '';
   for (var k = 0; k < spots.length; k++){
     var s2 = spots[k];
+    if (s2.n / total * 100 < SMALL_PCT) continue;   // เล็ก — โชว์เป็นสีล้วน ไม่ติดชิป
     var rad = s2.mid * Math.PI / 50;
     var x = RC * Math.sin(rad), y = -RC * Math.cos(rad);
     var amountText = fmtShort(s2.n);
@@ -1415,8 +1414,8 @@ function viewMonthHtml(d){
   return head + arrows + hero + quick
     + '<div class="sec-t">สัดส่วนตามหมวด</div><div class="card" style="padding:8px 6px 4px">' + ringHtml(cats, 'ใช้ทั้งหมด', '฿' + fmtBaht(cur.total_minor)) + '</div>'
     + '<div class="sec-t">statement · ' + monthLabelOf(cur.m) + '</div><div class="card srows" style="padding:5px 14px 12px">'
-    + detailRows(mrows, 4)
-    + (mrows.length > 4 ? '<button class="dt-viewall" data-act="vall">ดูทั้งหมด ' + mrows.length + ' รายการ →</button>' : '') + '</div>';
+    + detailRows(mrows, S.view.sl ? mrows.length : 4)
+    + (mrows.length > 4 ? '<button class="dt-viewall" data-act="vall">' + (S.view.sl ? 'ย่อ ▲' : 'ดูทั้งหมด ' + mrows.length + ' รายการ →') + '</button>' : '') + '</div>';
 }
 function viewAcctHtml(d, a){
   var acct = (d.dacct || {})[a] || { total_minor: 0, transfer_minor: 0, cats: [] };
@@ -1444,8 +1443,8 @@ function viewAcctHtml(d, a){
     + conn
     + '<div class="sec-t">ออกจากบัญชีนี้ไปไหน <span style="color:var(--dim);font-weight:400;font-size:10px">เดือนนี้</span></div>' + ring
     + '<div class="sec-t">statement · ' + meta.name + '</div><div class="card srows" style="padding:5px 14px 12px">'
-    + detailRows(arows, 4)
-    + (arows.length > 4 ? '<button class="dt-viewall" data-act="vall">ดูทั้งหมด ' + arows.length + ' รายการ →</button>' : '')
+    + detailRows(arows, S.view.sl ? arows.length : 4)
+    + (arows.length > 4 ? '<button class="dt-viewall" data-act="vall">' + (S.view.sl ? 'ย่อ ▲' : 'ดูทั้งหมด ' + arows.length + ' รายการ →') + '</button>' : '')
     + '<button class="dt-imp" data-act="vimp">＋ นำเข้า statement เอง</button></div>';
 }
 
