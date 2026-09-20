@@ -490,13 +490,19 @@ function fixedRow(f){
   var ico = (f.logo && LOGO_URL(f.logo)) ? '<img src="'+LOGO_URL(f.logo)+'" alt="">' : (f.emoji || '•');
   var dt = 'ครบ ' + f.day + ' ' + ML;
   if (f.status === 'done' && f.date) dt += ' · ' + (f.dir === 'in' ? 'รับ ' : 'จ่าย ') + fmtDayShort(f.date);
+  if (f.spent_minor > 0) dt += ' · ใช้แล้ว ฿' + fmtBaht(f.spent_minor);
   var stTxt = f.status === 'done' ? '<div class="st ok">✅ '+(f.dir === 'in' ? 'รับแล้ว' : 'จ่ายแล้ว')+'</div>'
     : f.status === 'pending' ? '<div class="st warn">⚠️ ยังไม่ยืนยัน</div>'
     : '<div class="st wait">⏳ รอ</div>';
   var amt = '<div class="amt3"'+(f.dir === 'in' ? ' style="color:var(--grn)"' : '')+'>'+(f.dir === 'in' ? '+' : '')+'฿'+fmtBaht(f.amount_minor)+'</div>';
-  var btns = (f.status === 'pending')
-    ? '<div class="frowitem" style="justify-content:flex-end;gap:6px"><button class="miniact cy2" data-act="ackFixed" data-key="'+esc(f.key)+'" data-v="done">'+(f.dir === 'in' ? '✅ รับแล้ว' : '✅ จ่ายแล้ว')+'</button><button class="miniact" data-act="ackFixed" data-key="'+esc(f.key)+'" data-v="wait">🕐 ยังไม่'+(f.dir === 'in' ? 'ได้' : 'จ่าย')+'</button></div>'
-    : '';
+  var bDone = '<button class="miniact cy2" data-act="ackFixed" data-key="'+esc(f.key)+'" data-v="done">'+(f.dir === 'in' ? '✅ รับแล้ว' : '✅ จ่ายแล้ว')+'</button>';
+  var bWait = '<button class="miniact" data-act="ackFixed" data-key="'+esc(f.key)+'" data-v="wait">🕐 ยังไม่'+(f.dir === 'in' ? 'ได้' : 'จ่าย')+'</button>';
+  var bAuto = '<button class="miniact" data-act="ackFixed" data-key="'+esc(f.key)+'" data-v="auto">↩︎ อัตโนมัติ</button>';
+  var btns = '';
+  if (f.status === 'pending') btns = bDone + bWait;
+  else if (f.status === 'wait') btns = bDone + bAuto;
+  else btns = bWait + (f.src === 'ack' ? bAuto : '');
+  btns = btns ? '<div class="frowitem" style="justify-content:flex-end;gap:6px;flex-wrap:wrap">'+btns+'</div>' : '';
   return '<div class="frowitem"><div class="ic">'+ico+'</div><div class="mid"><div class="nm">'+esc(f.label)+'</div><div class="dt">'+dt+'</div></div><div class="rt2">'+amt+stTxt+'</div></div>'+btns;
 }
 function htmlSummary(d){
@@ -760,7 +766,7 @@ function htmlSettings(d){
   }).join('');
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v2.1.0</span></div>'
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v2.1.1</span></div>'
     + '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>'
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
     + '<div class="irow"><span class="k">รอยืนยัน</span><span class="v">'+d.summary.pendingCount+' · ฿'+fmtBaht(d.summary.pendingSum)+'</span></div>'
@@ -1111,9 +1117,15 @@ function htmlCalendar(d){
 }
 function ackFixedLocal(key, v){
   var d = S.data; if (!d || !d.fixed) return;
+  if (v === 'auto'){
+    toast('กำลังคืนเป็นอัตโนมัติ…');
+    if (!IS_DEMO) callAction('ackFixed', [key, 'auto'], '');
+    return;
+  }
   for (var i = 0; i < d.fixed.length; i++){
     if (d.fixed[i].key === key){
       d.fixed[i].status = v;
+      d.fixed[i].src = 'ack';
       if (v === 'done') d.fixed[i].date = todayISO();
     }
   }
@@ -1238,12 +1250,12 @@ var DEMO = {
           truemoney:{ spent_minor:71050, in_minor:180000, remain_minor:108950 } },
   flow:{ out_total:681050, spend:501050, wallet_in:180000, wallet_count:4, wallet_spent:71050, wallet_remain:108950 },
   fixed:[
-    {key:'income', label:'เงินจากพ่อ', emoji:'💰', amount_minor:1600000, day:1, dir:'in', status:'done', date:'2026-09-01'},
-    {key:'house', label:'ค่าบ้านให้พี่', emoji:'🏠', amount_minor:400000, day:1, dir:'out', status:'done', date:'2026-09-02'},
-    {key:'tmn', label:'เติม TrueMoney', logo:'truemoney', amount_minor:70000, day:8, dir:'out', status:'done', date:'2026-09-08'},
-    {key:'claude', label:'Claude ผ่าน Apple', logo:'claude', amount_minor:69900, day:9, dir:'out', status:'pending', date:''},
-    {key:'netflix', label:'Netflix ครอบครัว', logo:'netflix', amount_minor:10500, day:13, dir:'out', status:'done', date:'2026-09-13'},
-    {key:'fuel', label:'งบน้ำมัน', emoji:'⛽', amount_minor:48000, day:30, dir:'out', status:'wait', date:''}
+    {key:'income', label:'เงินจากพ่อ', emoji:'💰', amount_minor:1600000, day:1, dir:'in', status:'done', date:'2026-09-01', src:'auto'},
+    {key:'house', label:'ค่าบ้านให้พี่', emoji:'🏠', amount_minor:400000, day:1, dir:'out', status:'done', date:'2026-09-02', src:'auto'},
+    {key:'tmn', label:'เติม TrueMoney', logo:'truemoney', amount_minor:70000, day:8, dir:'out', status:'done', date:'2026-09-08', spent_minor:70000, src:'auto'},
+    {key:'claude', label:'Claude ผ่าน Apple', logo:'claude', amount_minor:69900, day:9, dir:'out', status:'pending', date:'', src:'auto'},
+    {key:'netflix', label:'Netflix ครอบครัว', logo:'netflix', amount_minor:10500, day:13, dir:'out', status:'done', date:'2026-09-13', src:'auto'},
+    {key:'fuel', label:'งบน้ำมัน', emoji:'⛽', amount_minor:48000, day:30, dir:'out', status:'done', date:'2026-09-08', spent_minor:13000, src:'auto'}
   ],
   summary:{ monthSpent:501050, monthIncome:2500000, cashflow:1998950, pendingCount:6, pendingSum:60000, today:5000,
     monthOut:681050, walletIn:180000, walletSpent:71050, walletCount:4,
