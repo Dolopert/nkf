@@ -427,7 +427,7 @@ if (!NKF_TOKEN && /^https?:$/.test(location.protocol) &&
 }
 /* ---------- /static-host bridge ---------- */
 var IS_DEMO = !(typeof google !== 'undefined' && google.script && google.script.run);
-var APP_BUILD = 'v3.2.0';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json
+var APP_BUILD = 'v3.2.1';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json
 var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, fxOpen:{}, view:null, imp:null };
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
@@ -452,7 +452,8 @@ UI.busy = function(){
 var TH_M = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 var TH_D = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
 var KIND = { qr_merchant:'สแกนจ่ายร้าน', transfer:'โอน', promptpay:'พร้อมเพย์', topup:'เติมเงิน',
-             wallet_topup_in:'เติมเข้า', wallet_card:'บัตร', wallet_online:'ออนไลน์', manual_in:'รายรับเข้า', unknown:'อื่นๆ' };
+             wallet_topup_in:'เติมเข้า', wallet_card:'บัตร', wallet_online:'ออนไลน์', manual_in:'รายรับเข้า', unknown:'อื่นๆ',
+             wallet_online_xb:'ออนไลน์ ตปท.', wallet_settle:'settle กระเป๋า', wallet_in:'เงินเข้ากระเป๋า', wallet_out:'จ่ายจากกระเป๋า', manual_out:'จ่าย (นำเข้า)' };
 
 /* ---------- format ---------- */
 function fmtBaht(minor){
@@ -720,7 +721,7 @@ function htmlSummary(d){
     + '<div class="card" style="padding:12px 13px">'
     + '<div class="tnode">'+logoImg('kplus','lgx')+' บัญชี K PLUS <small>เหลือ ฿'+fmtBaht(kp.balance_minor || 0)+'</small></div>'
     + '<div class="tree">'
-    + '<div class="titem">💸 ใช้จ่ายตรง <span class="note2">scan / โอน</span><span class="r rd">−฿'+fmtBaht(flow.spend || 0)+'</span></div>'
+    + '<div class="titem">💸 ใช้จ่ายตรง <span class="note2">scan / โอน</span><span class="r rd">−฿'+fmtBaht(bankSpent)+'</span></div>'
     + (wIn > 0 ? '<div class="titem">↪ ย้ายเข้า <span class="note2">'+(s.walletCount || 0)+' ครั้ง · ไม่นับรายจ่าย</span><span class="r cy">−฿'+fmtBaht(wIn)+'</span></div>' : '')
     + '<div class="subwrap"><div class="tnode" style="margin:6px 0 2px">'+logoImg('truemoney','lgx')+' กระเป๋า TrueMoney <small>ค้าง ~฿'+fmtBaht(flow.wallet_remain || 0)+'</small></div>'
     + '<div class="tree">'
@@ -959,7 +960,7 @@ function htmlSettings(d){
   }).join('');
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v3.2.0</span></div>'
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v3.2.1</span></div>'
     + '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>'
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
     + '<div class="irow"><span class="k">รอยืนยัน</span><span class="v">'+d.summary.pendingCount+' · ฿'+fmtBaht(d.summary.pendingSum)+'</span></div>'
@@ -976,7 +977,7 @@ function htmlSettings(d){
 }
 
 function kindEmoji(kind){
-  return ({ qr_merchant:'📱', transfer:'💸', promptpay:'📲', topup:'💳', wallet_topup_in:'⬆️', wallet_card:'💳', wallet_online:'🌐', manual_in:'💰' })[kind] || '🧾';
+  return ({ qr_merchant:'📱', transfer:'💸', promptpay:'📲', topup:'💳', wallet_topup_in:'⬆️', wallet_card:'💳', wallet_online:'🌐', manual_in:'💰', wallet_online_xb:'🌐', wallet_settle:'👛', wallet_in:'⬆️', wallet_out:'👛', manual_out:'📄' })[kind] || '🧾';
 }
 
 /* ---------- swipe (iOS Clock style: ตามนิ้วทันที เด้งนุ่ม ไม่ต้องกดค้าง) ----------
