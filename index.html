@@ -298,6 +298,8 @@
   .improw .a{font-variant-numeric:tabular-nums;font-weight:650}
   .improw .a.inm{color:#7ee2a8}
   .improw .tag{font-size:8.5px;color:#8fe8ff;border:1px solid rgba(101,220,255,.35);border-radius:99px;padding:1px 6px}
+  .improw .tag.skip{color:#8a8a96;border-color:#33333c}
+  .improw.skiprow{opacity:.55}
   .imp-sum{margin-top:10px;font-size:11px;color:var(--mut)}
   .imp-warn{color:#ff8f8f;font-size:11px;margin-top:7px}
   .conncard{display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid rgba(126,226,168,.35);border-radius:15px;padding:11px 13px;margin-top:8px}
@@ -427,7 +429,7 @@ if (!NKF_TOKEN && /^https?:$/.test(location.protocol) &&
 }
 /* ---------- /static-host bridge ---------- */
 var IS_DEMO = !(typeof google !== 'undefined' && google.script && google.script.run);
-var APP_BUILD = 'v3.2.1';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json
+var APP_BUILD = 'v3.2.2';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json
 var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, fxOpen:{}, view:null, imp:null };
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
@@ -960,7 +962,7 @@ function htmlSettings(d){
   }).join('');
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v3.2.1</span></div>'
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v3.2.2</span></div>'
     + '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>'
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
     + '<div class="irow"><span class="k">รอยืนยัน</span><span class="v">'+d.summary.pendingCount+' · ฿'+fmtBaht(d.summary.pendingSum)+'</span></div>'
@@ -1742,7 +1744,7 @@ var DEMO = {
 var IMP_TMN_RE = /^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}:\d{2}:\d{2})\s+(เงินเข้า|เงินออก)\s+(-?[\d,]+(?:\.\d+)?)\s*(.*)$/;
 var IMP_BAL_RE = /^-?[\d,]+\.\d{2}(?:\s+-?[\d,]+\.\d{2})?$/;
 var IMP_HDR = ['ใบแสดงรายการ','statement of account','ชื่อบัญชี','เลขที่บัญชี','รอบรายการ','ยอดคงเหลือ','วันที่ ประเภท','account name','account no','statement date'];
-var IMP_SAMPLE = '12/09/2569 7-Eleven 45.00\n13/09/2569 รับเงิน โอนเข้า 2,500.00\n01/09/2026 13:47:26 เงินออก 224.00 im_onlinepayment_010000000000278672970\n02/09/2026 11:24:29 เงินออก 144.12 prepaidcard_master';
+var IMP_SAMPLE = '12/09/2569 7-Eleven 45.00\n13/09/2569 รับเงิน โอนเข้า 2,500.00\n01/09/2026 13:46:40 เงินเข้า 300.00 kbankimobiledd01\n01/09/2026 13:47:26 เงินออก 224.00 im_onlinepayment_010000000000278672970\n02/09/2026 11:24:29 เงินออก 144.12 prepaidcard_master';
 function impPad_(v){ return (v < 10 ? '0' : '') + v; }
 function impParseText(text){
   var out = [], cur = null;
@@ -1819,19 +1821,25 @@ function renderImp(){
     + '<div class="impbtns"><button class="impbtn" data-act="impFile">เลือกไฟล์ .txt/.csv</button>'
     + '<button class="impbtn pri" data-act="impParse">วิเคราะห์</button></div>';
   if (imp.rows && imp.rows.length){
-    var tot = 0, inN = 0, i, j;
-    for (i = 0; i < imp.rows.length; i++){ if (imp.rows[i].direction !== 'in') tot += imp.rows[i].amount_minor; else inN++; }
-    h += '<div class="imp-sum">พบ ' + imp.rows.length + ' รายการ · จ่ายรวม ฿' + fmtBaht(tot) + (inN ? ' · รับเข้า ' + inN + ' รายการ' : '') + '</div><div class="imp-list">';
+    var tot = 0, inN = 0, goN = 0, i, j;
+    for (i = 0; i < imp.rows.length; i++){
+      if (imp.rows[i].wallet && imp.rows[i].direction === 'in') { inN++; continue; }
+      goN++;
+      if (imp.rows[i].direction !== 'in') tot += imp.rows[i].amount_minor;
+    }
+    h += '<div class="imp-sum">พบ ' + imp.rows.length + ' รายการ · จะนำเข้า ' + goN + ' · จ่ายรวม ฿' + fmtBaht(tot)
+      + (inN ? ' · ข้ามเงินเข้า ' + inN + ' รายการ (ย้ายเงินตัวเอง)' : '') + '</div><div class="imp-list">';
     for (j = 0; j < imp.rows.length && j < 60; j++){
       var r = imp.rows[j];
-      h += '<div class="improw"><span class="d">' + esc(fmtWhen(r.at)) + '</span>'
+      var skipIt = (r.wallet && r.direction === 'in');
+      h += '<div class="improw' + (skipIt ? ' skiprow' : '') + '"><span class="d">' + esc(fmtWhen(r.at)) + '</span>'
         + '<span class="n">' + esc(r.detail) + '</span>'
-        + (r.wallet ? '<span class="tag">กระเป๋า</span>' : '')
+        + (skipIt ? '<span class="tag skip">ข้าม: เงินเข้า</span>' : (r.wallet ? '<span class="tag">กระเป๋า</span>' : ''))
         + '<span class="a' + (r.direction === 'in' ? ' inm' : '') + '">' + (r.direction === 'in' ? '+' : '−') + '฿' + fmtBaht(r.amount_minor) + '</span></div>';
     }
     if (imp.rows.length > 60) h += '<div class="imp-sum">… และอีก ' + (imp.rows.length - 60) + ' รายการ</div>';
     h += '</div><div class="impbtns"><button class="impbtn" data-act="impClose">ยกเลิก</button>'
-      + '<button class="impbtn pri" data-act="impGo">นำเข้า ' + imp.rows.length + ' รายการ</button></div>';
+      + '<button class="impbtn pri" data-act="impGo">นำเข้า ' + goN + ' รายการ</button></div>';
   }
   if (imp.err) h += '<div class="imp-warn">' + esc(imp.err) + '</div>';
   box.innerHTML = h;
@@ -1841,15 +1849,16 @@ function renderImp(){
 function impGo(){
   if (!S.imp || !S.imp.rows || !S.imp.rows.length) return;
   var acct = S.imp.acct || 'kplus';
-  var payload = S.imp.rows.map(function(r){
+  var payload = S.imp.rows.filter(function(r){ return !(r.wallet && r.direction === 'in'); }).map(function(r){
     return { at: r.at, direction: r.direction, amount_minor: r.amount_minor, detail: r.detail, wallet: !!r.wallet };
   });
+  if (!payload.length){ toast('ไม่มีรายการที่จะนำเข้า (ข้ามเงินเข้า — นับฝั่งบัญชีแล้ว)'); el('impov').classList.remove('on'); S.imp = null; return; }
   el('impov').classList.remove('on');
   S.imp = null;
   if (IS_DEMO){ toast('เดโม่: นำเข้า ' + payload.length + ' รายการ (ไม่บันทึกจริง)'); return; }
   google.script.run.withSuccessHandler(function(res){
     if (res && res.ok){
-      toast('นำเข้า ' + res.added + ' รายการ' + (res.dup ? ' · ข้ามซ้ำ ' + res.dup : '') + ' ✓');
+      toast('นำเข้า ' + res.added + ' รายการ' + (res.dup ? ' · ข้ามซ้ำ ' + res.dup : '') + (res.in_skip ? ' · ข้ามเงินเข้า ' + res.in_skip : '') + ' ✓');
       reload(true);
     } else toast((res && res.msg) || 'นำเข้าไม่สำเร็จ', true);
   }).withFailureHandler(function(){ toast('เชื่อมต่อไม่ได้', true); }).importStatement(acct, payload);
