@@ -168,6 +168,54 @@
   .logline:first-child{border-top:none}
   .load{padding:60px 0;text-align:center;color:var(--dim);font-size:12px}
   .spinner{width:26px;height:26px;border:2.5px solid #2a2a33;border-top-color:var(--cy);border-radius:50%;margin:0 auto 12px;animation:sp 0.9s linear infinite}
+  /* ---------- v2: หลายบัญชี · เงินไปไหน (แบบ C) · ปฏิทิน · โลโก้ ---------- */
+  .lgx{width:21px;height:21px;border-radius:6px;object-fit:contain}
+  .amtxf{color:var(--mut)}
+  .cchip.xf{color:#8fe8ff}
+  .seg{display:flex;height:10px;border-radius:99px;overflow:hidden;margin-top:10px;background:#0b0b0e;border:1px solid #1f1f26}
+  .seg i{display:block;height:100%}
+  .segl{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:7px;font-size:10px;color:var(--mut);font-variant-numeric:tabular-nums}
+  .segl b{color:var(--tx);font-weight:600}
+  .dot{display:inline-block;width:7px;height:7px;border-radius:99px;margin-right:4px;vertical-align:.5px}
+  .wtr{display:flex;align-items:center;gap:7px;width:fit-content;margin-top:9px;background:rgba(101,220,255,.08);border:1px solid rgba(101,220,255,.3);color:#8fe8ff;border-radius:10px;padding:5px 10px;font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums}
+  .wtr span{color:var(--mut);font-weight:400;font-size:10.5px}
+  .accts{display:flex;gap:8px;overflow-x:auto;padding:1px 0 2px;-webkit-overflow-scrolling:touch}
+  .acct{flex:none;width:196px;background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:10px 12px}
+  .acct .a1{display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700}
+  .acct .a2{font-size:9.5px;color:var(--dim);margin-top:3px}
+  .acct .a3{font-size:17px;font-weight:650;font-variant-numeric:tabular-nums;margin-top:7px}
+  .acct .a4{font-size:10px;color:var(--mut);margin-top:2px;font-variant-numeric:tabular-nums}
+  .acct.soon{opacity:.55}
+  .tnode{display:flex;align-items:center;gap:8px;background:#101014;border:1px solid #26262e;border-radius:13px;padding:8px 11px;font-size:11.5px;font-weight:600}
+  .tnode small{color:var(--dim);font-weight:400;font-size:9.5px;margin-left:auto;font-variant-numeric:tabular-nums}
+  .tree{margin:2px 0 0 17px;border-left:1.5px solid #2c2c36;padding-left:13px}
+  .titem{position:relative;padding:7px 0;font-size:11.5px;display:flex;align-items:center;gap:8px}
+  .titem::before{content:'';position:absolute;left:-13px;top:17px;width:11px;height:1.5px;background:#2c2c36}
+  .titem .r{margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums}
+  .titem .r.rd{color:var(--red)}.titem .r.cy{color:#8fe8ff}.titem .r.m{color:var(--mut)}.titem .r.am{color:var(--amb)}
+  .titem .note2{font-size:9px;color:var(--dim);font-weight:400}
+  .subwrap{padding-left:11px;border-left:1.5px solid #2c2c36}
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:4px}
+  .ck{font-size:8.5px;color:var(--dim);text-align:center;padding:2px 0;font-weight:600}
+  .cd{height:40px;border-radius:10px;background:#101014;border:1px solid #1a1a20;padding:3px 4px;font-variant-numeric:tabular-nums}
+  .cd.b{background:transparent;border:none}
+  .cd.today{border-color:rgba(101,220,255,.65);background:rgba(101,220,255,.07)}
+  .cd .dots{display:flex;gap:3px;margin-top:2px;flex-wrap:wrap}
+  .cd .dd{width:5.5px;height:5.5px;border-radius:99px}
+  .frowitem{display:flex;align-items:center;gap:9px;border-top:1px solid #1e1e23;padding:8px 0}
+  .frowitem:first-of-type{border-top:none}
+  .frowitem .ic{width:28px;height:28px;border-radius:9px;background:#101014;border:1px solid #232329;display:flex;align-items:center;justify-content:center;font-size:14px;flex:none;overflow:hidden}
+  .frowitem .ic img{width:19px;height:19px;border-radius:5px}
+  .frowitem .mid{flex:1;min-width:0}
+  .frowitem .nm{font-size:12px}
+  .frowitem .dt{font-size:9.5px;color:var(--dim);margin-top:1px;font-variant-numeric:tabular-nums}
+  .frowitem .rt2{text-align:right;flex:none;font-variant-numeric:tabular-nums}
+  .frowitem .amt3{font-size:12px;font-weight:650}
+  .st{font-size:9.5px;margin-top:2px}
+  .st.ok{color:#9ae2b5;font-weight:600}
+  .st.warn{color:var(--amb);font-weight:600}
+  .st.wait{color:var(--dim)}
+  .tag{font-size:8.5px;font-weight:700;color:#062026;background:var(--cy);border-radius:99px;padding:1.5px 6px}
 </style>
 </head>
 <body>
@@ -177,6 +225,7 @@
   <symbol id="i-hist" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></symbol>
   <symbol id="i-set" viewBox="0 0 24 24"><path d="M4 7.5h7M17 7.5h3M4 16.5h3M13 16.5h7"/><circle cx="14" cy="7.5" r="2.2"/><circle cx="10" cy="16.5" r="2.2"/></symbol>
   <symbol id="i-ref" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.6"/><path d="M20 5v6h-6"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17M8 3.5V7M16 3.5V7"/></symbol>
 </svg>
 
 <div class="wrap">
@@ -194,13 +243,15 @@
     <div class="tabpane" id="pane1"></div>
     <div class="tabpane" id="pane2"></div>
     <div class="tabpane" id="pane3"></div>
+    <div class="tabpane" id="pane4"></div>
   </main>
 
   <nav class="tabbar">
-    <button class="nv on" data-act="tab" data-i="0"><span class="ic"><svg><use href="#i-sum"/></svg></span>สรุป</button>
+    <button class="nv on" data-act="tab" data-i="0"><span class="ic"><svg><use href="#i-sum"/></svg></span>ภาพรวม</button>
     <button class="nv" data-act="tab" data-i="1"><span class="ic"><svg><use href="#i-list"/></svg><span class="bdg" id="bdg" style="display:none"></span></span>รอยืนยัน</button>
-    <button class="nv" data-act="tab" data-i="2"><span class="ic"><svg><use href="#i-hist"/></svg></span>ประวัติ</button>
-    <button class="nv" data-act="tab" data-i="3"><span class="ic"><svg><use href="#i-set"/></svg></span>ตั้งค่า</button>
+    <button class="nv" data-act="tab" data-i="2"><span class="ic"><svg><use href="#i-cal"/></svg></span>ปฏิทิน</button>
+    <button class="nv" data-act="tab" data-i="3"><span class="ic"><svg><use href="#i-hist"/></svg></span>รายการ</button>
+    <button class="nv" data-act="tab" data-i="4"><span class="ic"><svg><use href="#i-set"/></svg></span>ตั้งค่า</button>
   </nav>
 </div>
 <div id="toast"></div>
@@ -388,41 +439,132 @@ function paint(){
   var d = S.data; if (!d) return;
   el('pane0').innerHTML = htmlSummary(d);
   el('pane1').innerHTML = htmlPending(d);
-  if (S.tab === 2) el('pane2').innerHTML = htmlHistory(d);   // วาดเฉพาะแท็บที่ใช้อยู่ — เบาลงครึ่ง
-  if (S.tab === 3) el('pane3').innerHTML = htmlSettings(d);
-  for (var i=0;i<4;i++) el('pane'+i).className = 'tabpane' + (S.tab===i ? ' on' : '');
+  if (S.tab === 2) el('pane2').innerHTML = htmlCalendar(d);  // วาดเฉพาะแท็บที่ใช้อยู่ — เบาลงครึ่ง
+  if (S.tab === 3) el('pane3').innerHTML = htmlHistory(d);
+  if (S.tab === 4) el('pane4').innerHTML = htmlSettings(d);
+  for (var i=0;i<5;i++) el('pane'+i).className = 'tabpane' + (S.tab===i ? ' on' : '');
   document.querySelectorAll('.nv').forEach(function(nv,i){ nv.className = 'nv' + (S.tab===i ? ' on' : ''); });
   bindSwipeAll();
 }
 
+function LOGO_URL(key){
+  var M = { kplus:'assets/logos/kplus.jpg', truemoney:'assets/logos/truemoney.jpg',
+            make:'assets/logos/make.jpg', bbl:'assets/logos/bbl.jpg', apple:'assets/logos/apple_white.svg',
+            netflix:'assets/logos/netflix.jpg', spotify:'assets/logos/spotify.jpg', claude:'assets/logos/claude.jpg',
+            grab:'assets/logos/grab.jpg', steam:'assets/logos/steam.png' };
+  return M[key] || '';
+}
+function logoImg(key, cls){
+  var u = LOGO_URL(key);
+  return u ? '<img class="'+cls+'" src="'+u+'" alt="">' : '';
+}
+function brandOf(it){
+  var s = String((it.display_name || '') + ' ' + (it.counterparty || ''));
+  if (/grab/i.test(s)) return 'grab';
+  if (/truemoney|ทรูมันนี่/i.test(s)) return 'truemoney';
+  if (/netflix/i.test(s)) return 'netflix';
+  if (/claude/i.test(s)) return 'claude';
+  if (/spotify/i.test(s)) return 'spotify';
+  if (/kbank|k ?plus|กสิกร/i.test(s)) return 'kplus';
+  return '';
+}
+function rowIcon(it){
+  var b = brandOf(it);
+  if (b && LOGO_URL(b)) return logoImg(b, 'lgx');
+  return kindEmoji(it.kind);
+}
+function fmtDayShort(dstr){
+  if (!dstr || dstr.length < 10) return '';
+  return parseInt(dstr.slice(8,10),10) + ' ' + TH_M[parseInt(dstr.slice(5,7),10)-1];
+}
+function summaryRow(it){
+  var xf = it.xf;
+  return '<div class="item" data-act="goitem" data-ref="'+esc(it.ref)+'">'
+    + '<div class="icw">'+rowIcon(it)+'</div>'
+    + '<div class="mid"><div class="nm">'+esc(shortName(it))+'</div><div class="sub">'+fmtWhen(it.at)+' · '+(xf ? 'ย้ายเข้ากระเป๋า' : (KIND[it.kind]||it.kind))+'</div></div>'
+    + '<div class="rt"><div class="amt'+(it.direction==='in'?' in':(xf?' amtxf':''))+'">'+fmtBaht(it.amount_minor)+'฿</div>'
+    + (xf ? '<div class="cchip xf">ไม่นับรายจ่าย</div>' : '')+'</div><div class="chev">›</div></div>';
+}
+function fixedRow(f){
+  var ML = TH_M[new Date().getMonth()];
+  var ico = (f.logo && LOGO_URL(f.logo)) ? '<img src="'+LOGO_URL(f.logo)+'" alt="">' : (f.emoji || '•');
+  var dt = 'ครบ ' + f.day + ' ' + ML;
+  if (f.status === 'done' && f.date) dt += ' · ' + (f.dir === 'in' ? 'รับ ' : 'จ่าย ') + fmtDayShort(f.date);
+  var stTxt = f.status === 'done' ? '<div class="st ok">✅ '+(f.dir === 'in' ? 'รับแล้ว' : 'จ่ายแล้ว')+'</div>'
+    : f.status === 'pending' ? '<div class="st warn">⚠️ ยังไม่ยืนยัน</div>'
+    : '<div class="st wait">⏳ รอ</div>';
+  var amt = '<div class="amt3"'+(f.dir === 'in' ? ' style="color:var(--grn)"' : '')+'>'+(f.dir === 'in' ? '+' : '')+'฿'+fmtBaht(f.amount_minor)+'</div>';
+  var btns = (f.status === 'pending')
+    ? '<div class="frowitem" style="justify-content:flex-end;gap:6px"><button class="miniact cy2" data-act="ackFixed" data-key="'+esc(f.key)+'" data-v="done">'+(f.dir === 'in' ? '✅ รับแล้ว' : '✅ จ่ายแล้ว')+'</button><button class="miniact" data-act="ackFixed" data-key="'+esc(f.key)+'" data-v="wait">🕐 ยังไม่'+(f.dir === 'in' ? 'ได้' : 'จ่าย')+'</button></div>'
+    : '';
+  return '<div class="frowitem"><div class="ic">'+ico+'</div><div class="mid"><div class="nm">'+esc(f.label)+'</div><div class="dt">'+dt+'</div></div><div class="rt2">'+amt+stTxt+'</div></div>'+btns;
+}
 function htmlSummary(d){
-  var s = d.summary;
-  var g = buildGraph(s.daily);
+  var s = d.summary || {};
+  var accts = d.accts || {}, flow = d.flow || {}, fixed = d.fixed || [];
   var cf = s.cashflow || 0;
-  var latest = d.pending.slice(-3).reverse();
-  var rows = latest.map(function(it){
-    return '<div class="item" data-act="goitem" data-ref="'+esc(it.ref)+'">'
-      + '<div class="icw">'+kindEmoji(it.kind)+'</div>'
-      + '<div class="mid"><div class="nm">'+esc(shortName(it))+'</div><div class="sub">'+fmtWhen(it.at)+' · '+(KIND[it.kind]||it.kind)+'</div></div>'
-      + '<div class="rt"><div class="amt'+(it.direction==='in'?' in':'')+'">'+fmtBaht(it.amount_minor)+'฿</div></div><div class="chev">›</div></div>';
-  }).join('');
-  return ''
-   + '<div class="card hero"><div class="lbl">ใช้จ่ายเดือนนี้ (สุทธิหลังหักรอคืน) · '+monthLabel()+'</div>'
-   +   '<div class="amt">฿'+fmtBaht(s.monthSpent)+'</div>'
-   +   '<div class="sub">รายรับเดือนนี้ <b style="color:var(--grn)">+฿'+fmtBaht(s.monthIncome || 0)+'</b> · คงเหลือ <b style="color:'+(cf >= 0 ? 'var(--grn)' : 'var(--red)')+'">'+(cf >= 0 ? '+' : '−')+'฿'+fmtBaht(Math.abs(cf))+'</b></div>'
-   +   '<div class="sub">จากอีเมลที่เก็บได้รอบนี้ · ยังมีรอยืนยันอีก '+s.pendingCount+' รายการ</div></div>'
-   + '<div class="card">'
-   +   '<div class="gr-head"><div class="t">รายจ่ายรายวัน · 9 วันล่าสุด</div><div class="r">'+graphPeak(s.daily)+'</div></div>'
-   +   g
-   +   '<div class="xlab">'+xlabels(s.daily)+'</div>'
-   +   '<div class="gr-foot"><span>รวม 9 วัน · <b>฿'+fmtBaht(sumDaily(s.daily))+'</b></span><span>วันนี้ <b>฿'+fmtBaht(s.today)+'</b></span></div>'
-   + '</div>'
-   + (s.pendingCount > 0
+  var wSpent = s.walletSpent || 0, wIn = s.walletIn || 0;
+  var bankSpent = Math.max(0, (s.monthSpent || 0) - wSpent);
+  var segTotal = bankSpent + wSpent;
+  var segHtml = '';
+  if (wSpent > 0){
+    var bp = segTotal > 0 ? (bankSpent / segTotal * 100) : 0;
+    segHtml = '<div class="seg"><i style="width:'+bp.toFixed(1)+'%;background:linear-gradient(90deg,#ff8f8f,#ffb0b0)"></i>'
+      + '<i style="width:'+(100-bp).toFixed(1)+'%;background:linear-gradient(90deg,#f5b943,#f8d17e)"></i></div>'
+      + '<div class="segl"><span><span class="dot" style="background:#ff8f8f"></span>🏦 บัญชี <b>฿'+fmtBaht(bankSpent)+'</b></span><span><span class="dot" style="background:#f5b943"></span>👛 กระเป๋า <b>฿'+fmtBaht(wSpent)+'</b></span></div>';
+  }
+  var wtrHtml = wIn > 0 ? '<div class="wtr">↪ ย้ายเข้ากระเป๋า ฿'+fmtBaht(wIn)+' <span>ไม่นับเป็นรายจ่าย</span></div>' : '';
+  var kp = accts.kplus || {}, tm = accts.truemoney || {};
+  var acctHtml = '<div class="sec-t">บัญชีของฉัน</div><div class="accts">'
+    + '<div class="acct"><div class="a1">'+(LOGO_URL('kplus') ? logoImg('kplus','lgx') : '🏦')+' K PLUS</div>'
+    + '<div class="a2">บัญชีหลัก · KBank</div>'
+    + '<div class="a3">฿'+fmtBaht(kp.balance_minor || 0)+'</div>'
+    + '<div class="a4">คงเหลือล่าสุด</div>'
+    + '<div class="a4">เดือนนี้ −฿'+fmtBaht(kp.out_minor || 0)+' · +฿'+fmtBaht(kp.in_minor || 0)+'</div></div>'
+    + '<div class="acct"><div class="a1">'+(LOGO_URL('truemoney') ? logoImg('truemoney','lgx') : '👛')+' TrueMoney</div>'
+    + '<div class="a2">กระเป๋า</div>'
+    + '<div class="a3">฿'+fmtBaht(tm.spent_minor || 0)+'</div>'
+    + '<div class="a4">ใช้เดือนนี้ · เติมเข้า ฿'+fmtBaht(tm.in_minor || 0)+'</div>'
+    + '<div class="a4">ค้างใช้ต่อ ~฿'+fmtBaht(tm.remain_minor || 0)+'</div></div>'
+    + '<div class="acct soon"><div class="a1">💳 บัตรเครดิต</div><div class="a2">ช่องว่างไว้</div><div class="a3">—</div><div class="a4">เมื่อมีบัตร: ใบแจ้งยอด → อีเมล</div></div>'
+    + '</div>';
+  var flowHtml = '<div class="sec-t">💰 เงินไปไหนเดือนนี้</div>'
+    + '<div class="card" style="padding:12px 13px">'
+    + '<div class="tnode">'+logoImg('kplus','lgx')+' บัญชี K PLUS <small>เหลือ ฿'+fmtBaht(kp.balance_minor || 0)+'</small></div>'
+    + '<div class="tree">'
+    + '<div class="titem">💸 ใช้จ่ายตรง <span class="note2">scan / โอน</span><span class="r rd">−฿'+fmtBaht(flow.spend || 0)+'</span></div>'
+    + (wIn > 0 ? '<div class="titem">↪ ย้ายเข้า <span class="note2">'+(s.walletCount || 0)+' ครั้ง · ไม่นับรายจ่าย</span><span class="r cy">−฿'+fmtBaht(wIn)+'</span></div>' : '')
+    + '<div class="subwrap"><div class="tnode" style="margin:6px 0 2px">'+logoImg('truemoney','lgx')+' กระเป๋า TrueMoney <small>ค้าง ~฿'+fmtBaht(flow.wallet_remain || 0)+'</small></div>'
+    + '<div class="tree">'
+    + ((flow.wallet_spent || 0) > 0
+        ? '<div class="titem">🛒 ใช้จากกระเป๋า<span class="r am">−฿'+fmtBaht(flow.wallet_spent)+'</span></div>'
+        : '<div class="titem">🛒 ใช้จากกระเป๋า <span class="note2">ยังไม่มี statement</span><span class="r m">—</span></div>')
+    + '<div class="titem">⏸ ค้างใช้ต่อ<span class="r m">~฿'+fmtBaht(flow.wallet_remain || 0)+'</span></div>'
+    + '</div></div></div></div>';
+  var fx = fixed.slice(0).sort(function(a, b){
+    if (a.status === b.status) return a.day - b.day;
+    if (a.status === 'pending') return -1;
+    if (b.status === 'pending') return 1;
+    return a.day - b.day;
+  });
+  var calHtml = fixed.length
+    ? '<div class="sec-t">ปฏิทินรายจ่ายประจำ</div><div class="card" style="padding:10px 14px">'
+      + fx.slice(0, 3).map(function(f){ return fixedRow(f); }).join('')
+      + '<div style="text-align:right;margin-top:6px"><button class="miniact cy2" data-act="tab" data-i="2">ดูทั้งหมด →</button></div></div>'
+    : '';
+  var latestP = d.pending.slice(-3).reverse();
+  var latest = latestP.map(function(it){ return summaryRow(it); }).join('');
+  return '<div class="card hero"><div class="lbl">ใช้จริงเดือนนี้ · ทั้งระบบ · '+monthLabel()+'</div>'
+    + '<div class="amt">฿'+fmtBaht(s.monthSpent || 0)+'</div>'
+    + segHtml + wtrHtml
+    + '<div class="sub">รายรับเดือนนี้ <b style="color:var(--grn)">+฿'+fmtBaht(s.monthIncome || 0)+'</b> · คงเหลือ <b style="color:'+(cf >= 0 ? 'var(--grn)' : 'var(--red)')+'">'+(cf >= 0 ? '+' : '−')+'฿'+fmtBaht(Math.abs(cf))+'</b></div></div>'
+    + acctHtml + flowHtml + calHtml
+    + (s.pendingCount > 0
       ? '<div class="pend"><div class="e">⏳</div><div class="txt"><div class="t1">รอยืนยัน '+s.pendingCount+' รายการ</div><div class="t2">รวม ฿'+fmtBaht(s.pendingSum)+' · ยังไม่ถูกบันทึก</div></div><button class="btn-cy" data-act="tab" data-i="1">จัดการ →</button></div>'
       : '<div class="pend" style="border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.06)"><div class="e">🎉</div><div class="txt"><div class="t1">เคลียร์ครบแล้ว</div><div class="t2">รออีเมลใหม่จากรอบถัดไป</div></div></div>')
-   + htmlBills(d)
-   + htmlIncomeCard(d)
-   + (latest.length ? '<div class="sec-t">ล่าสุด</div>' + rows : '');
+    + htmlBills(d)
+    + htmlIncomeCard(d)
+    + (latestP.length ? '<div class="sec-t">ล่าสุด</div>' + latest : '');
 }
 function htmlBills(d){
   var bills = d.bills || [];
@@ -531,9 +673,9 @@ function pendingRow(d, it){
     + '<button class="swact del" data-act="delGo" data-ref="'+esc(it.ref)+'"><i>🗑</i>ลบ</button>'
     + (sugMeta ? '<button class="swact save" data-act="saveGo" data-ref="'+esc(it.ref)+'"><i>✓</i>บันทึก</button>' : '')
     + '<div class="item'+(open?' open':'')+'" data-act="toggle" data-ref="'+esc(it.ref)+'">'
-    + '<div class="icw">'+kindEmoji(it.kind)+'</div>'
-    + '<div class="mid"><div class="nm">'+esc(shortName(it))+'</div><div class="sub">'+fmtWhen(it.at)+' · '+(KIND[it.kind]||it.kind)+'</div></div>'
-    + '<div class="rt"><div class="amt'+(it.direction==='in'?' in':'')+'">'+fmtBaht(it.amount_minor)+'฿</div>'
+    + '<div class="icw">'+rowIcon(it)+'</div>'
+    + '<div class="mid"><div class="nm">'+esc(shortName(it))+'</div><div class="sub">'+fmtWhen(it.at)+' · '+(it.xf ? 'ย้ายเข้ากระเป๋า' : (KIND[it.kind]||it.kind))+'</div></div>'
+    + '<div class="rt"><div class="amt'+(it.direction==='in'?' in':(it.xf?' amtxf':''))+'">'+fmtBaht(it.amount_minor)+'฿</div>'
     + ((!open && sugMeta) ? '<div class="sgdot">แนะนำ: '+sugMeta.e+' '+esc(sugMeta.t)+'</div>' : '')
     + '</div>'
     + (inner ? '<div class="exp">' + inner + '</div>' : '')
@@ -597,26 +739,28 @@ function htmlHistory(d){
   if (!d.history.length) return '<div class="empty">ยังไม่มีรายการที่บันทึก — ปัดขวาหรือกดหมวดได้เลย</div>';
   var rows = d.history.slice(0, 40).map(function(it){
     var m = catMeta(it.category);
+    var xf = it.xf;
     var billChip = '';
     if (it.bill_status === 'open') billChip = '<div class="cchip amber">💸 รอ '+fmtBaht(Math.max(0,(it.bill_expect||0)-(it.bill_returned||0)))+'฿</div>';
     else if (it.bill_status === 'done') billChip = '<div class="cchip amber">💸 ครบแล้ว</div>';
     else if (it.bill_status === 'closed') billChip = '<div class="cchip">💸 ปิดแล้ว</div>';
     return '<div class="item" style="margin-bottom:8px">'
-      + '<div class="icw">'+m.e+'</div>'
-      + '<div class="mid"><div class="nm">'+esc(shortName(it))+'</div><div class="sub">'+fmtWhen(it.at)+' · '+(KIND[it.kind]||it.kind)+'</div></div>'
-      + '<div class="rt"><div class="amt'+(it.direction==='in'?' in':'')+'">'+fmtBaht(it.amount_minor)+'฿</div><div class="cchip done">'+m.t+'</div>'+billChip+'</div></div>';
+      + '<div class="icw">'+rowIcon(it)+'</div>'
+      + '<div class="mid"><div class="nm">'+esc(shortName(it))+'</div><div class="sub">'+fmtWhen(it.at)+' · '+(xf ? 'ย้ายเข้ากระเป๋า' : (KIND[it.kind]||it.kind))+'</div></div>'
+      + '<div class="rt"><div class="amt'+(it.direction==='in'?' in':(xf?' amtxf':''))+'">'+fmtBaht(it.amount_minor)+'฿</div>'
+      + (xf ? '<div class="cchip xf">ไม่นับรายจ่าย</div>' : '<div class="cchip done">'+m.t+'</div>')
+      + billChip+'</div></div>';
   }).join('');
-  return '<div class="list-hd"><div class="l"><div class="t1">ประวัติ · '+monthLabel()+'</div><div class="t2">บันทึกแล้ว '+d.meta.savedCount+' รายการ</div></div></div>'
+  return '<div class="list-hd"><div class="l"><div class="t1">รายการ · '+monthLabel()+'</div><div class="t2">บันทึกแล้ว '+d.meta.savedCount+' รายการ</div></div></div>'
     + rows;
 }
-
 function htmlSettings(d){
   var logs = (d.meta.logTail || []).map(function(l){
     return '<div class="logline">'+esc(l.time)+' · '+(l.ok === 'OK' ? '✓' : '✗')+' scan '+l.scanned+' → ใหม่ '+l.parsed+' · ซ้ำ '+l.dup+' · ข้าม '+l.skipped+'</div>';
   }).join('');
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v2.0.0</span></div>'
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v2.1.0</span></div>'
     + '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>'
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
     + '<div class="irow"><span class="k">รอยืนยัน</span><span class="v">'+d.summary.pendingCount+' · ฿'+fmtBaht(d.summary.pendingSum)+'</span></div>'
@@ -818,6 +962,7 @@ document.addEventListener('click', function(e){
   if (act === 'incNew') { S.incForm = true; paint(); animPop('.incform'); focusInput('incName'); return; }
   if (act === 'incCancel') { S.incForm = false; paint(); return; }
   if (act === 'incSave') { incSave(); return; }
+  if (act === 'ackFixed') { ackFixedLocal(t.getAttribute('data-key'), t.getAttribute('data-v')); return; }
   if (act === 'skip' || act === 'delGo') {
     var it = findItem(ref);
     var rowItem = sw ? sw.querySelector('.item') : null;
@@ -938,6 +1083,46 @@ function recalcSummary(){
   updateBadge();
 }
 
+/* ---------- v2: ปฏิทินรายจ่ายประจำ ---------- */
+function htmlCalendar(d){
+  var fixed = d.fixed || [];
+  var now = new Date();
+  var y = now.getFullYear(), m = now.getMonth();
+  var startIdx = new Date(y, m, 1).getDay();
+  var daysIn = new Date(y, m + 1, 0).getDate();
+  var today = now.getDate();
+  var byDay = {};
+  fixed.forEach(function(f){ (byDay[f.day] = byDay[f.day] || []).push(f); });
+  function colorOf(f){ return f.status === 'done' ? '#22c55e' : (f.status === 'pending' ? '#f5b943' : '#3f3f4b'); }
+  var cells = '';
+  ['อา','จ','อ','พ','พฤ','ศ','ส'].forEach(function(n){ cells += '<div class="ck">'+n+'</div>'; });
+  for (var i = 0; i < startIdx; i++) cells += '<div class="cd b"></div>';
+  for (var dd = 1; dd <= daysIn; dd++){
+    var dots = (byDay[dd] || []).map(function(f){ return '<span class="dd" style="background:'+colorOf(f)+'"></span>'; }).join('');
+    cells += '<div class="cd'+(dd === today ? ' today' : '')+'"><span style="font-size:10px;color:'+(dd === today ? 'var(--tx)' : 'var(--mut)')+'">'+dd+'</span>'+(dots ? '<div class="dots">'+dots+'</div>' : '')+'</div>';
+  }
+  var rows = fixed.slice(0).sort(function(a, b){ return a.day - b.day; }).map(function(f){ return fixedRow(f); }).join('');
+  return '<div class="sec-t">'+TH_M[m]+' '+String(y + 543).slice(2)+' <span class="tag">ใหม่</span></div>'
+    + '<div class="card" style="padding:10px 10px"><div class="cal">'+cells+'</div>'
+    + '<div class="segl" style="margin-top:8px"><span><span class="dot" style="background:#22c55e"></span>จ่าย/รับแล้ว</span><span><span class="dot" style="background:#f5b943"></span>ยังไม่ยืนยัน</span><span><span class="dot" style="background:#3f3f4b"></span>รอ</span><span><span class="dot" style="background:var(--cy)"></span>วันนี้</span></div></div>'
+    + '<div class="sec-t">รายการประจำเดือนนี้</div>'
+    + '<div class="card" style="padding:8px 14px">'+(rows || '<div class="hint" style="margin:4px 2px">ยังไม่มีข้อมูลรายจ่ายประจำ</div>')+'</div>'
+    + '<div class="hint">กติกาเดิม: ระบบ "เตรียมไว้ให้กด" — ไม่ auto-apply · จับคู่ให้แล้วจะขึ้นสถานะ ✅ เอง</div>';
+}
+function ackFixedLocal(key, v){
+  var d = S.data; if (!d || !d.fixed) return;
+  for (var i = 0; i < d.fixed.length; i++){
+    if (d.fixed[i].key === key){
+      d.fixed[i].status = v;
+      if (v === 'done') d.fixed[i].date = todayISO();
+    }
+  }
+  paint();
+  toast(v === 'done' ? 'บันทึกว่าจ่ายแล้ว ✓' : 'รับทราบ — รอต่อ');
+  if (IS_DEMO) return;
+  callAction('ackFixed', [key, v], '');
+}
+
 /* ---------- บิลรอเงินคืน + รายรับ (ฝั่ง client — อัปเดตจอก่อนทันที ค่อยยิงเซิร์ฟเวอร์เบื้องหลัง) ---------- */
 function billUpsertLocal(ref){
   var it = findItem(ref); if (!it) return;
@@ -1038,17 +1223,30 @@ var DEMO = {
     {at:'2026-09-18T08:48:37',ref:'D6',kind:'transfer',direction:'out',amount_minor:2500,counterparty:'ผู้ใช้ทดสอบ สี่',status:'new',category:'',saved_at:'',display_name:'',suggested:'',bill_expect:0,bill_returned:0,bill_status:''}
   ],
   history:[
-    {at:'2026-09-03T04:05:00',ref:'H0',kind:'manual_in',direction:'in',amount_minor:2500000,counterparty:'เงินเดือน (เดโม่)',status:'saved',category:'income',saved_at:'',display_name:''},
     {at:'2026-09-18T00:07:52',ref:'H1',kind:'promptpay',direction:'out',amount_minor:2000,counterparty:'ผู้ใช้ทดสอบ สอง',status:'saved',category:'food',saved_at:'',display_name:''},
-    {at:'2026-09-15T19:17:00',ref:'H2',kind:'topup',direction:'out',amount_minor:10000,counterparty:'เบอร์ทดสอบ 0000',status:'saved',category:'topup',saved_at:'',display_name:''},
+    {at:'2026-09-15T19:17:00',ref:'H2',kind:'topup',direction:'out',amount_minor:10000,counterparty:'เบอร์ทดสอบ 0000',status:'saved',category:'topup',saved_at:'',display_name:'',xf:true},
+    {at:'2026-09-16T13:34:00',ref:'H6',kind:'qr_merchant',direction:'out',amount_minor:20000,counterparty:'กระเป๋าทดสอบ (Wallet)',status:'saved',category:'topup',saved_at:'',display_name:'',xf:true},
     {at:'2026-09-10T19:33:00',ref:'H3',kind:'transfer',direction:'out',amount_minor:10500,counterparty:'ผู้ใช้ทดสอบ ห้า',status:'saved',category:'entertainment',saved_at:'',display_name:''},
     {at:'2026-09-08T19:54:00',ref:'H4',kind:'qr_merchant',direction:'out',amount_minor:10000,counterparty:'ปั๊มน้ำมันตัวอย่าง (ชื่อบัญชี: บจก.)',status:'saved',category:'fuel',saved_at:'',display_name:''},
-    {at:'2026-09-07T00:42:00',ref:'H5',kind:'qr_merchant',direction:'out',amount_minor:5000,counterparty:'ร้านซักผ้าตัวอย่าง',status:'saved',category:'house',saved_at:'',display_name:''}
+    {at:'2026-09-07T00:42:00',ref:'H5',kind:'qr_merchant',direction:'out',amount_minor:5000,counterparty:'ร้านซักผ้าตัวอย่าง',status:'saved',category:'house',saved_at:'',display_name:''},
+    {at:'2026-09-03T04:05:00',ref:'H0',kind:'manual_in',direction:'in',amount_minor:2500000,counterparty:'เงินเดือน (เดโม่)',status:'saved',category:'income',saved_at:'',display_name:''},
   ],
   bills:[
     {ref:'D2',name:'ร้านสินค้าตัวอย่าง',at:'2026-09-18T00:02:38',amount_minor:25000,expect_minor:25000,returned_minor:10000,remaining_minor:15000,status:'open'}
   ],
-  summary:{ monthSpent:450090, monthIncome:2500000, cashflow:2049910, pendingCount:6, pendingSum:60000, today:5000,
+  accts:{ kplus:{ balance_minor:1234567, out_minor:681050, in_minor:2500000 },
+          truemoney:{ spent_minor:71050, in_minor:180000, remain_minor:108950 } },
+  flow:{ out_total:681050, spend:501050, wallet_in:180000, wallet_count:4, wallet_spent:71050, wallet_remain:108950 },
+  fixed:[
+    {key:'income', label:'เงินจากพ่อ', emoji:'💰', amount_minor:1600000, day:1, dir:'in', status:'done', date:'2026-09-01'},
+    {key:'house', label:'ค่าบ้านให้พี่', emoji:'🏠', amount_minor:400000, day:1, dir:'out', status:'done', date:'2026-09-02'},
+    {key:'tmn', label:'เติม TrueMoney', logo:'truemoney', amount_minor:70000, day:8, dir:'out', status:'done', date:'2026-09-08'},
+    {key:'claude', label:'Claude ผ่าน Apple', logo:'claude', amount_minor:69900, day:9, dir:'out', status:'pending', date:''},
+    {key:'netflix', label:'Netflix ครอบครัว', logo:'netflix', amount_minor:10500, day:13, dir:'out', status:'done', date:'2026-09-13'},
+    {key:'fuel', label:'งบน้ำมัน', emoji:'⛽', amount_minor:48000, day:30, dir:'out', status:'wait', date:''}
+  ],
+  summary:{ monthSpent:501050, monthIncome:2500000, cashflow:1998950, pendingCount:6, pendingSum:60000, today:5000,
+    monthOut:681050, walletIn:180000, walletSpent:71050, walletCount:4,
     daily:[{d:'2026-09-10',n:10500},{d:'2026-09-11',n:8200},{d:'2026-09-12',n:1000},{d:'2026-09-13',n:7600},{d:'2026-09-14',n:3000},{d:'2026-09-15',n:6800},{d:'2026-09-16',n:2700},{d:'2026-09-17',n:1500},{d:'2026-09-18',n:5000}] },
   meta:{ total:24, savedCount:6, skippedCount:0, sheetUrl:'#', logTail:[{time:'2026-09-18 09:20:00',ok:'OK',scanned:20,parsed:0,dup:19,skipped:1,appended:0}], genAt:'2026-09-18T09:35:00', triggerMinutes:10, memCount:24, llmOn:true }
 };
@@ -1059,6 +1257,9 @@ function applyPose(p){
   S.tab = 1;
   if (p === 'grid' || p === 'bill'){ if (refs[1]) S.open[refs[1]] = true; paint(); el('main').scrollTop = 60; return; }
   if (p === 'inc'){ S.tab = 0; S.incForm = true; paint(); el('main').scrollTop = 110; return; }
+  if (p === 'cal'){ S.tab = 2; paint(); el('main').scrollTop = 0; return; }
+  if (p === 'hist'){ S.tab = 3; paint(); el('main').scrollTop = 0; return; }
+  if (p === 'set'){ S.tab = 4; paint(); el('main').scrollTop = 0; return; }
   paint();
   var rows = document.querySelectorAll('#pane1 .swrow');
   var r = rows[1]; if (!r) return;
@@ -1087,7 +1288,7 @@ el('main').addEventListener('scroll', function(){
   closeOtherReveals(null); // ปิดทุกแถวที่ค้างเปิด
 }, { passive: true });
 (function(){
-  var m = /[?&]tab=([0-3])/.exec(location.search);
+  var m = /[?&]tab=([0-4])/.exec(location.search);
   if (m) S.tab = parseInt(m[1], 10);
 })();
 var POSE = /[?&]pose=([a-z]+)/.exec(location.search);
