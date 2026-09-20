@@ -649,13 +649,24 @@ function htmlSummary(d){
       + fx.slice(0, 3).map(function(f){ return fixedRow(f); }).join('')
       + '<div style="text-align:right;margin-top:6px"><button class="miniact cy2" data-act="tab" data-i="2">ดูทั้งหมด →</button></div></div>'
     : '';
+  // แถบงบรายหมวด — ตัวเลขชุดเดียวกับแท็บปฏิทิน (budgets จากเซิร์ฟเวอร์เดียวกัน)
+  var budPrev = '';
+  var budList = d.budgets || [];
+  if (budList.length){
+    var btt = d.budgetTotals || { spent_minor: 0, cap_minor: 0 };
+    var bpct = btt.cap_minor > 0 ? Math.round(btt.spent_minor / btt.cap_minor * 100) : 0;
+    budPrev = '<div class="sec-t">งบรายหมวด</div><div class="card" style="padding:8px 14px">'
+      + '<div class="budtot" style="margin:2px 0 4px"><div class="l">ใช้ไป <b>฿'+fmtBaht(btt.spent_minor)+'</b> จาก ฿'+fmtBaht(btt.cap_minor)+'</div><div class="pc" style="font-size:15px">'+bpct+'<small>%</small></div></div>'
+      + budList.slice(0, 3).map(function(b){ return budgetRow(b); }).join('')
+      + '<div style="text-align:right;margin-top:6px"><button class="miniact cy2" data-act="tab" data-i="2">ดูทั้งหมด →</button></div></div>';
+  }
   var latestP = d.pending.slice(-3).reverse();
   var latest = latestP.map(function(it){ return summaryRow(it); }).join('');
   return '<div class="card hero"><div class="lbl">ใช้จริงเดือนนี้ · ทั้งระบบ · '+monthLabel()+'</div>'
     + '<div class="amt">฿'+fmtBaht(s.monthSpent || 0)+'</div>'
     + segHtml + wtrHtml
     + '<div class="sub">รายรับเดือนนี้ <b style="color:var(--grn)">+฿'+fmtBaht(s.monthIncome || 0)+'</b> · คงเหลือ <b style="color:'+(cf >= 0 ? 'var(--grn)' : 'var(--red)')+'">'+(cf >= 0 ? '+' : '−')+'฿'+fmtBaht(Math.abs(cf))+'</b></div></div>'
-    + acctHtml + flowHtml + calHtml
+    + acctHtml + flowHtml + budPrev + calHtml
     + (s.pendingCount > 0
       ? '<div class="pend"><div class="e">⏳</div><div class="txt"><div class="t1">รอยืนยัน '+s.pendingCount+' รายการ</div><div class="t2">รวม ฿'+fmtBaht(s.pendingSum)+' · ยังไม่ถูกบันทึก</div></div><button class="btn-cy" data-act="tab" data-i="1">จัดการ →</button></div>'
       : '<div class="pend" style="border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.06)"><div class="e">🎉</div><div class="txt"><div class="t1">เคลียร์ครบแล้ว</div><div class="t2">รออีเมลใหม่จากรอบถัดไป</div></div></div>')
@@ -857,7 +868,7 @@ function htmlSettings(d){
   }).join('');
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v3.0.0</span></div>'
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v3.0.1</span></div>'
     + '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>'
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
     + '<div class="irow"><span class="k">รอยืนยัน</span><span class="v">'+d.summary.pendingCount+' · ฿'+fmtBaht(d.summary.pendingSum)+'</span></div>'
