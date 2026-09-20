@@ -211,6 +211,10 @@
   .frowitem .dt{font-size:9.5px;color:var(--dim);margin-top:1px;font-variant-numeric:tabular-nums}
   .frowitem .rt2{text-align:right;flex:none;font-variant-numeric:tabular-nums}
   .frowitem .amt3{font-size:12px;font-weight:650}
+  .frowitem{cursor:pointer}
+  .frowitem.open{background:rgba(101,220,255,.03)}
+  .fchev{color:var(--dim);font-size:9px;margin-left:7px;flex:none}
+  .fxdrop{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;padding:1px 0 10px;border-bottom:1px dashed #232329;margin-bottom:1px}
   .st{font-size:9.5px;margin-top:2px}
   .st.ok{color:#9ae2b5;font-weight:600}
   .st.warn{color:var(--amb);font-weight:600}
@@ -321,7 +325,7 @@ if (!NKF_TOKEN && /^https?:$/.test(location.protocol) &&
 }
 /* ---------- /static-host bridge ---------- */
 var IS_DEMO = !(typeof google !== 'undefined' && google.script && google.script.run);
-var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false };
+var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, fxOpen:{} };
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
 var SW = { OPEN:112, COMMIT:160, MAX:210, EASE:'cubic-bezier(.22,.8,.24,1)' };
@@ -521,6 +525,7 @@ function summaryRow(it){
 }
 function fixedRow(f){
   var ML = TH_M[new Date().getMonth()];
+  var open = !!(S.fxOpen && S.fxOpen[f.key]);
   var ico = (f.logo && LOGO_URL(f.logo)) ? '<img src="'+LOGO_URL(f.logo)+'" alt="">' : (f.emoji || '•');
   var dt = 'ครบ ' + f.day + ' ' + ML;
   if (f.status === 'done' && f.date) dt += ' · ' + (f.dir === 'in' ? 'รับ ' : 'จ่าย ') + fmtDayShort(f.date);
@@ -529,15 +534,21 @@ function fixedRow(f){
     : f.status === 'pending' ? '<div class="st warn">⚠️ ยังไม่ยืนยัน</div>'
     : '<div class="st wait">⏳ รอ</div>';
   var amt = '<div class="amt3"'+(f.dir === 'in' ? ' style="color:var(--grn)"' : '')+'>'+(f.dir === 'in' ? '+' : '')+'฿'+fmtBaht(f.amount_minor)+'</div>';
-  var bDone = '<button class="miniact cy2" data-act="ackFixed" data-key="'+esc(f.key)+'" data-v="done">'+(f.dir === 'in' ? '✅ รับแล้ว' : '✅ จ่ายแล้ว')+'</button>';
-  var bWait = '<button class="miniact" data-act="ackFixed" data-key="'+esc(f.key)+'" data-v="wait">🕐 ยังไม่'+(f.dir === 'in' ? 'ได้' : 'จ่าย')+'</button>';
-  var bAuto = '<button class="miniact" data-act="ackFixed" data-key="'+esc(f.key)+'" data-v="auto">↩︎ อัตโนมัติ</button>';
-  var btns = '';
-  if (f.status === 'pending') btns = bDone + bWait;
-  else if (f.status === 'wait') btns = bDone + bAuto;
-  else btns = bWait + (f.src === 'ack' ? bAuto : '');
-  btns = btns ? '<div class="frowitem" style="justify-content:flex-end;gap:6px;flex-wrap:wrap">'+btns+'</div>' : '';
-  return '<div class="frowitem"><div class="ic">'+ico+'</div><div class="mid"><div class="nm">'+esc(f.label)+'</div><div class="dt">'+dt+'</div></div><div class="rt2">'+amt+stTxt+'</div></div>'+btns;
+  // hider: ปุ่มยืนยัน/แก้ ซ่อนไว้ — แตะแถวแล้วค่อยกางลงมา
+  var drop = '';
+  if (open){
+    var bDone = '<button class="miniact cy2" data-act="ackFixed" data-key="'+esc(f.key)+'" data-v="done">'+(f.dir === 'in' ? '✅ รับแล้ว' : '✅ จ่ายแล้ว')+'</button>';
+    var bWait = '<button class="miniact" data-act="ackFixed" data-key="'+esc(f.key)+'" data-v="wait">🕐 ยังไม่'+(f.dir === 'in' ? 'ได้' : 'จ่าย')+'</button>';
+    var bAuto = '<button class="miniact" data-act="ackFixed" data-key="'+esc(f.key)+'" data-v="auto">↩︎ อัตโนมัติ</button>';
+    var list = '';
+    if (f.status === 'pending') list = bDone + bWait;
+    else if (f.status === 'wait') list = bDone + bAuto;
+    else list = bWait + (f.src === 'ack' ? bAuto : '');
+    drop = '<div class="fxdrop" data-key="'+esc(f.key)+'">'+list+'</div>';
+  }
+  return '<div class="frowitem'+(open ? ' open' : '')+'" data-act="fxToggle" data-key="'+esc(f.key)+'">'
+    + '<div class="ic">'+ico+'</div><div class="mid"><div class="nm">'+esc(f.label)+'</div><div class="dt">'+dt+'</div></div>'
+    + '<div class="rt2">'+amt+stTxt+'</div><span class="fchev">'+(open ? '▾' : '▸')+'</span></div>' + drop;
 }
 function htmlSummary(d){
   var s = d.summary || {};
@@ -800,7 +811,7 @@ function htmlSettings(d){
   }).join('');
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v2.1.2</span></div>'
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v2.1.3</span></div>'
     + '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>'
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
     + '<div class="irow"><span class="k">รอยืนยัน</span><span class="v">'+d.summary.pendingCount+' · ฿'+fmtBaht(d.summary.pendingSum)+'</span></div>'
@@ -1016,6 +1027,15 @@ document.addEventListener('click', function(e){
   if (act === 'incNew') { S.incForm = true; paint(); animPop('.incform'); focusInput('incName'); return; }
   if (act === 'incCancel') { S.incForm = false; paint(); return; }
   if (act === 'incSave') { incSave(); return; }
+  if (act === 'fxToggle') {
+    var fk = t.getAttribute('data-key');
+    S.fxOpen = S.fxOpen || {};
+    if (S.fxOpen[fk]) delete S.fxOpen[fk];
+    else { S.fxOpen = {}; S.fxOpen[fk] = 1; }   // เปิดทีละแถว — ไม่รกจอ
+    paint();
+    if (S.fxOpen[fk]) animPop('.fxdrop[data-key="' + fk + '"]');
+    return;
+  }
   if (act === 'ackFixed') { ackFixedLocal(t.getAttribute('data-key'), t.getAttribute('data-v')); return; }
   if (act === 'skip' || act === 'delGo') {
     var it = findItem(ref);
@@ -1161,7 +1181,7 @@ function htmlCalendar(d){
     + '<div class="segl" style="margin-top:8px"><span><span class="dot" style="background:#22c55e"></span>จ่าย/รับแล้ว</span><span><span class="dot" style="background:#f5b943"></span>ยังไม่ยืนยัน</span><span><span class="dot" style="background:#3f3f4b"></span>รอ</span><span><span class="dot" style="background:var(--cy)"></span>วันนี้</span></div></div>'
     + '<div class="sec-t">รายการประจำเดือนนี้</div>'
     + '<div class="card" style="padding:8px 14px">'+(rows || '<div class="hint" style="margin:4px 2px">ยังไม่มีข้อมูลรายจ่ายประจำ</div>')+'</div>'
-    + '<div class="hint">กติกาเดิม: ระบบ "เตรียมไว้ให้กด" — ไม่ auto-apply · จับคู่ให้แล้วจะขึ้นสถานะ ✅ เอง</div>';
+    + '<div class="hint">แตะรายการเพื่อยืนยัน/แก้ · จับคู่ให้แล้วจะขึ้นสถานะ ✅ เอง — ไม่ auto-apply</div>';
 }
 function ackFixedLocal(key, v){
   var d = S.data; if (!d || !d.fixed) return;
@@ -1318,6 +1338,13 @@ function applyPose(p){
   if (p === 'grid' || p === 'bill'){ if (refs[1]) S.open[refs[1]] = true; paint(); el('main').scrollTop = 60; return; }
   if (p === 'inc'){ S.tab = 0; S.incForm = true; paint(); el('main').scrollTop = 110; return; }
   if (p === 'cal'){ S.tab = 2; paint(); el('main').scrollTop = 0; return; }
+  if (p === 'fx'){
+    S.tab = 2; S.fxOpen = {};
+    var fxAr = (S.data && S.data.fixed) ? S.data.fixed : [];
+    var fPick = fxAr.filter(function(x){ return x.status === 'pending'; })[0] || fxAr[0];
+    if (fPick) S.fxOpen[fPick.key] = 1;
+    paint(); el('main').scrollTop = 0; return;
+  }
   if (p === 'hist'){ S.tab = 3; paint(); el('main').scrollTop = 0; return; }
   if (p === 'set'){ S.tab = 4; paint(); el('main').scrollTop = 0; return; }
   paint();
