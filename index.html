@@ -404,7 +404,7 @@ if (!NKF_TOKEN && /^https?:$/.test(location.protocol) &&
 }
 /* ---------- /static-host bridge ---------- */
 var IS_DEMO = !(typeof google !== 'undefined' && google.script && google.script.run);
-var APP_BUILD = 'v3.1.6';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json
+var APP_BUILD = 'v3.1.6-dev';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json
 var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, fxOpen:{}, view:null };
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
@@ -936,7 +936,7 @@ function htmlSettings(d){
   }).join('');
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v3.1.6</span></div>'
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v3.1.7</span></div>'
     + '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>'
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
     + '<div class="irow"><span class="k">รอยืนยัน</span><span class="v">'+d.summary.pendingCount+' · ฿'+fmtBaht(d.summary.pendingSum)+'</span></div>'
@@ -1348,13 +1348,13 @@ function ringHtml(items, cTop, cSub){
     spots.push({ e: it2.e, t: it2.t, n: it2.n, col: col, mid: (a0 + a1) / 2 });
     acc = a1;
   }
-  var used = [], chipHtml = '';
+  var used = [], chipHtml = '', chipN = 0;
   for (var k = 0; k < spots.length; k++){
     var s2 = spots[k];
     if (s2.n / total * 100 < SMALL_PCT) continue;   // เล็ก — โชว์เป็นสีล้วน ไม่ติดชิป
     var rad = s2.mid * Math.PI / 50;
-    var rAdj = RC + (k % 2 ? 7 : 0);                // เยื้องกัน — สลับระยะเข้า/ออกเล็กน้อย ไม่เรียงตรงเป็นแถว
-    var x = rAdj * Math.sin(rad), y = -rAdj * Math.cos(rad);
+    var x = RC * Math.sin(rad);
+    var y = -RC * Math.cos(rad) + [-8, 6, -10, 9][chipN % 4];   // ตัวเลขนอนเหมือนเดิม — เยื้องแกน Y คนละระยะ ไม่เรียบตรงทื่อ
     var amountText = '฿' + fmtShort(s2.n);          // ใส่หน่วยบาทบนชิป
     var chipW = Math.min(112, 36 + amountText.length * 7);
     var clash = false;
@@ -1363,15 +1363,9 @@ function ringHtml(items, cTop, cSub){
       if (dx < (chipW + used[q][2]) / 2 + 4 && dy < 28){ clash = true; break; }
     }
     if (!clash){
-      var rot = s2.mid * 3.6;                       // เอียงตามแนวโค้งของวง (ไม่ตั้งตรง)
-      while (rot > 180) rot -= 360;
-      while (rot < -180) rot += 360;
-      if (rot > 90) rot -= 180;
-      if (rot < -90) rot += 180;
-      if (rot > 44) rot = 44;
-      if (rot < -44) rot = -44;
       used.push([x, y, chipW]);
-      chipHtml += '<span class="rchip" style="left:calc(50% + ' + x.toFixed(1) + 'px);top:calc(50% + ' + y.toFixed(1) + 'px);transform:translate(-50%,-50%) rotate(' + rot.toFixed(0) + 'deg)">' + s2.e + '<span>' + amountText + '</span></span>';
+      chipHtml += '<span class="rchip" style="left:calc(50% + ' + x.toFixed(1) + 'px);top:calc(50% + ' + y.toFixed(1) + 'px)">' + s2.e + '<span>' + amountText + '</span></span>';
+      chipN++;
     }
   }
   return '<div class="ringw"><div class="rring" style="background:conic-gradient(' + grads.join(',') + ')"></div>'
