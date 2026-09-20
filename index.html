@@ -215,6 +215,31 @@
   .frowitem.open{background:rgba(101,220,255,.03)}
   .fchev{color:var(--dim);font-size:9px;margin-left:7px;flex:none}
   .fxdrop{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;padding:1px 0 10px;border-bottom:1px dashed #232329;margin-bottom:1px}
+  /* ---------- v3: งบรายหมวด ---------- */
+  .budtot{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:8px}
+  .budtot .l{font-size:11px;color:var(--mut)}
+  .budtot .l b{color:var(--tx);font-weight:600}
+  .budtot .pc{font-size:19px;font-weight:750;font-variant-numeric:tabular-nums}
+  .budtot .pc small{font-size:12px;color:var(--mut);font-weight:500}
+  .bar{height:9px;border-radius:99px;background:#0b0b0e;border:1px solid #1f1f26;overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:99px}
+  .bgrn{background:linear-gradient(90deg,#3fbf7a,#7ee2a8)}
+  .bamb{background:linear-gradient(90deg,#d99a26,#f5b943)}
+  .bred{background:linear-gradient(90deg,#e06060,#ff8f8f)}
+  .bcy{background:linear-gradient(90deg,#3fb6d9,#65DCFF)}
+  .ovl{font-size:8.5px;font-weight:700;color:#062026;background:var(--cy);border-radius:99px;padding:1.5px 7px}
+  .st.over{color:var(--red);font-weight:700}
+  .budrow{display:flex;gap:11px;align-items:center;padding:9px 0;border-top:1px solid #1e1e23}
+  .budrow:first-child{border-top:none}
+  .budrow .ic{width:30px;height:30px;border-radius:9px;background:#101014;border:1px solid #232329;display:flex;align-items:center;justify-content:center;font-size:15px;flex:none;overflow:hidden}
+  .budrow .ic img{width:20px;height:20px;border-radius:5px}
+  .budrow .mid{flex:1;min-width:0}
+  .budrow .nm{font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:6px}
+  .budrow .cap{font-size:9px;color:var(--dim);margin:2px 0 6px;font-weight:400}
+  .budrow .rt{text-align:right;flex:none;font-variant-numeric:tabular-nums;min-width:96px}
+  .budrow .num{font-size:13px;font-weight:700}
+  .budrow .num small{color:var(--dim);font-weight:500}
+  .budrow .st{font-size:9.5px;margin-top:2px}
   .st{font-size:9.5px;margin-top:2px}
   .st.ok{color:#9ae2b5;font-weight:600}
   .st.warn{color:var(--amb);font-weight:600}
@@ -550,6 +575,27 @@ function fixedRow(f){
     + '<div class="ic">'+ico+'</div><div class="mid"><div class="nm">'+esc(f.label)+'</div><div class="dt">'+dt+'</div></div>'
     + '<div class="rt2">'+amt+stTxt+'</div><span class="fchev">'+(open ? '▾' : '▸')+'</span></div>' + drop;
 }
+function fmtShort(minor){
+  var v = minor / 100;
+  return (Math.abs(v % 1) < 0.005) ? String(Math.round(v)) : v.toFixed(2);
+}
+function budgetRow(b){
+  var ico = (b.logo && LOGO_URL(b.logo)) ? '<img src="'+LOGO_URL(b.logo)+'" alt="">' : (b.emoji || '•');
+  var col = b.pct >= 100 ? 'bred' : (b.pct >= 80 ? 'bamb' : 'bgrn');
+  var daysIn = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+  var capTxt = (b.per_day > 0) ? (fmtShort(b.per_day) + ' × ' + daysIn + ' วัน') : ('งบ ' + fmtBaht(b.cap_minor));
+  if (b.day > 0) capTxt += ' · ครบ ' + b.day + ' ' + TH_M[new Date().getMonth()];
+  var st = b.over_minor > 0 ? '<div class="st over">เกิน ฿'+fmtBaht(b.over_minor)+'</div>'
+    : (b.pct >= 80 ? '<div class="st warn">⚠️ เหลือ ฿'+fmtBaht(b.remain_minor)+'</div>'
+    : '<div class="st ok">เหลือ ฿'+fmtBaht(b.remain_minor)+'</div>');
+  return '<div class="budrow">'
+    + '<div class="ic">'+ico+'</div>'
+    + '<div class="mid"><div class="nm">'+esc(b.label)+(b.overlap ? ' <span class="ovl">ทับซ้อน</span>' : '')+'</div>'
+    + '<div class="cap">'+capTxt+'</div>'
+    + '<div class="bar"><i class="'+col+'" style="width:'+Math.min(100, b.pct)+'%"></i></div></div>'
+    + '<div class="rt"><div class="num">฿'+fmtShort(b.spent_minor)+'<small> / '+fmtShort(b.cap_minor)+'</small></div>'+st+'</div>'
+    + '</div>';
+}
 function htmlSummary(d){
   var s = d.summary || {};
   var accts = d.accts || {}, flow = d.flow || {}, fixed = d.fixed || [];
@@ -811,7 +857,7 @@ function htmlSettings(d){
   }).join('');
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v2.1.3</span></div>'
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v3.0.0</span></div>'
     + '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>'
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
     + '<div class="irow"><span class="k">รอยืนยัน</span><span class="v">'+d.summary.pendingCount+' · ฿'+fmtBaht(d.summary.pendingSum)+'</span></div>'
@@ -1175,13 +1221,28 @@ function htmlCalendar(d){
     var dots = (byDay[dd] || []).map(function(f){ return '<span class="dd" style="background:'+colorOf(f)+'"></span>'; }).join('');
     cells += '<div class="cd'+(dd === today ? ' today' : '')+'"><span style="font-size:10px;color:'+(dd === today ? 'var(--tx)' : 'var(--mut)')+'">'+dd+'</span>'+(dots ? '<div class="dots">'+dots+'</div>' : '')+'</div>';
   }
-  var rows = fixed.slice(0).sort(function(a, b){ return a.day - b.day; }).map(function(f){ return fixedRow(f); }).join('');
-  return '<div class="sec-t">'+TH_M[m]+' '+String(y + 543).slice(2)+' <span class="tag">ใหม่</span></div>'
+  var budgets = d.budgets || [];
+  var bt = d.budgetTotals || { spent_minor: 0, cap_minor: 0 };
+  var bkeys = {}; budgets.forEach(function(b){ bkeys[b.key] = 1; });
+  var budHtml = '';
+  if (budgets.length){
+    var tpct = bt.cap_minor > 0 ? Math.round(bt.spent_minor / bt.cap_minor * 100) : 0;
+    var tcol = tpct >= 100 ? 'bred' : (tpct >= 80 ? 'bamb' : 'bcy');
+    budHtml = '<div class="sec-t">งบเดือนนี้</div><div class="card">'
+      + '<div class="budtot"><div class="l">ใช้ไป <b>฿'+fmtBaht(bt.spent_minor)+'</b> จาก ฿'+fmtBaht(bt.cap_minor)+'</div><div class="pc">'+tpct+'<small>%</small></div></div>'
+      + '<div class="bar"><i class="'+tcol+'" style="width:'+Math.min(100, tpct)+'%"></i></div></div>'
+      + '<div class="sec-t">งบรายหมวด</div><div class="card" style="padding:8px 14px">'
+      + budgets.map(function(b){ return budgetRow(b); }).join('') + '</div>';
+  }
+  var fxList = fixed.filter(function(f){ return !bkeys[f.key]; });
+  var rows = fxList.slice(0).sort(function(a, b){ return a.day - b.day; }).map(function(f){ return fixedRow(f); }).join('');
+  return '<div class="sec-t">ปฏิทิน · '+TH_M[m]+' '+String(y + 543).slice(2)+'</div>'
     + '<div class="card" style="padding:10px 10px"><div class="cal">'+cells+'</div>'
     + '<div class="segl" style="margin-top:8px"><span><span class="dot" style="background:#22c55e"></span>จ่าย/รับแล้ว</span><span><span class="dot" style="background:#f5b943"></span>ยังไม่ยืนยัน</span><span><span class="dot" style="background:#3f3f4b"></span>รอ</span><span><span class="dot" style="background:var(--cy)"></span>วันนี้</span></div></div>'
-    + '<div class="sec-t">รายการประจำเดือนนี้</div>'
-    + '<div class="card" style="padding:8px 14px">'+(rows || '<div class="hint" style="margin:4px 2px">ยังไม่มีข้อมูลรายจ่ายประจำ</div>')+'</div>'
-    + '<div class="hint">แตะรายการเพื่อยืนยัน/แก้ · จับคู่ให้แล้วจะขึ้นสถานะ ✅ เอง — ไม่ auto-apply</div>';
+    + budHtml
+    + '<div class="sec-t">รายการประจำ</div>'
+    + '<div class="card" style="padding:8px 14px">'+(rows || '<div class="hint" style="margin:4px 2px">— ยังไม่มี —</div>')+'</div>'
+    + '<div class="hint">แตะรายการเพื่อยืนยัน/แก้ · จับคู่อัตโนมัติแล้วจะขึ้น ✅ เอง</div>';
 }
 function ackFixedLocal(key, v){
   var d = S.data; if (!d || !d.fixed) return;
@@ -1325,6 +1386,12 @@ var DEMO = {
     {key:'netflix', label:'Netflix ครอบครัว', logo:'netflix', amount_minor:10500, day:13, dir:'out', status:'done', date:'2026-09-13', src:'auto'},
     {key:'fuel', label:'งบน้ำมัน', emoji:'⛽', amount_minor:48000, day:30, dir:'out', status:'done', date:'2026-09-08', spent_minor:13000, src:'auto'}
   ],
+  budgets:[
+    {key:'fuel', label:'งบน้ำมัน', emoji:'⛽', cats:['fuel'], per_day:0, cap_minor:48000, spent_minor:13000, remain_minor:35000, over_minor:0, pct:27, day:30, overlap:true},
+    {key:'daily', label:'ใช้รายวัน', emoji:'🍜', cats:['food'], per_day:25000, cap_minor:750000, spent_minor:430000, remain_minor:320000, over_minor:0, pct:57, day:0, overlap:false},
+    {key:'fun', label:'ใช้ส่วนตัว', emoji:'🛍', cats:['shop','ent'], per_day:0, cap_minor:40000, spent_minor:54000, remain_minor:0, over_minor:14000, pct:135, day:0, overlap:false}
+  ],
+  budgetTotals:{ spent_minor:497000, cap_minor:838000 },
   summary:{ monthSpent:501050, monthIncome:2500000, cashflow:1998950, pendingCount:6, pendingSum:60000, today:5000,
     monthOut:681050, walletIn:180000, walletSpent:71050, walletCount:4,
     daily:[{d:'2026-09-10',n:10500},{d:'2026-09-11',n:8200},{d:'2026-09-12',n:1000},{d:'2026-09-13',n:7600},{d:'2026-09-14',n:3000},{d:'2026-09-15',n:6800},{d:'2026-09-16',n:2700},{d:'2026-09-17',n:1500},{d:'2026-09-18',n:5000}] },
