@@ -404,6 +404,7 @@ if (!NKF_TOKEN && /^https?:$/.test(location.protocol) &&
 }
 /* ---------- /static-host bridge ---------- */
 var IS_DEMO = !(typeof google !== 'undefined' && google.script && google.script.run);
+var APP_BUILD = 'v3.1.6';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json
 var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, fxOpen:{}, view:null };
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
@@ -935,7 +936,7 @@ function htmlSettings(d){
   }).join('');
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v3.1.5</span></div>'
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v3.1.6</span></div>'
     + '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>'
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
     + '<div class="irow"><span class="k">รอยืนยัน</span><span class="v">'+d.summary.pendingCount+' · ฿'+fmtBaht(d.summary.pendingSum)+'</span></div>'
@@ -1734,6 +1735,23 @@ el('main').addEventListener('scroll', function(){
 (function(){
   var m = /[?&]tab=([0-4])/.exec(location.search);
   if (m) S.tab = parseInt(m[1], 10);
+})();
+/* เช็คอัปเดตเองทุกครั้งที่เปิด: iOS จำ HTML ของแอปหน้าจอโฮมไว้ ถ้าเจอเวอร์ชันใหม่ → เปิด URL ?v= ใหม่ (แคชคีย์ใหม่) ให้เลย */
+(function(){
+  setTimeout(function(){
+    try {
+      fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.json(); }).then(function(j){
+        if (!j || !j.v || j.v === APP_BUILD) return;
+        var gk = 'nkf_upd_' + j.v;
+        try { if (sessionStorage.getItem(gk)) return; sessionStorage.setItem(gk, '1'); } catch (e2) {}
+        var nv = String(j.v).replace(/[^0-9.]/g, '');
+        try { toast('มีเวอร์ชันใหม่ — กำลังอัปเดต…'); } catch (e4) {}
+        setTimeout(function(){
+          location.replace(location.pathname + (nv ? '?v=' + nv : '') + (location.hash || ''));
+        }, 350);
+      }).catch(function(){});
+    } catch (e3) {}
+  }, 900);
 })();
 var POSE = /[?&]pose=([a-z]+)/.exec(location.search);
 if (IS_DEMO) {
