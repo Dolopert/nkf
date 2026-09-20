@@ -569,7 +569,8 @@ function paintDetail(){
   if (!el2) return;
   if (!S.view){ el2.className = 'detail'; el2.innerHTML = ''; return; }
   try {
-    el2.innerHTML = (S.view.t === 'month') ? viewMonthHtml(S.data) : viewAcctHtml(S.data, S.view.a);
+    el2.innerHTML = (S.view.t === 'month') ? viewMonthHtml(S.data)
+      : (S.view.t === 'all' ? viewAllHtml() : viewAcctHtml(S.data, S.view.a));
   } catch (e) {
     el2.innerHTML = '<div class="dt-top"><button class="dt-back" data-act="vclose"><svg><use href="#i-back"/></svg></button><div class="ttl">รายละเอียด</div></div><div class="hint" style="margin:8px 2px">แสดงรายละเอียดไม่ได้</div>';
   }
@@ -934,7 +935,7 @@ function htmlSettings(d){
   }).join('');
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v3.1.4</span></div>'
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v3.1.5</span></div>'
     + '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>'
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
     + '<div class="irow"><span class="k">รอยืนยัน</span><span class="v">'+d.summary.pendingCount+' · ฿'+fmtBaht(d.summary.pendingSum)+'</span></div>'
@@ -1155,9 +1156,13 @@ document.addEventListener('click', function(e){
     if (v === 'month'){ var ms = detailMonths(); S.view = { t: 'month', m: ms.length ? ms[0].m : '' }; }
     else if (v.indexOf('acct:') === 0) S.view = { t: 'acct', a: v.slice(5) };
     else { toast('เร็วๆ นี้ครับ'); return; }
+    S.prev = null;
     paint(); el('detail').scrollTop = 0; return;
   }
-  if (act === 'vclose') { S.view = null; paint(); return; }
+  if (act === 'vclose') {
+    if (S.view && S.view.t === 'all' && S.prev){ S.view = S.prev; S.prev = null; paint(); el('detail').scrollTop = 0; return; }
+    S.view = null; S.prev = null; paint(); return;
+  }
   if (act === 'vstep') {
     var ms2 = detailMonths();
     var idx2 = 0;
@@ -1168,11 +1173,10 @@ document.addEventListener('click', function(e){
   }
   if (act === 'vimp') { toast('ยังไม่เปิดใช้งาน — เฟสถัดไปครับ'); return; }
   if (act === 'vall') {
-    S.view.sl = !S.view.sl;      // กาง/ย่อ statement ในหน้าเดิม (ไม่เด้งไปแท็บรวม — ดูแค่ของหน้านี้)
-    paint();
-    var scv = document.querySelector('#detail .srows');
-    if (scv) el('detail').scrollTop = Math.max(0, scv.offsetTop - 10);
-    return;
+    var sc2 = S.view;            // ย้ายไปหน้าของตัวเอง — โชว์เฉพาะลิสต์ของหน้านี้ ไม่กางยาวในหน้าเดิม
+    S.prev = sc2;
+    S.view = (sc2.t === 'acct') ? { t: 'all', scope: 'acct', a: sc2.a } : { t: 'all', scope: 'month', m: sc2.m };
+    paint(); el('detail').scrollTop = 0; return;
   }
   if (act === 'fxToggle') {
     var fk = t.getAttribute('data-key');
@@ -1348,17 +1352,25 @@ function ringHtml(items, cTop, cSub){
     var s2 = spots[k];
     if (s2.n / total * 100 < SMALL_PCT) continue;   // เล็ก — โชว์เป็นสีล้วน ไม่ติดชิป
     var rad = s2.mid * Math.PI / 50;
-    var x = RC * Math.sin(rad), y = -RC * Math.cos(rad);
-    var amountText = fmtShort(s2.n);
-    var chipW = Math.min(104, 36 + amountText.length * 7);
+    var rAdj = RC + (k % 2 ? 7 : 0);                // เยื้องกัน — สลับระยะเข้า/ออกเล็กน้อย ไม่เรียงตรงเป็นแถว
+    var x = rAdj * Math.sin(rad), y = -rAdj * Math.cos(rad);
+    var amountText = '฿' + fmtShort(s2.n);          // ใส่หน่วยบาทบนชิป
+    var chipW = Math.min(112, 36 + amountText.length * 7);
     var clash = false;
     for (var q = 0; q < used.length; q++){
       var dx = Math.abs(x - used[q][0]), dy = Math.abs(y - used[q][1]);
       if (dx < (chipW + used[q][2]) / 2 + 4 && dy < 28){ clash = true; break; }
     }
     if (!clash){
+      var rot = s2.mid * 3.6;                       // เอียงตามแนวโค้งของวง (ไม่ตั้งตรง)
+      while (rot > 180) rot -= 360;
+      while (rot < -180) rot += 360;
+      if (rot > 90) rot -= 180;
+      if (rot < -90) rot += 180;
+      if (rot > 44) rot = 44;
+      if (rot < -44) rot = -44;
       used.push([x, y, chipW]);
-      chipHtml += '<span class="rchip" style="left:calc(50% + ' + x.toFixed(1) + 'px);top:calc(50% + ' + y.toFixed(1) + 'px)">' + s2.e + '<span>' + amountText + '</span></span>';
+      chipHtml += '<span class="rchip" style="left:calc(50% + ' + x.toFixed(1) + 'px);top:calc(50% + ' + y.toFixed(1) + 'px);transform:translate(-50%,-50%) rotate(' + rot.toFixed(0) + 'deg)">' + s2.e + '<span>' + amountText + '</span></span>';
     }
   }
   return '<div class="ringw"><div class="rring" style="background:conic-gradient(' + grads.join(',') + ')"></div>'
@@ -1414,8 +1426,21 @@ function viewMonthHtml(d){
   return head + arrows + hero + quick
     + '<div class="sec-t">สัดส่วนตามหมวด</div><div class="card" style="padding:8px 6px 4px">' + ringHtml(cats, 'ใช้ทั้งหมด', '฿' + fmtBaht(cur.total_minor)) + '</div>'
     + '<div class="sec-t">statement · ' + monthLabelOf(cur.m) + '</div><div class="card srows" style="padding:5px 14px 12px">'
-    + detailRows(mrows, S.view.sl ? mrows.length : 4)
-    + (mrows.length > 4 ? '<button class="dt-viewall" data-act="vall">' + (S.view.sl ? 'ย่อ ▲' : 'ดูทั้งหมด ' + mrows.length + ' รายการ →') + '</button>' : '') + '</div>';
+    + detailRows(mrows, 4)
+    + (mrows.length > 4 ? '<button class="dt-viewall" data-act="vall">ดูทั้งหมด ' + mrows.length + ' รายการ →</button>' : '') + '</div>';
+}
+function viewAllHtml(){
+  var v = S.view || {};
+  var list, title;
+  if (v.scope === 'acct'){
+    list = rowsOfAcct(v.a || 'kplus');
+    title = 'รายการทั้งหมด · ' + ({ kplus: 'K PLUS', truemoney: 'TrueMoney' }[v.a] || v.a || '');
+  } else {
+    list = rowsOfMonth(v.m || '');
+    title = 'รายการทั้งหมด · ' + monthLabelOf(v.m);
+  }
+  return '<div class="dt-top"><button class="dt-back" data-act="vclose"><svg><use href="#i-back"/></svg></button><div class="ttl">' + esc(title) + '</div></div>'
+    + '<div class="card srows" style="padding:5px 14px 12px">' + detailRows(list, 999) + '</div>';
 }
 function viewAcctHtml(d, a){
   var acct = (d.dacct || {})[a] || { total_minor: 0, transfer_minor: 0, cats: [] };
@@ -1443,8 +1468,8 @@ function viewAcctHtml(d, a){
     + conn
     + '<div class="sec-t">ออกจากบัญชีนี้ไปไหน <span style="color:var(--dim);font-weight:400;font-size:10px">เดือนนี้</span></div>' + ring
     + '<div class="sec-t">statement · ' + meta.name + '</div><div class="card srows" style="padding:5px 14px 12px">'
-    + detailRows(arows, S.view.sl ? arows.length : 4)
-    + (arows.length > 4 ? '<button class="dt-viewall" data-act="vall">' + (S.view.sl ? 'ย่อ ▲' : 'ดูทั้งหมด ' + arows.length + ' รายการ →') + '</button>' : '')
+    + detailRows(arows, 4)
+    + (arows.length > 4 ? '<button class="dt-viewall" data-act="vall">ดูทั้งหมด ' + arows.length + ' รายการ →</button>' : '')
     + '<button class="dt-imp" data-act="vimp">＋ นำเข้า statement เอง</button></div>';
 }
 
@@ -1675,6 +1700,8 @@ function applyPose(p){
     paint(); return;
   }
   if (p === 'vacct'){ S.view = { t: 'acct', a: 'kplus' }; paint(); return; }
+  if (p === 'vall'){ var msV2 = (S.data && S.data.mdet) || []; S.view = { t: 'all', scope: 'month', m: msV2.length ? msV2[0].m : '' }; paint(); return; }
+  if (p === 'valla'){ S.view = { t: 'all', scope: 'acct', a: 'kplus' }; paint(); return; }
   if (p === 'hist'){ S.tab = 3; paint(); el('main').scrollTop = 0; return; }
   if (p === 'set'){ S.tab = 4; paint(); el('main').scrollTop = 0; return; }
   paint();
