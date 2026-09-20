@@ -240,6 +240,56 @@
   .budrow .num{font-size:13px;font-weight:700}
   .budrow .num small{color:var(--dim);font-weight:500}
   .budrow .st{font-size:9.5px;margin-top:2px}
+  /* ---------- v3.1: หน้ารายละเอียด (overlay) ---------- */
+  .detail{position:fixed;inset:0;background:var(--bg);z-index:80;overflow-y:auto;display:none;padding:14px 14px 30px;-webkit-overflow-scrolling:touch}
+  .detail.on{display:block}
+  .dt-top{display:flex;align-items:center;gap:10px;padding:2px 0 12px}
+  .dt-top .ttl{font-size:14.5px;font-weight:750}
+  .dt-back{width:38px;height:38px;border-radius:12px;background:var(--card);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;flex:none}
+  .dt-back svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .mpick{display:flex;align-items:center;justify-content:center;gap:14px;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:7px 10px}
+  .mpick b{font-size:13.5px;font-weight:700;min-width:86px;text-align:center}
+  .mpick button{background:#101014;border:1px solid #232329;border-radius:10px;width:36px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--mut)}
+  .mpick button svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .dt-hero{background:linear-gradient(180deg,#191a1f,#121216);border:1px solid var(--bd);border-radius:16px;padding:13px 15px;margin-top:8px}
+  .dt-hero .l2{font-size:11px;color:var(--mut)}
+  .dt-hero .v2{font-size:25px;font-weight:750;font-variant-numeric:tabular-nums;margin-top:2px}
+  .dt-hero .sp{display:flex;gap:18px;margin-top:7px;font-size:11px;color:var(--mut)}
+  .dt-hero .sp b{font-variant-numeric:tabular-nums}
+  .quick3{display:flex;gap:7px;margin-top:10px}
+  .quick3 .qi{flex:1;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:8px 9px;min-width:0}
+  .quick3 .qi .k{font-size:8.5px;color:var(--dim)}
+  .quick3 .qi .v{font-size:11.5px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ringw{position:relative;margin:4px auto 2px}
+  .rring{position:absolute;inset:65px;border-radius:50%}
+  .rring::after{content:'';position:absolute;inset:36px;border-radius:50%;background:var(--card)}
+  .rctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2;pointer-events:none}
+  .rctr span{font-size:9.5px;color:var(--dim)}
+  .rctr strong{font-size:19px;font-weight:750;font-variant-numeric:tabular-nums;margin-top:1px}
+  .rpill{position:absolute;transform:translate(-50%,-50%);background:#0f0f12f0;border:1px solid #26262b;border-radius:99px;padding:2px 7px;font-size:10px;font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap;z-index:3;display:flex;align-items:center;gap:4px}
+  .rpill i{font-style:normal;font-size:11px}
+  .srows .srow{display:flex;align-items:center;gap:9px;padding:9px 0;border-top:1px solid #1e1e23;font-size:12px}
+  .srows .srow:first-child{border-top:none}
+  .srows .srow .icw2{width:28px;height:28px;border-radius:9px;background:#101014;border:1px solid #232329;display:flex;align-items:center;justify-content:center;font-size:13px;flex:none;overflow:hidden}
+  .srows .srow .icw2 img{width:18px;height:18px;border-radius:5px}
+  .srows .srow .mid2{flex:1;min-width:0}
+  .srows .srow .mid2 .nm2{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .srows .srow .mid2 .dt2{font-size:9.5px;color:var(--dim);margin-top:1px}
+  .srows .srow .amt4{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .srows .srow .amt4.xm{color:var(--dim)}
+  .srows .srow .amt4.inm{color:var(--grn)}
+  .dt-viewall{width:100%;margin-top:8px;background:#101014;border:1px solid #232329;border-radius:12px;color:var(--cy);font-weight:650;font-size:11.5px;padding:11px 0;font-family:inherit}
+  .dt-imp{width:100%;margin-top:10px;background:rgba(101,220,255,.1);border:1px solid rgba(101,220,255,.4);border-radius:13px;color:#8fe8ff;font-weight:650;font-size:12px;padding:12px 0;font-family:inherit}
+  .conncard{display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid rgba(126,226,168,.35);border-radius:15px;padding:11px 13px;margin-top:8px}
+  .conncard.warm{border-color:var(--bd);border-style:dashed}
+  .conncard img{width:24px;height:24px;border-radius:7px}
+  .conncard .c1{font-size:13px;font-weight:700}
+  .conncard .c2{font-size:9.5px;color:var(--dim);margin-top:1px}
+  .conncard .cc{margin-left:auto;flex:none}
+  .con{display:flex;align-items:center;gap:5px;font-size:9px;font-weight:700;color:var(--grn)}
+  .con2{display:flex;align-items:center;gap:5px;font-size:9px;font-weight:600;color:var(--dim)}
+  .sdot{width:6px;height:6px;border-radius:99px;background:currentColor;flex:none}
+  .acct .chev{position:absolute;right:9px;top:9px;color:var(--dim);font-size:10px}
   .st{font-size:9.5px;margin-top:2px}
   .st.ok{color:#9ae2b5;font-weight:600}
   .st.warn{color:var(--amb);font-weight:600}
@@ -255,6 +305,9 @@
   <symbol id="i-set" viewBox="0 0 24 24"><path d="M4 7.5h7M17 7.5h3M4 16.5h3M13 16.5h7"/><circle cx="14" cy="7.5" r="2.2"/><circle cx="10" cy="16.5" r="2.2"/></symbol>
   <symbol id="i-ref" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.6"/><path d="M20 5v6h-6"/></symbol>
   <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17M8 3.5V7M16 3.5V7"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15.5 18l-6-6 6-6"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="M8.5 6l6 6-6 6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
 </svg>
 
 <div class="wrap">
@@ -274,6 +327,8 @@
     <div class="tabpane" id="pane3"></div>
     <div class="tabpane" id="pane4"></div>
   </main>
+
+  <div class="detail" id="detail"></div>
 
   <nav class="tabbar">
     <button class="nv on" data-act="tab" data-i="0"><span class="ic"><svg><use href="#i-sum"/></svg></span>ภาพรวม</button>
@@ -350,7 +405,7 @@ if (!NKF_TOKEN && /^https?:$/.test(location.protocol) &&
 }
 /* ---------- /static-host bridge ---------- */
 var IS_DEMO = !(typeof google !== 'undefined' && google.script && google.script.run);
-var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, fxOpen:{} };
+var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, fxOpen:{}, view:null };
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
 var SW = { OPEN:112, COMMIT:160, MAX:210, EASE:'cubic-bezier(.22,.8,.24,1)' };
@@ -508,6 +563,18 @@ function paint(){
   for (var i=0;i<5;i++) el('pane'+i).className = 'tabpane' + (S.tab===i ? ' on' : '');
   document.querySelectorAll('.nv').forEach(function(nv,i){ nv.className = 'nv' + (S.tab===i ? ' on' : ''); });
   bindSwipeAll();
+  paintDetail();
+}
+function paintDetail(){
+  var el2 = el('detail');
+  if (!el2) return;
+  if (!S.view){ el2.className = 'detail'; el2.innerHTML = ''; return; }
+  try {
+    el2.innerHTML = (S.view.t === 'month') ? viewMonthHtml(S.data) : viewAcctHtml(S.data, S.view.a);
+  } catch (e) {
+    el2.innerHTML = '<div class="dt-top"><button class="dt-back" data-act="vclose"><svg><use href="#i-back"/></svg></button><div class="ttl">รายละเอียด</div></div><div class="hint" style="margin:8px 2px">แสดงรายละเอียดไม่ได้</div>';
+  }
+  el2.className = 'detail on';
 }
 
 function LOGO_URL(key){
@@ -613,17 +680,17 @@ function htmlSummary(d){
   var wtrHtml = wIn > 0 ? '<div class="wtr">↪ ย้ายเข้ากระเป๋า ฿'+fmtBaht(wIn)+' <span>ไม่นับเป็นรายจ่าย</span></div>' : '';
   var kp = accts.kplus || {}, tm = accts.truemoney || {};
   var acctHtml = '<div class="sec-t">บัญชีของฉัน</div><div class="accts">'
-    + '<div class="acct"><div class="a1">'+(LOGO_URL('kplus') ? logoImg('kplus','lgx') : '🏦')+' K PLUS</div>'
+    + '<div class="acct" data-act="vopen" data-v="acct:kplus" style="cursor:pointer"><span class="chev">›</span><div class="a1">'+(LOGO_URL('kplus') ? logoImg('kplus','lgx') : '🏦')+' K PLUS</div>'
     + '<div class="a2">บัญชีหลัก · KBank</div>'
     + '<div class="a3">฿'+fmtBaht(kp.balance_minor || 0)+'</div>'
-    + '<div class="a4">คงเหลือล่าสุด</div>'
-    + '<div class="a4">เดือนนี้ −฿'+fmtBaht(kp.out_minor || 0)+' · +฿'+fmtBaht(kp.in_minor || 0)+'</div></div>'
-    + '<div class="acct"><div class="a1">'+(LOGO_URL('truemoney') ? logoImg('truemoney','lgx') : '👛')+' TrueMoney</div>'
+    + '<div class="a4">เดือนนี้ −฿'+fmtBaht(kp.out_minor || 0)+' · +฿'+fmtBaht(kp.in_minor || 0)+'</div>'
+    + connChip('kplus')+'</div>'
+    + '<div class="acct" data-act="vopen" data-v="acct:truemoney" style="cursor:pointer"><span class="chev">›</span><div class="a1">'+(LOGO_URL('truemoney') ? logoImg('truemoney','lgx') : '👛')+' TrueMoney</div>'
     + '<div class="a2">กระเป๋า</div>'
     + '<div class="a3">฿'+fmtBaht(tm.spent_minor || 0)+'</div>'
     + '<div class="a4">ใช้เดือนนี้ · เติมเข้า ฿'+fmtBaht(tm.in_minor || 0)+'</div>'
-    + '<div class="a4">ค้างใช้ต่อ ~฿'+fmtBaht(tm.remain_minor || 0)+'</div></div>'
-    + '<div class="acct soon"><div class="a1">💳 บัตรเครดิต</div><div class="a2">ช่องว่างไว้</div><div class="a3">—</div><div class="a4">เมื่อมีบัตร: ใบแจ้งยอด → อีเมล</div></div>'
+    + connChip('truemoney')+'</div>'
+    + '<div class="acct soon" data-act="vopen" data-v="soon" style="cursor:pointer"><span class="chev">›</span><div class="a1">💳 บัตรเครดิต</div><div class="a2">ช่องว่างไว้</div><div class="a3">—</div><div class="a4">เมื่อมีบัตร: ใบแจ้งยอด → อีเมล</div></div>'
     + '</div>';
   var flowHtml = '<div class="sec-t">💰 เงินไปไหนเดือนนี้</div>'
     + '<div class="card" style="padding:12px 13px">'
@@ -662,7 +729,7 @@ function htmlSummary(d){
   }
   var latestP = d.pending.slice(-3).reverse();
   var latest = latestP.map(function(it){ return summaryRow(it); }).join('');
-  return '<div class="card hero"><div class="lbl">ใช้จริงเดือนนี้ · ทั้งระบบ · '+monthLabel()+'</div>'
+  return '<div class="card hero" data-act="vopen" data-v="month" style="cursor:pointer"><div class="lbl" style="display:flex;justify-content:space-between"><span>ใช้จริงเดือนนี้ · ทั้งระบบ · '+monthLabel()+'</span><span style="color:var(--cy);font-weight:650">รายละเอียด ›</span></div>'
     + '<div class="amt">฿'+fmtBaht(s.monthSpent || 0)+'</div>'
     + segHtml + wtrHtml
     + '<div class="sub">รายรับเดือนนี้ <b style="color:var(--grn)">+฿'+fmtBaht(s.monthIncome || 0)+'</b> · คงเหลือ <b style="color:'+(cf >= 0 ? 'var(--grn)' : 'var(--red)')+'">'+(cf >= 0 ? '+' : '−')+'฿'+fmtBaht(Math.abs(cf))+'</b></div></div>'
@@ -868,7 +935,7 @@ function htmlSettings(d){
   }).join('');
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v3.0.1</span></div>'
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v3.1.0</span></div>'
     + '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>'
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
     + '<div class="irow"><span class="k">รอยืนยัน</span><span class="v">'+d.summary.pendingCount+' · ฿'+fmtBaht(d.summary.pendingSum)+'</span></div>'
@@ -1084,6 +1151,24 @@ document.addEventListener('click', function(e){
   if (act === 'incNew') { S.incForm = true; paint(); animPop('.incform'); focusInput('incName'); return; }
   if (act === 'incCancel') { S.incForm = false; paint(); return; }
   if (act === 'incSave') { incSave(); return; }
+  if (act === 'vopen') {
+    var v = t.getAttribute('data-v') || '';
+    if (v === 'month'){ var ms = detailMonths(); S.view = { t: 'month', m: ms.length ? ms[0].m : '' }; }
+    else if (v.indexOf('acct:') === 0) S.view = { t: 'acct', a: v.slice(5) };
+    else { toast('เร็วๆ นี้ครับ'); return; }
+    paint(); el('detail').scrollTop = 0; return;
+  }
+  if (act === 'vclose') { S.view = null; paint(); return; }
+  if (act === 'vstep') {
+    var ms2 = detailMonths();
+    var idx2 = 0;
+    for (var ii = 0; ii < ms2.length; ii++) if (ms2[ii].m === S.view.m) idx2 = ii;
+    var ni = idx2 + parseInt(t.getAttribute('data-d'), 10);
+    if (ms2[ni]) { S.view.m = ms2[ni].m; paint(); el('detail').scrollTop = 0; }
+    return;
+  }
+  if (act === 'vimp') { toast('ยังไม่เปิดใช้งาน — เฟสถัดไปครับ'); return; }
+  if (act === 'vall') { S.view = null; S.tab = 3; paint(); el('main').scrollTop = 0; return; }
   if (act === 'fxToggle') {
     var fk = t.getAttribute('data-key');
     S.fxOpen = S.fxOpen || {};
@@ -1212,6 +1297,136 @@ function recalcSummary(){
   d.summary.pendingSum = still.reduce(function(a,x){ return a + (x.direction==='in'?0:x.amount_minor); }, 0);
   d.meta.savedCount += moved;
   updateBadge();
+}
+
+/* ---------- v3.1: หน้ารายละเอียด (เดือน/บัญชี) + ring แบบไอคอนบนวง ---------- */
+var RING_PAL = ['#f5b943', '#65DCFF', '#7ee2a8', '#ff8f8f', '#b48cff', '#3f3f4b'];
+function connChip(a){
+  var ok = false;
+  try { var lt = (S.data.meta.logTail || [])[0]; ok = !!(lt && lt.ok === 'OK'); } catch (e) {}
+  if (a === 'kplus' && ok) return '<div class="con"><span class="sdot"></span>AUTO CONNECTED</div>';
+  if (a === 'kplus') return '<div class="con2"><span class="sdot"></span>รอสแกนรอบถัดไป</div>';
+  return '<div class="con2"><span class="sdot"></span>รอเชื่อม · นำเข้าเอง</div>';
+}
+function detailMonths(){ return (S.data && S.data.mdet) || []; }
+function monthLabelOf(mp){
+  if (!mp || mp.length < 7) return '—';
+  return TH_M[parseInt(mp.slice(5, 7), 10) - 1] + ' ' + String(parseInt(mp.slice(0, 4), 10) + 543).slice(2);
+}
+function ringItemsFromCats(cats){
+  return (cats || []).map(function(c){
+    var m = catMeta(c.cat);
+    if (c.cat === 'other') m = { slug: 'other', e: '✨', t: 'อื่นๆ' };
+    if (c.cat === 'transfer') m = { slug: 'transfer', e: '↪', t: 'ย้ายเข้ากระเป๋า' };
+    if (c.cat === 'billwait') m = { slug: 'billwait', e: '💸', t: 'รอเงินคืน' };
+    return { e: m.e, t: m.t, n: c.n };
+  });
+}
+function ringHtml(items, cTop, cSub){
+  var total = 0;
+  for (var i = 0; i < items.length; i++) total += items[i].n;
+  if (!total || !items.length) return '<div class="hint" style="margin:8px 6px">— ยังไม่มีข้อมูลเดือนนี้ —</div>';
+  var W2 = 300, cx = W2 / 2, cy = W2 / 2, R = 85;
+  var grads = [], pills = '', acc = 0, smallC = 0;
+  for (var j = 0; j < items.length; j++){
+    var it2 = items[j];
+    var pct = it2.n / total * 100;
+    var col = RING_PAL[j % RING_PAL.length];
+    var a0 = acc, a1 = acc + pct;
+    grads.push(col + ' ' + a0.toFixed(2) + '% ' + a1.toFixed(2) + '%');
+    var mid = (a0 + a1) / 2;
+    var rad = mid * Math.PI / 180;
+    var rr = pct < 9 ? R + 30 + (smallC % 2) * 15 : R + 16;
+    if (pct < 9) smallC++;
+    var x = cx + rr * Math.sin(rad);
+    var y = cy - rr * Math.cos(rad);
+    pills += '<span class="rpill" style="left:' + x.toFixed(1) + 'px;top:' + y.toFixed(1) + 'px"><i>' + it2.e + '</i>' + fmtShort(it2.n) + '</span>';
+    acc = a1;
+  }
+  return '<div class="ringw" style="width:' + W2 + 'px;height:' + W2 + 'px">'
+    + '<div class="rring" style="background:conic-gradient(' + grads.join(',') + ')"></div>'
+    + '<div class="rctr"><span>' + cTop + '</span><strong>' + cSub + '</strong></div>'
+    + pills + '</div>';
+}
+function detailRows(list, max2){
+  if (!list || !list.length) return '<div class="hint" style="margin:6px 2px">— ไม่มีรายการ —</div>';
+  return list.slice(0, max2 || 30).map(function(it){
+    var xf = it.xf;
+    var sub = fmtWhen(it.at) + ' · ' + (it.direction === 'in' ? 'รายรับ' : (xf ? 'ย้ายเข้ากระเป๋า' : catMeta(it.category).t));
+    var amtCls = it.direction === 'in' ? ' inm' : (xf ? ' xm' : '');
+    var amtTxt = (it.direction === 'in' ? '+' : '−') + '฿' + fmtBaht(it.amount_minor);
+    return '<div class="srow"><div class="icw2">' + rowIcon(it) + '</div>'
+      + '<div class="mid2"><div class="nm2">' + esc(shortName(it)) + '</div><div class="dt2">' + sub + '</div></div>'
+      + '<div class="amt4' + amtCls + '">' + amtTxt + '</div></div>';
+  }).join('');
+}
+function rowsOfMonth(mp){
+  return (S.data.history || []).filter(function(it){ return it.at.slice(0, 7) === mp; });
+}
+function rowsOfAcct(a){
+  return (S.data.history || []).filter(function(it){ return (it.acct || 'kplus') === a; });
+}
+function viewMonthHtml(d){
+  var months = detailMonths();
+  var head = '<div class="dt-top"><button class="dt-back" data-act="vclose"><svg><use href="#i-back"/></svg></button><div class="ttl">รายละเอียดเดือน</div></div>';
+  if (!months.length) return head + '<div class="hint" style="margin:8px 2px">ยังไม่มีข้อมูล</div>';
+  var idx = 0;
+  for (var i = 0; i < months.length; i++) if (months[i].m === S.view.m) idx = i;
+  var cur = months[idx];
+  S.view.m = cur.m;
+  var older = months[idx + 1], newer = months[idx - 1];
+  var prevPct = (older && older.total_minor > 0) ? Math.round((cur.total_minor - older.total_minor) / older.total_minor * 100) : null;
+  var arrows = '<div class="mpick">'
+    + '<button data-act="vstep" data-d="1"' + (older ? '' : ' style="opacity:.3"') + '><svg><use href="#i-back"/></svg></button>'
+    + '<b>' + monthLabelOf(cur.m) + '</b>'
+    + '<button data-act="vstep" data-d="-1"' + (newer ? '' : ' style="opacity:.3"') + '><svg><use href="#i-next"/></svg></button></div>';
+  var rest2 = cur.income_minor - cur.total_minor;
+  var hero = '<div class="dt-hero"><div class="l2">ยอดใช้จริง</div><div class="v2">฿' + fmtBaht(cur.total_minor) + '</div>'
+    + '<div class="sp"><span>รายรับ <b style="color:var(--grn)">+฿' + fmtBaht(cur.income_minor) + '</b></span>'
+    + '<span>คงเหลือ <b style="color:var(--cy)">' + (rest2 >= 0 ? '+' : '−') + '฿' + fmtBaht(Math.abs(rest2)) + '</b></span></div></div>';
+  var prevTxt = '—';
+  if (prevPct != null) prevTxt = (prevPct <= 0 ? '−' : '+') + Math.abs(prevPct) + '%';
+  var prevCol = prevPct == null ? '' : (prevPct <= 0 ? 'color:var(--grn)' : 'color:var(--amb)');
+  var quick = '<div class="quick3">'
+    + '<div class="qi"><div class="k">เทียบเดือนก่อน</div><div class="v" style="' + prevCol + '">' + prevTxt + '</div></div>'
+    + '<div class="qi"><div class="k">ใช้สูงสุด</div><div class="v">' + (cur.top_day ? fmtDayShort(cur.top_day) + ' · ฿' + fmtShort(cur.top_day_n) : '—') + '</div></div>'
+    + '<div class="qi"><div class="k">จ่ายบ่อยสุด</div><div class="v">' + (cur.top_merchant ? esc(cur.top_merchant.slice(0, 12)) : '—') + '</div></div>'
+    + '</div>';
+  var cats = ringItemsFromCats(cur.cats);
+  return head + arrows + hero + quick
+    + '<div class="sec-t">สัดส่วนตามหมวด</div><div class="card" style="padding:6px 4px 2px">' + ringHtml(cats, 'ใช้ทั้งหมด', '฿' + fmtBaht(cur.total_minor)) + '</div>'
+    + '<div class="sec-t">statement · ' + monthLabelOf(cur.m) + '</div><div class="card srows" style="padding:7px 14px">'
+    + detailRows(rowsOfMonth(cur.m), 30)
+    + '<button class="dt-viewall" data-act="vall">ดูทั้งหมด →</button></div>';
+}
+function viewAcctHtml(d, a){
+  var acct = (d.dacct || {})[a] || { total_minor: 0, transfer_minor: 0, cats: [] };
+  var metas = { kplus: { name: 'K PLUS', img: 'kplus', sub: 'บัญชีหลัก · KBank' }, truemoney: { name: 'TrueMoney', img: 'truemoney', sub: 'กระเป๋า' } };
+  var meta = metas[a] || { name: a, img: '', sub: '' };
+  var ok = false;
+  try { var lt0 = (d.meta.logTail || [])[0]; ok = !!(a === 'kplus' && lt0 && lt0.ok === 'OK'); } catch (e) {}
+  var conn = '<div class="conncard' + (ok ? '' : ' warm') + '">'
+    + (LOGO_URL(meta.img) ? '<img src="' + LOGO_URL(meta.img) + '" alt="">' : '')
+    + '<div><div class="c1">' + meta.name + '</div><div class="c2">' + meta.sub + (ok ? ' · เชื่อมผ่านอีเมล' : ' · ยังไม่เชื่อม — เลือกวิธี: เมล (auto) หรือ นำเข้าเอง') + '</div></div>'
+    + '<span class="cc">' + (ok ? '<span class="con"><span class="sdot"></span>AUTO CONNECTED</span>' : '<span class="con2"><span class="sdot"></span>รอเชื่อม</span>') + '</span></div>';
+  var items = ringItemsFromCats(acct.cats);
+  if (acct.transfer_minor > 0) items.push({ e: '↪', t: 'ย้ายเข้ากระเป๋า', n: acct.transfer_minor });
+  var billRem = 0;
+  (d.bills || []).forEach(function(b){ billRem += Math.max(0, (b.bill_expect || 0) - (b.bill_returned || 0)); });
+  if (billRem > 0) items.push({ e: '💸', t: 'รอเงินคืน', n: billRem });
+  items.sort(function(x, y){ return y.n - x.n; });
+  var totalOut = 0;
+  items.forEach(function(x){ totalOut += x.n; });
+  var ring = (a === 'truemoney' && !items.length)
+    ? '<div class="card"><div class="hint" style="margin:6px 2px">ยังไม่มี statement ของกระเป๋า — เลือกวิธีเชื่อมด้านบน</div></div>'
+    : '<div class="card" style="padding:6px 4px 2px">' + ringHtml(items, 'ออกจากบัญชี', '−฿' + fmtBaht(totalOut)) + '</div>';
+  return '<div class="dt-top"><button class="dt-back" data-act="vclose"><svg><use href="#i-back"/></svg></button><div class="ttl">รายละเอียดบัญชี</div></div>'
+    + conn
+    + '<div class="sec-t">ออกจากบัญชีนี้ไปไหน <span style="color:var(--dim);font-weight:400;font-size:10px">เดือนนี้</span></div>' + ring
+    + '<div class="sec-t">statement · ' + meta.name + '</div><div class="card srows" style="padding:7px 14px">'
+    + detailRows(rowsOfAcct(a), 30)
+    + '<button class="dt-viewall" data-act="vall">ดูทั้งหมด →</button></div>'
+    + '<button class="dt-imp" data-act="vimp">＋ นำเข้า statement เอง</button>';
 }
 
 /* ---------- v2: ปฏิทินรายจ่ายประจำ ---------- */
@@ -1403,6 +1618,18 @@ var DEMO = {
     {key:'fun', label:'ใช้ส่วนตัว', emoji:'🛍', cats:['shop','ent'], per_day:0, cap_minor:40000, spent_minor:54000, remain_minor:0, over_minor:14000, pct:135, day:0, overlap:false}
   ],
   budgetTotals:{ spent_minor:497000, cap_minor:838000 },
+  mdet:[
+    {m:'2026-09', total_minor:497000, income_minor:2500000, count:6,
+     cats:[{cat:'food',n:308000},{cat:'shopping',n:54000},{cat:'fuel',n:45000},{cat:'entertainment',n:35000},{cat:'house',n:30000},{cat:'other',n:25000}],
+     top_day:'2026-09-08', top_day_n:123400, top_merchant:'บางจาก บีเค อินฟินิต', top_merchant_n:2, top_merchant_sum:45000},
+    {m:'2026-08', total_minor:565000, income_minor:2500000, count:9,
+     cats:[{cat:'food',n:380000},{cat:'shopping',n:60000},{cat:'entertainment',n:45000},{cat:'house',n:40000},{cat:'fuel',n:40000}],
+     top_day:'2026-08-14', top_day_n:145000, top_merchant:'ผู้ใช้ทดสอบ', top_merchant_n:3, top_merchant_sum:90000}
+  ],
+  dacct:{
+    kplus:{ total_minor:677000, transfer_minor:180000, cats:[{cat:'food',n:308000},{cat:'shopping',n:54000},{cat:'fuel',n:45000},{cat:'house',n:10000}] },
+    truemoney:{ total_minor:0, transfer_minor:0, cats:[] }
+  },
   summary:{ monthSpent:501050, monthIncome:2500000, cashflow:1998950, pendingCount:6, pendingSum:60000, today:5000,
     monthOut:681050, walletIn:180000, walletSpent:71050, walletCount:4,
     daily:[{d:'2026-09-10',n:10500},{d:'2026-09-11',n:8200},{d:'2026-09-12',n:1000},{d:'2026-09-13',n:7600},{d:'2026-09-14',n:3000},{d:'2026-09-15',n:6800},{d:'2026-09-16',n:2700},{d:'2026-09-17',n:1500},{d:'2026-09-18',n:5000}] },
@@ -1423,6 +1650,12 @@ function applyPose(p){
     if (fPick) S.fxOpen[fPick.key] = 1;
     paint(); el('main').scrollTop = 0; return;
   }
+  if (p === 'vmonth'){
+    var msV = (S.data && S.data.mdet) || [];
+    S.view = { t: 'month', m: msV.length ? msV[0].m : '' };
+    paint(); return;
+  }
+  if (p === 'vacct'){ S.view = { t: 'acct', a: 'kplus' }; paint(); return; }
   if (p === 'hist'){ S.tab = 3; paint(); el('main').scrollTop = 0; return; }
   if (p === 'set'){ S.tab = 4; paint(); el('main').scrollTop = 0; return; }
   paint();
