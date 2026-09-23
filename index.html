@@ -317,6 +317,17 @@
   .st.warn{color:var(--amb);font-weight:600}
   .st.wait{color:var(--dim)}
   .tag{font-size:8.5px;font-weight:700;color:#062026;background:var(--cy);border-radius:99px;padding:1.5px 6px}
+  /* ---------- แก้โดย CC 23 ก.ย. 69 (TASK_p4_pwa_supabase): หน้าล็อกอิน ---------- */
+  .loginwrap{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;align-items:center;justify-content:center;padding:24px}
+  .loginbox{width:100%;max-width:340px}
+  .loginlogo{font-size:20px;font-weight:700;text-align:center;margin-bottom:4px}
+  .loginlogo .p{font-size:9.5px;font-weight:700;color:#062026;background:var(--cy);border-radius:99px;padding:2px 7px;margin-left:7px;vertical-align:2.5px;letter-spacing:.3px}
+  .loginsub{font-size:12px;color:var(--mut);text-align:center;margin-bottom:20px}
+  .loginerr{background:#3a1d1d;border:1px solid rgba(255,143,143,.5);color:#ffb4b4;border-radius:12px;padding:9px 12px;font-size:12px;margin-bottom:12px;line-height:1.5}
+  .logininput{width:100%;background:#101014;border:1px solid #2c2c36;border-radius:12px;color:var(--tx);font-size:16px;padding:12px 14px;font-family:inherit;outline:none;margin-bottom:10px;box-sizing:border-box;-webkit-user-select:text;user-select:text}
+  .logininput:focus{border-color:var(--cy)}
+  .loginbtn{padding:12px 0;font-size:13.5px;margin-top:4px}
+  .loginforgot{display:block;width:100%;background:transparent;border:none;color:var(--dim);font-size:11.5px;font-family:inherit;padding:14px 0 0;cursor:pointer;text-align:center}
 </style>
 </head>
 <body>
@@ -364,72 +375,29 @@
 </div>
 <div id="toast"></div>
 
+<!-- แก้โดย CC 23 ก.ย. 69 (TASK_p4_pwa_supabase): หน้าล็อกอิน Supabase (ซ่อนไว้ — ต่อ JS ท้ายไฟล์เปิด/ปิด) -->
+<div class="loginwrap" id="loginScreen" style="display:none">
+  <div class="loginbox">
+    <div class="loginlogo">NongKept<span class="p">FULLAUTO</span></div>
+    <div class="loginsub">เข้าสู่ระบบด้วยอีเมลที่ได้รับเชิญ</div>
+    <div class="loginerr" id="loginErr" style="display:none"></div>
+    <input type="email" id="loginEmail" class="logininput" placeholder="อีเมล" autocomplete="username" inputmode="email">
+    <input type="password" id="loginPass" class="logininput" placeholder="รหัสผ่าน" autocomplete="current-password">
+    <button class="btn-cy loginbtn" id="loginBtn" type="button" style="width:100%">เข้าสู่ระบบ</button>
+    <button class="loginforgot" id="loginForgot" type="button">ลืมรหัสผ่าน?</button>
+  </div>
+</div>
+
+<script src="assets/vendor/supabase-js.js"></script>
+<script>window.NKF_SB = {"url": "https://sdxnvqrlqnyiycnxqyeo.supabase.co", "anon": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkeG52cXJscW55aXljbnhxeWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNTEwNDQsImV4cCI6MjEwNTYyNzA0NH0.zuLrXg4xMrrrbEB5VM_q_4c22nnLZV3iNgpsg-pEZbk"};</script>
+<script src="assets/supabase_bridge.js"></script>
 <script>
 /* ============ NongKept FullAuto — v1.5 (บิลรอเงินคืน + รายรับเข้า) ============ */
-/* ---------- static-host bridge: JSONP -> google.script.run shim ---------- */
-var NKF_EXEC = 'https://script.google.com/macros/s/AKfycbwm6T3wPwHlOaQIWQ_79r_9Ux-Wu7WUUftkvGcc7NsZvVqRp72Z6YkvJnm8KusBf8yPMA/exec';
-var NKF_TOKEN = (function(){
-  try {
-    var mh = (location.hash || '').match(/[#&]k=([a-f0-9]{16,64})/);
-    if (mh) { try { localStorage.setItem('nkf_k', mh[1]); } catch(_e){} return mh[1]; }
-    var ms = (location.search || '').match(/[?&]k=([a-f0-9]{16,64})/);
-    if (ms) { try { localStorage.setItem('nkf_k', ms[1]); } catch(_e){} return ms[1]; }
-    return localStorage.getItem('nkf_k') || '';
-  } catch(_e){ return ''; }
-})();
-function nkfJsonp(method, args, onOk, onErr){
-  var cb = 'nkfcb_' + Math.random().toString(36).slice(2) + '_' + Date.now();
-  var done = false;
-  var s = document.createElement('script');
-  var to = setTimeout(function(){ if(!done){ done = true; cleanup(); if(onErr) onErr({timeout:true}); } }, 20000);
-  function cleanup(){
-    clearTimeout(to);
-    try { delete window[cb]; } catch(_e){ window[cb] = null; }
-    if (s.parentNode) s.parentNode.removeChild(s);
-  }
-  window[cb] = function(res){ if(!done){ done = true; cleanup(); if(onOk) onOk(res); } };
-  s.onerror = function(){ if(!done){ done = true; cleanup(); if(onErr) onErr({net:true}); } };
-  s.src = NKF_EXEC + '?cb=' + cb + '&t=' + encodeURIComponent(NKF_TOKEN) +
-          '&action=' + encodeURIComponent(method) +
-          '&a=' + encodeURIComponent(JSON.stringify(args || [])) + '&_=' + Date.now();
-  document.head.appendChild(s);
-}
-if (NKF_TOKEN && !(typeof google !== 'undefined' && google.script && google.script.run)) {
-  var _nkfHnd = { ok: null, err: null };
-  var _nkfProxy = null;
-  var _nkfBase = {
-    withSuccessHandler: function(f){ _nkfHnd.ok = f; return _nkfProxy; },
-    withFailureHandler: function(f){ _nkfHnd.err = f; return _nkfProxy; }
-  };
-  _nkfProxy = new Proxy(_nkfBase, {
-    get: function(t, k){
-      if (k in t) return t[k];
-      if (typeof k !== 'string') return undefined;
-      return function(){
-        var a = Array.prototype.slice.call(arguments);
-        var ok = _nkfHnd.ok, err = _nkfHnd.err;
-        _nkfHnd.ok = null; _nkfHnd.err = null;
-        nkfJsonp(k, a, ok, err);
-      };
-    }
-  });
-  window.google = { script: { run: _nkfProxy } };
-}
-if (!NKF_TOKEN && /^https?:$/.test(location.protocol) &&
-    location.hostname.indexOf('localhost') === -1 && location.hostname.indexOf('127.0.0.1') === -1) {
-  /* เปิดจากที่โฮสต์จริงแต่ไม่มีกุญแจ — แสดงหน้าล็อก (ไม่โชว์เดโม่) */
-  document.addEventListener('DOMContentLoaded', function(){
-    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;' +
-      'min-height:100vh;background:#070707;color:#e8e8ee;font-family:-apple-system,sans-serif;' +
-      'text-align:center;padding:24px"><div><div style="font-size:34px">🔒</div>' +
-      '<div style="margin-top:10px;font-size:15px;font-weight:600">ต้องเปิดจากลิงก์ส่วนตัวครับ</div>' +
-      '<div style="margin-top:6px;font-size:12.5px;color:#8a8a96;line-height:1.7">' +
-      'ลิงก์นี้ต้องมีรหัสเข้าถึง (#k=...) — ขอจากเจ้าของแอปได้เลย</div></div></div>';
-  });
-}
-/* ---------- /static-host bridge ---------- */
-var IS_DEMO = !(typeof google !== 'undefined' && google.script && google.script.run);
-var APP_BUILD = 'v3.2.2';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json
+// แก้โดย CC 23 ก.ย. 69 (TASK_p4_pwa_supabase): ?demo=1 บังคับโหมดเดโม่แม้มี Supabase bridge โหลดอยู่
+var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
+var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
+var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
+var APP_BUILD = 'v4.0.0-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json
 var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, fxOpen:{}, view:null, imp:null };
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
@@ -960,22 +928,24 @@ function htmlSettings(d){
   var logs = (d.meta.logTail || []).map(function(l){
     return '<div class="logline">'+esc(l.time)+' · '+(l.ok === 'OK' ? '✓' : '✗')+' scan '+l.scanned+' → ใหม่ '+l.parsed+' · ซ้ำ '+l.dup+' · ข้าม '+l.skipped+'</div>';
   }).join('');
+  // แก้โดย CC 23 ก.ย. 69 (TASK_p4_pwa_supabase): โหมด Supabase ไม่มี trigger/log/ชีต — ซ่อนแถวที่ไม่มีข้อมูล + ปุ่มออกจากระบบ
+  var isSupa = d.meta.mode === 'supabase';
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v3.2.2</span></div>'
-    + '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>'
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.0.0-supabase</span></div>'
+    + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
+    + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
     + '<div class="irow"><span class="k">รอยืนยัน</span><span class="v">'+d.summary.pendingCount+' · ฿'+fmtBaht(d.summary.pendingSum)+'</span></div>'
     + '<div class="irow"><span class="k">บันทึกแล้ว</span><span class="v">'+d.meta.savedCount+'</span></div>'
     + '<div class="irow"><span class="k">หมวดแนะนำ</span><span class="v">ความจำ '+((d.meta.memCount || 0))+' ร้าน · AI '+(d.meta.llmOn ? '✓ เปิด' : '— ยังไม่เปิด')+'</span></div>'
     + '<div class="irow"><span class="k">ทิ้ง/ข้าม</span><span class="v">'+d.meta.skippedCount+'</span></div>'
     + '<div class="irow"><span class="k">อัปเดตล่าสุด</span><span class="v">'+fmtWhen(d.meta.genAt)+'</span></div>'
-    + '<div class="irow"><span class="k">ชีตทดลอง</span><span class="v"><a href="'+esc(d.meta.sheetUrl)+'" target="_blank">เปิดชีต ↗</a></span></div>'
+    + (d.meta.sheetUrl ? '<div class="irow"><span class="k">ชีตทดลอง</span><span class="v"><a href="'+esc(d.meta.sheetUrl)+'" target="_blank">เปิดชีต ↗</a></span></div>' : '')
     + '</div>'
-    + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">รอบเก็บล่าสุด</h3>'
-    + (logs || '<div class="logline">— ยังไม่มี log —</div>')
-    + '</div>'
-    + '<div class="card"><div class="hint" style="margin:0">ระบบนี้เป็น<b>ชุดทดลองแยก</b> — ข้อมูลอยู่ในชีตทดลองของพี่เท่านั้น · ไม่แตะบอท NongKept ตัวจริง · หมวด/คำใช้ชุดเดียวกับบอท</div></div>';
+    + (isSupa ? '<div class="card"><button class="miniact" data-act="logout" style="width:100%;padding:11px 0;text-align:center">ออกจากระบบ</button></div>' : '')
+    + (logs ? '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">รอบเก็บล่าสุด</h3>' + logs + '</div>' : '')
+    + '<div class="card"><div class="hint" style="margin:0">ระบบนี้เป็น<b>ชุดทดลองแยก</b> — ข้อมูลอยู่ใน'+(isSupa ? 'ฐาน Supabase ของบัญชีคุณ' : 'ชีตทดลองของพี่')+'เท่านั้น · ไม่แตะบอท NongKept ตัวจริง · หมวด/คำใช้ชุดเดียวกับบอท</div></div>';
 }
 
 function kindEmoji(kind){
@@ -1139,6 +1109,7 @@ document.addEventListener('click', function(e){
   var act = t.getAttribute('data-act');
   var ref = t.getAttribute('data-ref');
   if (act === 'tab') { S.tab = parseInt(t.getAttribute('data-i'),10) || 0; paint(); el('main').scrollTop = 0; return; }
+  if (act === 'logout') { if (window.NKF_AUTH) window.NKF_AUTH.signOut(function(){}); return; } // แก้โดย CC 23 ก.ย. 69 (TASK_p4_pwa_supabase)
   if (act === 'toggle') {
     if (!ref) return;
     // แถวที่ปัดเปิดอยู่ → แตะ = เก็บปุ่มกลับ (ไม่กางหมวด)
@@ -1241,6 +1212,43 @@ document.addEventListener('click', function(e){
   }
 });
 el('btnRefresh').addEventListener('click', function(){ reload(false); });
+
+/* ---------- แก้โดย CC 23 ก.ย. 69 (TASK_p4_pwa_supabase): หน้าล็อกอิน Supabase ---------- */
+function showLogin(){
+  el('loginScreen').style.display = 'flex';
+  document.querySelector('.wrap').style.display = 'none';
+}
+function hideLogin(){
+  el('loginScreen').style.display = 'none';
+  document.querySelector('.wrap').style.display = '';
+  loginErr('');
+}
+function loginErr(msg){
+  var e = el('loginErr');
+  if (!e) return;
+  if (!msg) { e.style.display = 'none'; e.textContent = ''; return; }
+  e.textContent = msg; e.style.display = '';
+}
+function doLogin(){
+  var email = el('loginEmail').value;
+  var pass = el('loginPass').value;
+  if (!email || !pass) { loginErr('กรอกอีเมลและรหัสผ่านให้ครบ'); return; }
+  var btn = el('loginBtn');
+  btn.disabled = true; btn.textContent = 'กำลังเข้าสู่ระบบ…';
+  loginErr('');
+  window.NKF_AUTH.signIn(email, pass, function(err){
+    btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ';
+    if (err) loginErr(err); // สำเร็จ: onAuthStateChange ใน bridge จะเรียก hideLogin()+โหลดข้อมูลให้เอง
+  });
+}
+if (IS_SUPA){
+  el('loginBtn').addEventListener('click', doLogin);
+  el('loginPass').addEventListener('keydown', function(ev){ if (ev.key === 'Enter') doLogin(); });
+  el('loginEmail').addEventListener('keydown', function(ev){ if (ev.key === 'Enter') el('loginPass').focus(); });
+  el('loginForgot').addEventListener('click', function(){
+    toast('รีเซ็ตรหัสผ่านเองยังไม่เปิดใช้ — ทักเจ้าของแอปให้ตั้งรหัสใหม่ให้ครับ', true);
+  });
+}
 
 function findItem(ref){
   var d = S.data; if (!d) return null;
@@ -1966,10 +1974,7 @@ el('main').addEventListener('scroll', function(){
   }, 900);
 })();
 var POSE = /[?&]pose=([a-z]+)/.exec(location.search);
-if (IS_DEMO) {
-  render(DEMO);
-  if (POSE) setTimeout(function(){ applyPose(POSE[1]); }, 140);
-} else {
+function bootAfterAuth(){
   reload(false);
   if (POSE){
     var _pv = 0, _pi = setInterval(function(){
@@ -1977,6 +1982,18 @@ if (IS_DEMO) {
       if ((typeof S !== 'undefined' && S.data && S.data.mdet) || _pv > 40){ clearInterval(_pi); try { applyPose(POSE[1]); } catch (e) {} }
     }, 250);
   }
+}
+if (IS_DEMO) {
+  render(DEMO);
+  if (POSE) setTimeout(function(){ applyPose(POSE[1]); }, 140);
+} else if (IS_SUPA) {
+  // แก้โดย CC 23 ก.ย. 69 (TASK_p4_pwa_supabase): มี session → เข้าแอปเลย · ไม่มี → โชว์หน้าล็อกอิน
+  window.NKF_AUTH.init(function(session){
+    if (session) { hideLogin(); bootAfterAuth(); }
+    else { showLogin(); }
+  });
+} else {
+  bootAfterAuth();
 }
 </script>
 </body>
