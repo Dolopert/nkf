@@ -415,7 +415,7 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.1.0-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json
+var APP_BUILD = 'v4.1.1-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json
 var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, fxOpen:{}, view:null, imp:null };
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
@@ -950,7 +950,7 @@ function htmlSettings(d){
   var isSupa = d.meta.mode === 'supabase';
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.1.0-supabase</span></div>'
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.1.1-supabase</span></div>'
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -1927,7 +1927,7 @@ function renderImp(){
   if (imp.needPw){
     h += '<div class="imp-pw"><span>รหัส PDF</span><input id="impPw" type="password" inputmode="numeric" autocomplete="off" placeholder="เลขบัตร ปชช. 13 หลัก">'
       + '<button class="impbtn" data-act="impPwGo">ถอดรหัส</button></div>'
-      + '<label class="imp-pwchk"><input type="checkbox" id="impPwSave"' + (imp.pwSave !== false ? ' checked' : '') + '> จำรหัสไว้ในเครื่องนี้ (เฉพาะเครื่องนี้)</label>';
+      + '<label class="imp-pwchk"><input type="checkbox" id="impPwSave"' + (imp.pwSave === true ? ' checked' : '') + '> จำรหัสไว้ในเครื่องนี้ (เฉพาะเครื่องนี้)</label>';
   }
   if (imp.rows && imp.rows.length){
     var tot = 0, inN = 0, goN = 0, i, j;
@@ -1970,7 +1970,7 @@ function impGo(){
   if (IS_DEMO){ toast('เดโม่: นำเข้า ' + payload.length + ' รายการ (ไม่บันทึกจริง)'); return; }
   google.script.run.withSuccessHandler(function(res){
     if (res && res.ok){
-      toast('นำเข้า ' + res.added + ' รายการ' + (res.dup ? ' · ข้ามซ้ำ ' + res.dup : '') + (res.in_skip ? ' · ข้ามเงินเข้า ' + res.in_skip : '') + ' ✓');
+      toast('นำเข้า ' + res.added + ' รายการ' + (res.dup ? ' · ข้ามซ้ำ ' + res.dup : '') + (res.in_skip ? ' · ข้ามเงินเข้า ' + res.in_skip : '') + (res.skipped ? ' · รูปแบบเสีย ' + res.skipped : '') + ' ✓');
       reload(true);
     } else toast((res && res.msg) || 'นำเข้าไม่สำเร็จ', true);
   }).withFailureHandler(function(){ toast('เชื่อมต่อไม่ได้', true); }).importStatement(acct, payload, meta);
@@ -2042,7 +2042,7 @@ function impPdfTry(pw){
     S.imp.text = pages.join('\n');
     if (!rows.length){ S.imp.rows = null; S.imp.err = 'อ่าน PDF ได้ แต่ไม่พบรายการ — ตรวจว่าเป็น statement ที่ถูกต้อง แล้วเลือกไฟล์ใหม่'; renderImp(); return; }
     S.imp.rows = rows; S.imp.err = '';
-    if (S.imp.pwSave !== false && pw){ try { localStorage.setItem('nkf_pdf_pw', pw); } catch (e) {} }
+    if (S.imp.pwSave === true && pw){ try {   /* opt-in เท่านั้น: รหัส = เลขบัตร ปชช. */ localStorage.setItem('nkf_pdf_pw', pw); } catch (e) {} }
     renderImp();
   }).catch(function(e){
     if (!S.imp) return;
@@ -2081,7 +2081,8 @@ function impPdfSubmitPw(){
   var pw = inp ? String(inp.value || '') : '';
   if (!S.imp){ S.imp = { acct: 'kplus', text: '', rows: null, err: '' }; }
   S.imp.pwVal = pw;
-  S.imp.pwSave = chk ? !!chk.checked : true;
+  S.imp.pwSave = chk ? !!chk.checked : false;
+  if (!S.imp.pwSave){ try { localStorage.removeItem('nkf_pdf_pw'); } catch (e) {} }   /* ไม่ติ๊ก = ลบรหัสที่เคยจำ */
   if (!pw.trim()){ S.imp.err = 'ใส่รหัสไฟล์ก่อนครับ'; renderImp(); return; }
   impPdfTry(pw.trim());
 }
