@@ -12,6 +12,9 @@
 (function () {
   'use strict';
 
+  // แก้โดย Hermes 28 ก.ย. 69 (forgot-password): จำ hash ตั้งต้นก่อน supabase-js ล้างทิ้ง — ใช้แยก "มากจากลิงก์ตั้งรหัสใหม่" กับ "ลิงก์เสีย/หมดอายุ"
+  var INIT_HASH = location.hash || '';
+
   // ---------- มิเรอร์ค่าคงที่จาก Web.gs (ห้ามแก้ Web.gs — คัดลอกมาเพื่อคำนวณฝั่งนี้) ----------
   var WEB_CATS = [
     ['food', '🍽️', 'อาหาร'],
@@ -81,6 +84,11 @@
     if (/invalid.*(credential|login)/i.test(m)) return 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
     if (/not allowed|not.*invit|403/i.test(m)) return 'อีเมลนี้ยังไม่ได้รับเชิญ — ติดต่อเจ้าของแอป';
     if (/network|fetch|failed to fetch|timeout/i.test(m)) return 'เน็ตหลุด — ลองใหม่อีกครั้ง';
+    // แก้โดย Hermes 28 ก.ย. 69 (forgot-password): ข้อความไทยของ error ฝั่งรีเซ็ตรหัส
+    if (/security purposes|rate limit|too many/i.test(m)) return 'ทำรายการถี่เกินไป — รอสักครู่แล้วลองใหม่';
+    if (/at least 6|minimum.*6|password.*(short|weak)/i.test(m)) return 'รหัสผ่านสั้นเกินไป — ตั้งอย่างน้อย 6 ตัว';
+    if (/different from the old/i.test(m)) return 'รหัสใหม่ต้องไม่ซ้ำกับรหัสเดิม';
+    if (/otp.*expired|token.*expired|expired|invalid.*(token|grant)/i.test(m)) return 'ลิงก์หมดอายุหรือถูกใช้ไปแล้ว — ขอลิงก์ใหม่';
     return m || 'เกิดข้อผิดพลาด';
   }
 
@@ -108,18 +116,25 @@
   }
 
   // ---------- auth ----------
-  var _authCb = null;
+  // แก้โดย Hermes 28 ก.ย. 69 (forgot-password): ส่ง event ให้ App แยกโหมด PASSWORD_RECOVERY + ฟังก์ชันรีเซ็ตรหัสผ่าน
+  var _authCb = null, _recovery = false;
+  function emitAuth(evt, session) {
+    CURRENT_UID = (session && session.user) ? session.user.id : null;
+    if (_authCb) _authCb(session || null, _recovery ? 'PASSWORD_RECOVERY' : (evt || ''));
+  }
   window.NKF_AUTH = {
+    initHashRecovery: /(^|[#&])type=recovery/.test(INIT_HASH),
+    initHashError: /(^|[#&])error=/.test(INIT_HASH),
     init: function (cb) {
       _authCb = cb;
-      sb.auth.onAuthStateChange(function (_evt, session) {
-        CURRENT_UID = (session && session.user) ? session.user.id : null;
-        if (_authCb) _authCb(session || null);
+      sb.auth.onAuthStateChange(function (evt, session) {
+        if (evt === 'PASSWORD_RECOVERY') _recovery = true;
+        if (evt === 'SIGNED_OUT') _recovery = false;
+        emitAuth(evt, session);
       });
       sb.auth.getSession().then(function (r) {
         var session = (r && r.data) ? r.data.session : null;
-        CURRENT_UID = (session && session.user) ? session.user.id : null;
-        if (_authCb) _authCb(session || null);
+        emitAuth('', session);
       });
     },
     signIn: function (email, password, cb) {
@@ -127,8 +142,18 @@
         .then(function (r) { cb(r.error ? errText(r.error) : null); })
         .catch(function (e) { cb(errText(e)); });
     },
+    resetPassword: function (email, cb) {
+      sb.auth.resetPasswordForEmail(strv(email).trim(), { redirectTo: location.origin + location.pathname })
+        .then(function (r) { cb(r.error ? errText(r.error) : null); })
+        .catch(function (e) { cb(errText(e)); });
+    },
+    updatePassword: function (password, cb) {
+      sb.auth.updateUser({ password: strv(password) })
+        .then(function (r) { if (!r.error) _recovery = false; cb(r.error ? errText(r.error) : null); })
+        .catch(function (e) { cb(errText(e)); });
+    },
     signOut: function (cb) {
-      sb.auth.signOut().then(function () { if (cb) cb(); }).catch(function () { if (cb) cb(); });
+      sb.auth.signOut().then(function () { _recovery = false; if (cb) cb(); }).catch(function () { _recovery = false; if (cb) cb(); });
     }
   };
 

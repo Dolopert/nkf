@@ -388,6 +388,19 @@
   </div>
 </div>
 
+<!-- แก้โดย Hermes 28 ก.ย. 69 (forgot-password): หน้าตั้งรหัสผ่านใหม่ — เปิดเมื่อเข้ามาจากลิงก์รีเซ็ตในอีเมล -->
+<div class="loginwrap" id="recoverScreen" style="display:none">
+  <div class="loginbox">
+    <div class="loginlogo">NongKept<span class="p">FULLAUTO</span></div>
+    <div class="loginsub">ตั้งรหัสผ่านใหม่</div>
+    <div class="loginerr" id="recoverErr" style="display:none"></div>
+    <input type="password" id="recoverPass" class="logininput" placeholder="รหัสผ่านใหม่ (อย่างน้อย 6 ตัว)" autocomplete="new-password">
+    <input type="password" id="recoverPass2" class="logininput" placeholder="ยืนยันรหัสผ่านใหม่" autocomplete="new-password">
+    <button class="btn-cy loginbtn" id="recoverBtn" type="button" style="width:100%">บันทึกรหัสผ่านใหม่</button>
+    <button class="loginforgot" id="recoverSkip" type="button">ข้ามไปก่อน — เข้าแอปเลย</button>
+  </div>
+</div>
+
 <script src="assets/vendor/supabase-js.js"></script>
 <script>window.NKF_SB = {"url": "https://sdxnvqrlqnyiycnxqyeo.supabase.co", "anon": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkeG52cXJscW55aXljbnhxeWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNTEwNDQsImV4cCI6MjEwNTYyNzA0NH0.zuLrXg4xMrrrbEB5VM_q_4c22nnLZV3iNgpsg-pEZbk"};</script>
 <script src="assets/supabase_bridge.js"></script>
@@ -397,7 +410,7 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.0.0-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json
+var APP_BUILD = 'v4.0.1-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json
 var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, fxOpen:{}, view:null, imp:null };
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
@@ -932,7 +945,7 @@ function htmlSettings(d){
   var isSupa = d.meta.mode === 'supabase';
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.0.0-supabase</span></div>'
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.0.1-supabase</span></div>'
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -1229,6 +1242,44 @@ function loginErr(msg){
   if (!msg) { e.style.display = 'none'; e.textContent = ''; return; }
   e.textContent = msg; e.style.display = '';
 }
+/* ---------- แก้โดย Hermes 28 ก.ย. 69 (forgot-password): ลืมรหัสผ่าน + หน้าตั้งรหัสใหม่ ---------- */
+var RECOVER = { done: false }; // done=true = ตั้งรหัสเสร็จ/ข้ามแล้ว — กัน event USER_UPDATED สะท้อนกลับมาเปิดหน้าเดิมซ้ำ
+function showRecover(){
+  el('loginScreen').style.display = 'none';
+  document.querySelector('.wrap').style.display = 'none';
+  el('recoverScreen').style.display = 'flex';
+}
+function hideRecover(){
+  el('recoverScreen').style.display = 'none';
+  document.querySelector('.wrap').style.display = '';
+  recoverErr('');
+}
+function recoverErr(msg){
+  var e = el('recoverErr');
+  if (!e) return;
+  if (!msg) { e.style.display = 'none'; e.textContent = ''; return; }
+  e.textContent = msg; e.style.display = '';
+}
+function enterRecover(){
+  if (RECOVER.done) return;
+  showRecover();
+}
+function doRecover(){
+  var p1 = el('recoverPass').value, p2 = el('recoverPass2').value;
+  if (!p1 || p1.length < 6) { recoverErr('รหัสผ่านต้องมีอย่างน้อย 6 ตัว'); return; }
+  if (p1 !== p2) { recoverErr('รหัสสองช่องไม่ตรงกัน — พิมพ์ให้ตรงกันอีกครั้ง'); return; }
+  var btn = el('recoverBtn');
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก…';
+  RECOVER.done = true; // กัน event USER_UPDATED ที่จะวิ่งมาก่อน promise resolve
+  recoverErr('');
+  window.NKF_AUTH.updatePassword(p1, function(err){
+    btn.disabled = false; btn.textContent = 'บันทึกรหัสผ่านใหม่';
+    if (err) { RECOVER.done = false; recoverErr(err); return; }
+    hideRecover();
+    toast('ตั้งรหัสผ่านใหม่แล้ว — เข้าแอปได้เลย 🎉');
+    bootAfterAuth();
+  });
+}
 function doLogin(){
   var email = el('loginEmail').value;
   var pass = el('loginPass').value;
@@ -1245,8 +1296,26 @@ if (IS_SUPA){
   el('loginBtn').addEventListener('click', doLogin);
   el('loginPass').addEventListener('keydown', function(ev){ if (ev.key === 'Enter') doLogin(); });
   el('loginEmail').addEventListener('keydown', function(ev){ if (ev.key === 'Enter') el('loginPass').focus(); });
+  // แก้โดย Hermes 28 ก.ย. 69 (forgot-password): ปุ่ม "ลืมรหัสผ่าน?" ยิงอีเมลรีเซ็ตจริง (เดิมเป็นข้อความบอกให้ทักเจ้าของ)
   el('loginForgot').addEventListener('click', function(){
-    toast('รีเซ็ตรหัสผ่านเองยังไม่เปิดใช้ — ทักเจ้าของแอปให้ตั้งรหัสใหม่ให้ครับ', true);
+    var email = el('loginEmail').value;
+    if (!email) { el('loginEmail').focus(); loginErr('กรอกอีเมลก่อนนะ แล้วกด "ลืมรหัสผ่าน?" อีกครั้ง'); return; }
+    var b = el('loginForgot');
+    b.disabled = true; b.textContent = 'กำลังส่งลิงก์…';
+    loginErr('');
+    window.NKF_AUTH.resetPassword(email, function(err){
+      b.disabled = false; b.textContent = 'ลืมรหัสผ่าน?';
+      if (err) { loginErr(err); return; }
+      toast('ถ้าอีเมลนี้มีบัญชีอยู่ ระบบส่งลิงก์ตั้งรหัสใหม่ให้แล้ว — เช็คกล่องขาเข้าและสแปม');
+    });
+  });
+  el('recoverBtn').addEventListener('click', doRecover);
+  el('recoverPass2').addEventListener('keydown', function(ev){ if (ev.key === 'Enter') doRecover(); });
+  el('recoverPass').addEventListener('keydown', function(ev){ if (ev.key === 'Enter') el('recoverPass2').focus(); });
+  el('recoverSkip').addEventListener('click', function(){
+    RECOVER.done = true;
+    hideRecover();
+    bootAfterAuth();
   });
 }
 
@@ -1988,9 +2057,14 @@ if (IS_DEMO) {
   if (POSE) setTimeout(function(){ applyPose(POSE[1]); }, 140);
 } else if (IS_SUPA) {
   // แก้โดย CC 23 ก.ย. 69 (TASK_p4_pwa_supabase): มี session → เข้าแอปเลย · ไม่มี → โชว์หน้าล็อกอิน
-  window.NKF_AUTH.init(function(session){
-    if (session) { hideLogin(); bootAfterAuth(); }
-    else { showLogin(); }
+  // แก้โดย Hermes 28 ก.ย. 69 (forgot-password): แยกโหมด PASSWORD_RECOVERY — ต้องตั้งรหัสใหม่ก่อนเข้าแอป
+  window.NKF_AUTH.init(function(session, evt){
+    if (evt === 'PASSWORD_RECOVERY' || (!RECOVER.done && session && window.NKF_AUTH.initHashRecovery)) { enterRecover(); return; }
+    if (session) { hideLogin(); hideRecover(); bootAfterAuth(); }
+    else {
+      showLogin();
+      if (window.NKF_AUTH.initHashError) loginErr('ลิงก์ตั้งรหัสผ่านไม่ถูกต้องหรือใช้ไปแล้ว — กด "ลืมรหัสผ่าน?" เพื่อขอใหม่');
+    }
   });
 } else {
   bootAfterAuth();
