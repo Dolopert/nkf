@@ -415,7 +415,7 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.1.1-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json
+var APP_BUILD = 'v4.1.2-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json
 var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, fxOpen:{}, view:null, imp:null };
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
@@ -950,7 +950,7 @@ function htmlSettings(d){
   var isSupa = d.meta.mode === 'supabase';
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.1.1-supabase</span></div>'
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.1.2-supabase</span></div>'
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -1978,8 +1978,12 @@ function impGo(){
 /* ---------- /v3.2 ---------- */
 
 /* ---------- v4.1: PDF statement — ถอดรหัสในเครื่อง (pdf.js) แล้วส่งเฉพาะ "แถว" ---------- */
-/* ตรวจจับ "เบราว์เซอร์เก่า" ก่อนติด polyfill (pdf.js v6 ต้องใช้ URL.parse [Safari 18+] + Promise.withResolvers [Safari 17.4+]) */
-var _impPdfLegacy = (typeof URL.parse !== 'function') || (typeof Promise.withResolvers !== 'function');
+/* ตรวจจับ "เบราว์เซอร์เก่า" ก่อนติด polyfill — pdf.js v6 ต้องใช้ URL.parse [Safari 18+] ·
+   Promise.withResolvers [Safari 17.4+] · ReadableStream async iteration [Safari 26.4+]
+   (ตัวสุดท้าย: getTextContent() ของ pdf.js วน `for await (const t of stream)` — เบราว์เซอร์ที่ขาดจะพัง
+   ตอน "เปิด PDF" ด้วยข้อความ "undefined is not a function (near '...t of e...')" · Chrome ≥124 · Firefox ≥110 · Node ≥18) */
+var _impPdfLegacy = (typeof URL.parse !== 'function') || (typeof Promise.withResolvers !== 'function')
+  || (typeof ReadableStream !== 'undefined' && typeof ReadableStream.prototype[Symbol.asyncIterator] !== 'function');
 try {
   if (typeof URL.parse !== 'function'){
     URL.parse = function(u, b){ try { return b === undefined ? new URL(u) : new URL(u, b); } catch (e) { return null; } };
@@ -1994,6 +1998,31 @@ try {
     };
   }
 } catch (e) {}
+/* v4.1.2: ReadableStream async-iteration polyfill — pdf.js v6 ใช้ `for await` กับ stream
+   (getTextContent → sendWithStream); Safari เพิ่งรองรับ 26.4 → ตัวที่ขาดใช้ getReader() เองแทน
+   (ถ้ามีอยู่แล้ว = ข้าม ไม่ติดตั้งทับ — Chrome/Firefox/Safari ใหม่ไม่แตะ) */
+/* == NKF-PDF-STREAMITER-START == */
+try {
+  if (typeof ReadableStream !== 'undefined' && typeof ReadableStream.prototype[Symbol.asyncIterator] !== 'function'){
+    ReadableStream.prototype[Symbol.asyncIterator] = function(){
+      var reader = this.getReader();
+      var iter = {
+        next: function(){
+          return reader.read().then(function(r){
+            return r.done ? { done: true, value: undefined } : { done: false, value: r.value };
+          });
+        },
+        return: function(v){
+          try { reader.cancel(); } catch (e2) {}
+          return Promise.resolve({ done: true, value: v });
+        }
+      };
+      iter[Symbol.asyncIterator] = function(){ return iter; };
+      return iter;
+    };
+  }
+} catch (e) {}
+/* == NKF-PDF-STREAMITER-END == */
 var _impPdfLib = null, _impPdfLibP = null;
 function impPdfLib(){
   if (_impPdfLib) return Promise.resolve(_impPdfLib);

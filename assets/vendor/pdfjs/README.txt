@@ -16,3 +16,12 @@ URL.parse (Safari 18+) และ Promise.withResolvers (Safari 17.4+) — แอ
 -------------------
 - PDF และรหัสถูกถอดในเครื่องผู้ใช้เท่านั้น — ส่งขึ้น Supabase เฉพาะ "แถว" ของ statement
 - ตั้ง password ผ่าน getDocument({...password}) — pdf.js ไม่ส่งรหัสไปไหน
+
+อัปเดต 28 ก.ย. 2026 (แอป v4.1.2) — Safari < 26.4 เปิด PDF ไม่ได้
+---------------------------------------------------------------
+- pdf.js v6 getTextContent() วน `for await (const t of stream)` บน ReadableStream —
+  Safari เพิ่งรองรับ async iteration ของ stream ใน 26.4 (Chrome ≥124 · Firefox ≥110 · Node ≥18)
+- เบราว์เซอร์ที่ขาด → พังตอน "เปิด PDF" ด้วย "undefined is not a function (near '...t of e...')"
+- แอปแก้ที่ App.html: polyfill ReadableStream[Symbol.asyncIterator] (บล็อก NKF-PDF-STREAMITER)
+  + ตรวจแล้วสลับเป็น main-thread (fake worker) ให้เบราว์เซอร์กลุ่มนี้ · เทสต์กันถอยหลัง:
+  tests/pdf_old_streams.test.js (ลบ [Symbol.asyncIterator] แล้วรันท่อจริง — parity ต้องยังตรง)
