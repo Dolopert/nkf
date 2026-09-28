@@ -3,7 +3,8 @@
  *
  * ให้ App.html เรียก google.script.run.<action>(...) ได้เหมือนเดิมทุกจุด (Proxy เดิมของ static-host)
  * แต่ครั้งนี้แอ็กชันส่วนใหญ่ (ดูตาราง TASK_p4_pwa_supabase.md ข้อ B) วิ่งไป Supabase (anon key + RLS)
- * แทนที่จะยิง JSONP ไป Apps Script — เหลือ importStatement/notifyText/debugFallback ที่ยังเป็นโหมดเดิม (P5 ยังไม่ย้าย)
+ * แทนที่จะยิง JSONP ไป Apps Script — ท่อนำเข้า statement ย้ายมาโหมดใหม่แล้ว (P5: RPC ingest_statement)
+ * · เหลือ notifyText/debugFallback ที่ยังเป็นโหมดเดิม (ใช้กับลิงก์ส่วนตัวเดิม)
  * และ markBill/addBillReturn/closeBill/unmarkBill ที่ยังไม่มีตารางใน Supabase v1 (คืน ok:false เสมอ)
  *
  * โหลดหลัง assets/vendor/supabase-js.js และก่อน App.html inline <script> (build_static.py ฉีดลำดับนี้ให้)
@@ -40,7 +41,7 @@
   // เพราะ migrations ของ P1/P3 ห้ามแตะ) — รูปแบบ "<key><SEP><display>" · ไม่มี SEP = ยังไม่เคยตั้งชื่อ
   var NAME_SEP = '||';
 
-  // ยังใช้ต่อกับ 3 แอ็กชันที่ยังไม่ย้าย (importStatement/notifyText/debugFallback) — token เดิมของ static host
+  // ยังใช้ต่อกับ 2 แอ็กชันที่ยังไม่ย้าย (notifyText/debugFallback) — token เดิมของ static host
   var LEGACY_EXEC_URL = 'https://script.google.com/macros/s/' +
     'AKfycbwm6T3wPwHlOaQIWQ_79r_9Ux-Wu7WUUftkvGcc7NsZvVqRp72Z6YkvJnm8KusBf8yPMA/exec';
 
@@ -157,7 +158,7 @@
     }
   };
 
-  // ---------- legacy JSONP (importStatement/notifyText/debugFallback เท่านั้น — P5 ยังไม่ย้าย) ----------
+  // ---------- legacy JSONP (notifyText/debugFallback เท่านั้น — ยังไม่ย้ายมาโหมดใหม่) ----------
   function legacyToken() {
     try {
       var mh = (location.hash || '').match(/[#&]k=([a-f0-9]{16,64})/);
@@ -170,7 +171,7 @@
   function legacyCall(method, args) {
     return new Promise(function (resolve) {
       var tok = legacyToken();
-      if (!tok) { resolve({ ok: false, msg: 'ฟีเจอร์นี้ยังไม่ย้ายมาโหมดใหม่ (P5) — ต้องมีลิงก์ส่วนตัวเดิม' }); return; }
+      if (!tok) { resolve({ ok: false, msg: 'ฟีเจอร์นี้ยังไม่ย้ายมาโหมดใหม่ — ต้องใช้ลิงก์ส่วนตัวเดิม (โหมดเก่า)' }); return; }
       var cb = 'nkfcb_' + Math.random().toString(36).slice(2) + '_' + Date.now();
       var done = false;
       var s = document.createElement('script');
@@ -189,7 +190,7 @@
       document.head.appendChild(s);
     });
   }
-  function notMoved() { return Promise.resolve({ ok: false, msg: 'ยังไม่ย้ายมาโหมดใหม่ (P5)' }); }
+  function notMoved() { return Promise.resolve({ ok: false, msg: 'ยังไม่ย้ายมาโหมดใหม่นี้ — ใช้ผ่านโหมดเดิมไปก่อน' }); }
 
   // ---------- มิเรอร์ isWalletXfer_/isWalletKind_ ใน Web.gs ----------
   function isWalletXfer(it) {
@@ -678,7 +679,32 @@
     appendIncome: appendIncome,
     ackFixed: ackFixed,
     setBudget: setBudget,
-    importStatement: function () { return legacyCall('importStatement', Array.prototype.slice.call(arguments)); },
+    importStatement: function (account, rows, meta) {
+      // P5: ย้ายมาโหมดใหม่แล้ว — เขียนตรงผ่าน RPC "ingest_statement" (ประตูเดียว: ตรวจแถว/กันซ้ำ ref/ข้ามเงินเข้า/แคป 300)
+      if (!CURRENT_UID) return Promise.resolve({ ok: false, msg: 'ยังไม่ได้ล็อกอิน — เข้าสู่ระบบก่อนนำเข้า' });
+      if (!rows || !rows.length) return Promise.resolve({ ok: false, msg: 'ไม่มีรายการ' });
+      var payload = rows.slice(0, 300).map(function (r) {
+        return {
+          at: strv(r.at),
+          direction: (String(r.direction) === 'in') ? 'in' : 'out',
+          amount_minor: Math.round(numv(r.amount_minor)),
+          detail: strv(r.detail),
+          wallet: !!r.wallet
+        };
+      });
+      var m = meta || {};
+      return sb.rpc('ingest_statement', {
+        p_account: (String(account || '') === 'truemoney') ? 'truemoney' : 'kplus',
+        p_rows: payload,
+        p_source: strv(m.source) || 'upload',
+        p_file_name: strv(m.file) || null
+      }).then(function (r) {
+        if (r.error) throw r.error;
+        var d = r.data || {};
+        if (!d.ok) return { ok: false, msg: d.msg || 'นำเข้าไม่สำเร็จ' };
+        return { ok: true, added: d.added, dup: d.dup, skipped: d.skipped, in_skip: d.in_skip };
+      }).catch(function (e) { return { ok: false, msg: errText(e) }; });
+    },
     notifyText: function () { return legacyCall('notifyText', Array.prototype.slice.call(arguments)); },
     debugFallback: function () { return legacyCall('debugFallback', Array.prototype.slice.call(arguments)); }
   };
