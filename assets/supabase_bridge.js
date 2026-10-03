@@ -205,7 +205,10 @@
   }
 
   // ---------- มิเรอร์ computeBudgets_ ใน Web.gs (data source = ตาราง budgets แทนแท็บชีต) ----------
-  function computeBudgets(budgetRows, rows, monthPrefix, nowDate) {
+  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69): excludeRefs = {ref:true} ของ tx ที่จับคู่รายการประจำแล้ว
+  // (มาจาก matchFixedRefs ชุดเดียวกับ computeFixed) → ไม่นับซ้ำในยอด "ใช้ไป" ของงบรายหมวด
+  function computeBudgets(budgetRows, rows, monthPrefix, nowDate, excludeRefs) {
+    excludeRefs = excludeRefs || {};
     var daysIn = new Date(nowDate.getFullYear(), nowDate.getMonth() + 1, 0).getDate();
     var out = [], totSpent = 0, totCap = 0;
     for (var i = 0; i < budgetRows.length; i++) {
@@ -226,6 +229,7 @@
         if (it.at.slice(0, 7) !== monthPrefix) continue;
         if (isWalletXfer(it)) continue;
         if (cats.indexOf(it.category) === -1) continue;
+        if (excludeRefs[it.ref]) continue;  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69)
         spent += it.amount_minor;
       }
       var pct = cap > 0 ? Math.round(spent / cap * 100) : 0;
@@ -316,14 +320,175 @@
   }
 
   // ---------- รายการประจำ: มาจากตาราง recurring/recurring_ack แทน FIXED_ITEMS ที่ฮาร์ดโค้ดในชีตเดิม ----------
+  // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): ขยายเป็น 10 แบรนด์ (ครบ LOGO_URL ใน App.html)
+  // ชุดกติกา (ลำดับ + regex) ต้องตรงกับ BRAND_RULES/brandOf ใน App.html — เทสต์ quickadd_typing ข้อ 8 เช็ค parity
+  var BRAND_RULES = [
+    ['truemoney', /truemoney|true money|ทรูมันนี่|ทรูมันนี/],
+    ['make', /\bmake\b/],
+    ['kplus', /kbank|k ?plus|กสิกร/],
+    ['bbl', /\bbbl\b|bualuang|บัวหลวง|ธนาคารกรุงเทพ/],
+    ['claude', /claude/],
+    ['netflix', /netflix|เน็ตฟลิกซ์/],
+    ['spotify', /spotify|สปอติฟาย/],
+    ['grab', /grab|แกร็บ/],
+    ['steam', /\bsteam\b|สตีม/],
+    ['apple', /\bapple\b|icloud|itunes|app store|แอปเปิ้ล|แอปเปิล/]
+  ];
   function fxLogo(name) {
-    var s = (name || '').toLowerCase();
-    if (/claude/.test(s)) return 'claude';
-    if (/netflix/.test(s)) return 'netflix';
-    if (/truemoney|ทรูมันนี่/.test(s)) return 'truemoney';
+    var s = strv(name).toLowerCase();
+    for (var i = 0; i < BRAND_RULES.length; i++) if (BRAND_RULES[i][1].test(s)) return BRAND_RULES[i][0];
     return '';
   }
-  function computeFixed(recurringRows, ackRows, rows, monthPrefix, todayNum) {
+  // ---------- แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): รายสัปดาห์ — ตัวช่วยวัน/งวด (บริสุทธิ์ · รับวันที่ชัดเจน) ----------
+  // dow 0=อาทิตย์ … 6=เสาร์ (= JS getDay() = recurring.day_of_week ใน 0007) · ต้องตรงกับ TH_DOW ใน App.html
+  var TH_DOW = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+  var DAY_MS = 86400000;
+  // 'YYYY-MM-DD' (วันที่ไทยแล้ว) → ms ของเที่ยงคืน UTC วันนั้น · คิดด้วยปี/เดือน/วันจริง (ไม่ขึ้นกับโซนเครื่อง) · ผิดรูป/วันไม่มีจริง → NaN
+  function ymdMs(s) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(strv(s));
+    if (!m) return NaN;
+    var y = +m[1], mo = +m[2], d = +m[3];
+    var t = Date.UTC(y, mo - 1, d), c = new Date(t);
+    if (c.getUTCFullYear() !== y || c.getUTCMonth() !== mo - 1 || c.getUTCDate() !== d) return NaN;
+    return t;
+  }
+  function msYmd(t) {
+    var c = new Date(t);
+    return c.getUTCFullYear() + '-' + pad2(c.getUTCMonth() + 1) + '-' + pad2(c.getUTCDate());
+  }
+  function validDow(dow) {
+    var n = parseInt(dow, 10);
+    return (String(n) === strv(dow).trim() && n >= 0 && n <= 6) ? n : -1;
+  }
+  // งวดนี้ = วัน dow ที่ใกล้สุดย้อนหลัง ≤ วันนี้ (วันนี้ตรง dow → วันนี้) · ข้อมูลไม่ถูกต้อง → ''
+  function weeklyDueDate(dow, todayStr) {
+    var n = validDow(dow), t = ymdMs(todayStr);
+    if (n < 0 || !isFinite(t)) return '';
+    var back = (new Date(t).getUTCDay() - n + 7) % 7;
+    return msYmd(t - back * DAY_MS);
+  }
+  // หน้าต่างจับคู่ของงวด = [due−3, due+3] (7 วัน · ไม่ทับหน้าต่างงวดถัดไปที่ due+7)
+  function weeklyWindow(dueStr) {
+    var t = ymdMs(dueStr);
+    if (!isFinite(t)) return ['', ''];
+    return [msYmd(t - 3 * DAY_MS), msYmd(t + 3 * DAY_MS)];
+  }
+  // วัน (1..31) ในเดือน y-m (m = 1..12) ที่ตรง dow — จุดปฏิทิน
+  function weeklyDotDays(dow, y, m) {
+    var n = validDow(dow), out = [];
+    if (n < 0) return out;
+    var dim = new Date(Date.UTC(y, m, 0)).getUTCDate();
+    for (var d = 1; d <= dim; d++) if (new Date(Date.UTC(y, m - 1, d)).getUTCDay() === n) out.push(d);
+    return out;
+  }
+  function absDays(a, b) { return Math.round(Math.abs(ymdMs(a) - ymdMs(b)) / DAY_MS); }
+  function isWeekly(f) { return strv(f.freq) === 'weekly'; }
+
+  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69): รายการนี้ถึงกำหนดในเดือน monthPrefix ไหม
+  // freq ไม่ใช่ 'yearly' (รวม null จากแถวที่ apply migration ช้า) = ทุกเดือน · 'yearly' = เฉพาะเดือน month_of_year
+  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): 'weekly' = มีงวดทุกเดือน (ไม่กรองเดือน — ตกเข้า return true เดิม)
+  function isDueMonth(f, monthPrefix) {
+    if (strv(f.freq) !== 'yearly') return true;
+    return parseInt(f.month_of_year, 10) === parseInt(strv(monthPrefix).slice(5, 7), 10);
+  }
+  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69): ตัวจับคู่ tx ↔ รายการประจำ "ชุดเดียว" ที่ computeFixed
+  // และ computeBudgets ใช้ร่วมกัน (กันเลขสองที่เพี้ยนกัน) → byId: {recurringId: tx.ref} · refs: {tx.ref: true}
+  // แก้โดย CC — TASK_cc_fix_v42.md (3 ต.ค. 69): กติกาจับคู่ (deterministic — ลำดับแถวจาก DB ไม่มีผล):
+  //   - เงื่อนไขพื้นฐานเดิม: saved · ทิศเดียวกัน · อยู่เดือนนี้ · ไม่ใช่ wallet transfer · ยอดต่างไม่เกิน tol
+  //   - รายการมี category → tx ต้องหมวดเดียวกัน (รายการเก่า category ว่าง = ไม่เช็คหมวด เหมือนเดิม)
+  //   - 1 tx จับได้ 1 รายการเท่านั้น — รายการวนตาม id น้อย→มาก ("รายการแรก" = id น้อยสุด) แล้วข้าม ref ที่ถูกจับแล้ว
+  //   - ผู้สมัครหลายตัว → วันในเดือนใกล้ day_of_month สุด · เสมอ → at เก่าสุด · ยังเสมอ → ref น้อยสุด
+  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): ขยายเป็น "ต่อ-งวด" (monthly/yearly พฤติกรรมเดิมเป๊ะ):
+  //   - weekly: งวดนี้ due = weeklyDueDate(day_of_week, todayStr) · tx ต้องอยู่ใน weeklyWindow(due) แทนเงื่อนไข "เดือนนี้"
+  //     (หน้าต่างข้ามเดือนได้) · ระยะห่างนับเป็นวันจริงจาก due · คีย์ byId = id + '|' + due (monthly/yearly คง String(id))
+  //   - 1 tx → 1 งวดของ 1 รายการเท่านั้น: refs ใช้ร่วมกันทุก freq (tx เดียวห้ามนับซ้ำสองที่ — งบรายวันหักถูก)
+  //   - todayStr ('YYYY-MM-DD' เวลาไทย) ไม่ส่ง = วันนี้จริง · ใช้เฉพาะ weekly
+  // แก้โดย CC — TASK_cc_fix_v42x.md (3 ต.ค. 69): weekly = จับ "ทุกงวดของเดือนจนถึงวันนี้" (ไม่ใช่แค่งวดล่าสุด)
+  //   - งวด = due−7k ที่ตกในเดือน monthPrefix (D <= วันนี้ เสมอเพราะ due <= วันนี้) + งวดล่าสุด due เสมอ
+  //     (due ตกเดือนก่อนได้ — คงไว้เพื่อให้ computeFixed เดิมเป๊ะ) · งวดก่อน due ที่ตกเดือนก่อน = ไม่นับ (ไม่หักข้ามเดือน)
+  //   - ไล่งวดเก่า → ใหม่ · ทุกงวดใช้กติกาเดิม (หน้าต่าง D±3 · ทิศ · tol · หมวด · ไม่ใช่ wallet xfer · ใกล้ D → at → ref)
+  //   - กันจับซ้ำร่วมทุก freq (1 tx → 1 งวดของ 1 รายการ) → refs = tx ของงวดที่ D ตกเดือนนี้ → computeBudgets หักครบทุกงวด
+  //     (due ตกเดือนก่อน → จับให้ byId ได้ แต่ไม่เข้า refs) · byId เก็บเฉพาะ id|due (งวดล่าสุด) เหมือนเดิม
+  function matchFixedRefs(recurringRows, rows, monthPrefix, todayStr) {
+    var byId = {}, refs = {};
+    var taken = {};  // แก้โดย CC — TASK_cc_fix_v42x.md (3 ต.ค. 69): tx ที่ถูกจับแล้ว (ทุกงวด) — refs = เฉพาะที่หักงบเดือนนี้
+    todayStr = todayStr || thaiNowParts().ymd;
+    var recs = recurringRows.slice(0).sort(function (a, b) {
+      var na = Number(a.id), nb = Number(b.id);
+      if (na !== nb && isFinite(na) && isFinite(nb)) return na - nb;
+      var sa = String(a.id), sb2 = String(b.id);
+      return sa < sb2 ? -1 : (sa > sb2 ? 1 : 0);
+    });
+    for (var j = 0; j < recs.length; j++) {
+      var f = recs[j];
+      if (f.active === false) continue;
+      if (!isDueMonth(f, monthPrefix)) continue;
+      var tol = Math.max(Math.round(f.amount_minor * 0.005), 50);
+      var fcat = strv(f.category);
+      var want = parseInt(f.day_of_month, 10) || 0;
+      // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): weekly → งวดนี้ + หน้าต่าง ±3 วัน (dow เสีย = ข้าม)
+      var weekly = isWeekly(f), due = '';
+      if (!weekly) {
+        var hit = pickFixedTx(f, rows, taken, tol, fcat, null, '', monthPrefix, want);
+        if (hit) { byId[String(f.id)] = hit.ref; refs[hit.ref] = true; taken[hit.ref] = true; }
+        continue;
+      }
+      due = weeklyDueDate(f.day_of_week, todayStr);
+      if (!due) continue;
+      // แก้โดย CC — TASK_cc_fix_v42x.md (3 ต.ค. 69): งวดก่อนหน้าในเดือนนี้ (เก่า → ใหม่) แล้วปิดด้วยงวดล่าสุด due
+      var insts = [], dueMs = ymdMs(due);
+      for (var k = 5; k >= 1; k--) {
+        var dk = msYmd(dueMs - 7 * k * DAY_MS);
+        if (dk.slice(0, 7) === monthPrefix) insts.push(dk);
+      }
+      insts.push(due);
+      for (var q = 0; q < insts.length; q++) {
+        var got = pickFixedTx(f, rows, taken, tol, fcat, weeklyWindow(insts[q]), insts[q], monthPrefix, want);
+        if (!got) continue;
+        taken[got.ref] = true;
+        // งวดล่าสุดที่ตกเดือนก่อน: จับไว้ให้การ์ด (byId) + กันจับซ้ำ (taken) แต่ไม่ใส่ refs → ไม่หักงบเดือนนี้
+        if (insts[q].slice(0, 7) === monthPrefix) refs[got.ref] = true;
+        if (insts[q] === due) byId[String(f.id) + '|' + due] = got.ref;
+      }
+    }
+    return { byId: byId, refs: refs };
+  }
+  // แก้โดย CC — TASK_cc_fix_v42x.md (3 ต.ค. 69): ตัวเลือก tx ของ "หนึ่งงวด" (ย้ายมาจากลูปเดิมใน matchFixedRefs — กติกาเดิมเป๊ะ)
+  //   win = [D−3, D+3] (weekly — ระยะ = วันจริงจาก D) · win null = monthly/yearly (เดือนนี้ — ระยะ = |วันที่ − want|)
+  function pickFixedTx(f, rows, refs, tol, fcat, win, instDate, monthPrefix, want) {
+    var best = null, bestDiff = 0;
+    for (var r = 0; r < rows.length; r++) {
+      var it = rows[r];
+      if (it.status !== 'saved' || it.direction !== f.direction) continue;
+      if (win) {
+        var ad = it.at.slice(0, 10);
+        if (ad < win[0] || ad > win[1]) continue;
+      } else if (it.at.slice(0, 7) !== monthPrefix) continue;
+      if (isWalletXfer(it)) continue;
+      if (refs[it.ref]) continue;
+      if (fcat && it.category !== fcat) continue;
+      if (Math.abs(it.amount_minor - f.amount_minor) > tol) continue;
+      var diff = win ? absDays(it.at.slice(0, 10), instDate) : Math.abs((parseInt(it.at.slice(8, 10), 10) || 0) - want);
+      if (!best || diff < bestDiff
+        || (diff === bestDiff && (it.at < best.at || (it.at === best.at && String(it.ref) < String(best.ref))))) {
+        best = it; bestDiff = diff;
+      }
+    }
+    return best;
+  }
+  function findRowByRef(rows, ref) {
+    for (var i = 0; i < rows.length; i++) if (rows[i].ref === ref) return rows[i];
+    return null;
+  }
+  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69): รับ matched (ผล matchFixedRefs) แทนการวนจับคู่เอง ·
+  // ข้ามรายการที่ไม่ถึงกำหนดเดือนนี้ · ส่ง freq/month_of_year/category ให้ UI
+  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): weekly — งวดนี้ D = weeklyDueDate(day_of_week, todayStr)
+  //   ack key = id|D (recurring_ack.month เก็บ 'YYYY-MM-DD' · monthly/yearly คง id|YYYY-MM — ไม่ชนกัน) · auto-match ใช้ byId[id|D]
+  //   ลำดับตัดสินเดิม: ack paid → ack wait → auto-match → D <= วันนี้ ? pending : wait · ส่งออกเพิ่ม dow, due (day = วันที่ของ D ไว้เรียงแถว)
+  //   todayStr ไม่ส่ง = monthPrefix + todayNum (ค่าชุดเดียวกับที่ getData ใช้)
+  function computeFixed(recurringRows, ackRows, rows, monthPrefix, todayNum, matched, todayStr) {
+    todayStr = todayStr || (monthPrefix + '-' + pad2(todayNum));
+    matched = matched || matchFixedRefs(recurringRows, rows, monthPrefix, todayStr);
     var acks = {};
     for (var i = 0; i < ackRows.length; i++) {
       var a = ackRows[i];
@@ -333,28 +498,33 @@
     for (var j = 0; j < recurringRows.length; j++) {
       var f = recurringRows[j];
       if (f.active === false) continue;
-      var ack = acks[f.id + '|' + monthPrefix] || null;
+      if (!isDueMonth(f, monthPrefix)) continue;
+      var weekly = isWeekly(f), due = '';
+      if (weekly) { due = weeklyDueDate(f.day_of_week, todayStr); if (!due) continue; }
+      var inst = weekly ? due : monthPrefix;
+      var ack = acks[f.id + '|' + inst] || null;
       var status = '', date = '', src;
       if (ack && ack.status === 'paid') { status = 'done'; date = toThaiLocal(ack.created_at).slice(0, 10); src = 'ack'; }
       else if (ack && ack.status === 'wait') { status = 'wait'; src = 'ack'; }
       else {
-        var hit = '';
-        for (var r = 0; r < rows.length; r++) {
-          var it = rows[r];
-          if (it.status !== 'saved' || it.direction !== f.direction) continue;
-          if (it.at.slice(0, 7) !== monthPrefix) continue;
-          if (isWalletXfer(it)) continue;
-          var tol = Math.max(Math.round(f.amount_minor * 0.005), 50);
-          if (Math.abs(it.amount_minor - f.amount_minor) <= tol) { hit = it.at.slice(0, 10); break; }
-        }
-        if (hit) { status = 'done'; date = hit; } else status = (f.day_of_month <= todayNum) ? 'pending' : 'wait';
+        var hitRef = matched.byId[weekly ? String(f.id) + '|' + due : String(f.id)];
+        var hitRow = hitRef !== undefined ? findRowByRef(rows, hitRef) : null;
+        if (hitRow) { status = 'done'; date = hitRow.at.slice(0, 10); }
+        else if (weekly) status = (due <= todayStr) ? 'pending' : 'wait';
+        else status = (f.day_of_month <= todayNum) ? 'pending' : 'wait';
         src = 'auto';
       }
-      out.push({
+      var yearly = strv(f.freq) === 'yearly';
+      var row = {
         key: String(f.id), label: f.name, emoji: '', logo: fxLogo(f.name),
-        amount_minor: f.amount_minor, day: f.day_of_month, dir: f.direction,
-        status: status, date: date, spent_minor: 0, src: src
-      });
+        amount_minor: f.amount_minor, day: weekly ? parseInt(due.slice(8, 10), 10) : f.day_of_month, dir: f.direction,
+        status: status, date: date, spent_minor: 0, src: src,
+        freq: weekly ? 'weekly' : (yearly ? 'yearly' : 'monthly'),
+        month_of_year: yearly ? (parseInt(f.month_of_year, 10) || null) : null,
+        category: strv(f.category)
+      };
+      if (weekly) { row.dow = validDow(f.day_of_week); row.due = due; }
+      out.push(row);
     }
     return out;
   }
@@ -368,6 +538,85 @@
       map[parts.key] = { id: m.id, key: parts.key, display: parts.display, category: m.category, hits: numv(m.hits) };
     }
     return map;
+  }
+
+  // ---------- แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): "รายการของฉัน" สำหรับ suggest ในฟอร์มรายการประจำ ----------
+  // seed ข้อมูลตั้งต้นของเจ้าของ ณ 3 ต.ค. 69 (รายการที่ระบบรู้จากนอกแอป — forecast ฝั่งบอท) — data ไม่ใช่ logic
+  // รีเฟรชได้ด้วยเครื่องมือ Hermes (เฟส 2) · ห้ามใช้ค่าในเทสต์
+  var RECALL_SEED = [
+    { name: 'Netflix', amount_minor: 10500, day: 13, cat: 'subscriptions', dir: 'out', freq: 'monthly' },
+    { name: 'เติม TrueMoney', amount_minor: 70000, day: 8, cat: 'topup', dir: 'out', freq: 'monthly' },
+    { name: 'งบน้ำมัน', amount_minor: 48000, day: 30, cat: 'fuel', dir: 'out', freq: 'monthly' }
+  ];
+  var RECALL_MAX = 40;
+  // รวม recurring ∪ seed ∪ merchants ∪ ประวัติ (saved) เป็นชุดเดียว dedupe ด้วย key เดียวกับทั้งระบบ (merchantKeyFor/splitMerchantName)
+  // แหล่งที่มาก่อนชนะ (rec → seed → mem → hist) · ช่องที่ยังว่างเติมจากแหล่งถัดไป · เรียง rec → seed → mem(hits) → hist(ล่าสุดก่อน)
+  // seed ส่งมาแทนได้ (เทสต์ใช้ [] / ชุดสังเคราะห์) — ไม่ส่ง = RECALL_SEED
+  function computeRecall(recurringRows, merchantRows, rows, seed) {
+    var RANK = { rec: 0, seed: 1, mem: 2, hist: 3 };
+    var map = {}, list = [];
+    function keyOf(name, kind) {
+      var k = merchantKeyFor(name, kind);
+      return (k && k !== 'card:unknown') ? k : '';
+    }
+    function entry(key, src) {
+      if (!key) return null;
+      if (map[key]) return map[key];
+      var e = { key: key, name: '', cat: '', amount_minor: 0, day: 0, dir: '', freq: '', month: null, dow: null, src: src, hits: 0, isRec: false, rid: '', _n: list.length };
+      map[key] = e; list.push(e);
+      return e;
+    }
+    function fill(e, o) {
+      if (!e) return;
+      if (!e.name && o.name) e.name = o.name;
+      if (!e.cat && o.cat) e.cat = o.cat;
+      if (!(e.amount_minor > 0) && o.amount_minor > 0) e.amount_minor = o.amount_minor;
+      if (!(e.day > 0) && o.day > 0) e.day = o.day;
+      if (!e.dir && o.dir) e.dir = o.dir;
+      if (!e.freq && o.freq) { e.freq = o.freq; e.month = o.month || null; e.dow = (o.dow >= 0 && o.dow <= 6) ? o.dow : null; }  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): + dow
+      if (o.hits > e.hits) e.hits = o.hits;
+    }
+    // 1) recurring (id น้อย→มาก)
+    var recs = (recurringRows || []).slice(0).sort(function (a, b) { return numv(a.id) - numv(b.id); });
+    recs.forEach(function (f) {
+      if (!f || f.active === false) return;
+      var e = entry(keyOf(f.name), 'rec');
+      if (!e) return;
+      var yearly = strv(f.freq) === 'yearly';
+      var wk = isWeekly(f);  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): รายสัปดาห์ → freq weekly + dow (ไม่มี day)
+      fill(e, { name: strv(f.name).trim(), cat: strv(f.category), amount_minor: numv(f.amount_minor), day: wk ? 0 : (parseInt(f.day_of_month, 10) || 0),
+        dir: strv(f.direction) === 'in' ? 'in' : 'out', freq: wk ? 'weekly' : (yearly ? 'yearly' : 'monthly'), month: yearly ? (parseInt(f.month_of_year, 10) || null) : null,
+        dow: wk ? validDow(f.day_of_week) : null });
+      if (!e.isRec) { e.isRec = true; e.rid = String(f.id); }
+    });
+    // 2) seed
+    (seed || []).forEach(function (s) {
+      fill(entry(keyOf(s.name), 'seed'), { name: strv(s.name), cat: strv(s.cat), amount_minor: numv(s.amount_minor), day: numv(s.day),
+        dir: strv(s.dir) || 'out', freq: strv(s.freq) || 'monthly', month: s.month || null });
+    });
+    // 3) merchants memory (hits มาก→น้อย · เสมอ → key)
+    var mems = (merchantRows || []).map(function (m) {
+      var p = splitMerchantName(m.name);
+      return { key: p.key, display: p.display, cat: strv(m.category), hits: numv(m.hits) };
+    }).filter(function (m) {
+      return m.key && m.key !== 'card:unknown' && (m.display || m.key.indexOf('code:') !== 0);  // รหัสร้านล้วนไม่มีชื่อ = ไม่มีความหมายให้ suggest
+    }).sort(function (a, b) { return (b.hits - a.hits) || (a.key < b.key ? -1 : (a.key > b.key ? 1 : 0)); });
+    mems.forEach(function (m) { fill(entry(m.key, 'mem'), { name: m.display || m.key, cat: m.cat, hits: m.hits }); });
+    // 4) ประวัติ saved (ล่าสุดก่อน — ต่อ key เอายอด/วันในเดือน/หมวดล่าสุด)
+    var hist = (rows || []).filter(function (it) { return it && it.status === 'saved'; }).slice(0).sort(function (a, b) {
+      if (a.at !== b.at) return a.at > b.at ? -1 : 1;
+      return a.ref < b.ref ? -1 : (a.ref > b.ref ? 1 : 0);
+    });
+    hist.forEach(function (it) {
+      var name = strv(it.display_name) || strv(it.counterparty).replace(/\s*\([^)]*\)\s*$/, '').trim();
+      fill(entry(keyOf(it.counterparty, it.kind), 'hist'), { name: name, cat: strv(it.category), amount_minor: numv(it.amount_minor),
+        day: parseInt(strv(it.at).slice(8, 10), 10) || 0, dir: it.direction === 'in' ? 'in' : 'out' });
+    });
+    list.sort(function (a, b) { return (RANK[a.src] - RANK[b.src]) || (a._n - b._n); });
+    return list.filter(function (e) { return e.name; }).slice(0, RECALL_MAX).map(function (e) {
+      return { key: e.key, name: e.name, brand: fxLogo(e.name), cat: e.cat, amount_minor: e.amount_minor, day: e.day,
+        dir: e.dir || 'out', freq: e.freq || 'monthly', month: e.month, dow: e.dow, src: e.src, hits: e.hits, isRec: e.isRec, rid: e.rid };
+    });
   }
 
   function fetchMerchants() {
@@ -421,6 +670,7 @@
       var nowLocal = toThaiLocal(nowIso());
       var monthPrefix = nowLocal.slice(0, 7);
       var todayNum = parseInt(nowLocal.slice(8, 10), 10);
+      var todayStr = nowLocal.slice(0, 10);  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): งวดรายสัปดาห์อิงวันนี้ (เวลาไทย)
       var nowDateObj = new Date(nowLocal);
 
       var dayKeys = [];
@@ -488,12 +738,19 @@
       var dailyArr = [];
       for (var k2 = 0; k2 < dayKeys.length; k2++) dailyArr.push({ d: dayKeys[k2], n: daily[dayKeys[k2]] });
 
+      // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69): จับคู่รายการประจำครั้งเดียว → ใช้ทั้งในลิสต์รายการประจำ
+      // และหัก tx ที่จับคู่แล้วออกจากยอด "ใช้ไป" ของงบรายหมวด (ชุดเดียวกัน — ตัวเลขสองที่ไม่เพี้ยนกัน)
+      var matched = { byId: {}, refs: {} };
+      try { matched = matchFixedRefs(recurringRows, rows, monthPrefix, todayStr); } catch (e) { /* keep default */ }
       var fx = [];
-      try { fx = computeFixed(recurringRows, ackRows, rows, monthPrefix, todayNum); } catch (e) { fx = []; }
+      try { fx = computeFixed(recurringRows, ackRows, rows, monthPrefix, todayNum, matched, todayStr); } catch (e) { fx = []; }
       var bud = { items: [], total: { spent_minor: 0, cap_minor: 0 } };
-      try { bud = computeBudgets(budgetRows, rows, monthPrefix, nowDateObj); } catch (e) { /* keep default */ }
+      try { bud = computeBudgets(budgetRows, rows, monthPrefix, nowDateObj, matched.refs); } catch (e) { /* keep default */ }
       var det = { months: [], acct: { kplus: { total_minor: 0, transfer_minor: 0, cats: [] }, truemoney: { total_minor: 0, transfer_minor: 0, cats: [] } } };
       try { det = computeDetail(rows, monthPrefix); } catch (e) { /* keep default */ }
+      // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): รายการของฉัน (suggest) — พังได้แต่ห้ามทำ getData ล้ม
+      var recall = [];
+      try { recall = computeRecall(recurringRows, merchantRows, rows, RECALL_SEED); } catch (e) { recall = []; }
 
       var accts = {
         kplus: { balance_minor: latestBalance, out_minor: monthOut, in_minor: monthIncome },
@@ -518,6 +775,7 @@
         budgetTotals: bud.total,
         mdet: det.months,
         dacct: det.acct,
+        recall: recall,  // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69)
         summary: {
           monthSpent: monthSpent, monthIncome: monthIncome, cashflow: monthIncome - monthSpent,
           pendingCount: pending.length, pendingSum: pendingSum,
@@ -619,11 +877,33 @@
     }).catch(function (e) { return { ok: false, msg: errText(e) }; });
   }
 
-  function ackFixed(key, status) {
+  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): พารามิเตอร์ที่ 3 instDate = วันที่ของ "งวดนี้" (เฉพาะ weekly)
+  //   อ่าน freq ของรายการก่อน → monthly/yearly: month = เดือนปัจจุบัน YYYY-MM (เดิมเป๊ะ · instDate ไม่สน)
+  //   weekly: ต้องส่ง instDate 'YYYY-MM-DD' ที่มีจริง · ห่างวันนี้ไม่เกิน ±8 วัน · ตรงวันในสัปดาห์ของรายการ → ใช้เป็น month key
+  //   ('auto' = ลบ ack เฉพาะงวดนั้น — งวดอื่นไม่โดน)
+  // แก้โดย CC — TASK_cc_fix_v42x.md (3 ต.ค. 69): ล็อก weekly ให้แคบ — instDate ต้องเป็น "งวดปัจจุบัน" เท่านั้น:
+  //   weeklyDueDate(dow, วันนี้) หรือ weeklyDueDate(dow, เมื่อวาน) (เผื่อแท็บค้างข้ามเที่ยงคืน) · นอกนั้น (เช่น due+7 / due−14) = ไม่รับ
+  function ackFixed(key, status, instDate) {
     var recurringId = parseInt(key, 10);
     status = (status === 'done') ? 'done' : (status === 'wait' ? 'wait' : (status === 'auto' ? 'auto' : ''));
     if (!recurringId || !status) return Promise.resolve({ ok: false, msg: 'ข้อมูลไม่ครบ' });
     var month = thaiNowParts().ym;
+    return sb.from('recurring').select('id,freq,day_of_week').eq('id', recurringId).limit(1).then(function (rr0) {
+      if (rr0.error) throw rr0.error;
+      var rec = (rr0.data && rr0.data[0]) || null;
+      if (rec && isWeekly(rec)) {
+        var inst = strv(instDate), today = thaiNowParts().ymd;
+        if (!isFinite(ymdMs(inst))) return { ok: false, msg: 'รายการรายสัปดาห์ต้องระบุงวด (วันที่ไม่ถูกต้อง)' };
+        // แก้โดย CC — TASK_cc_fix_v42x.md (3 ต.ค. 69): แทนเช็ค ±8 วัน + dow เดิม (งวดที่รับได้ตรง dow อยู่แล้ว)
+        var curInst = weeklyDueDate(rec.day_of_week, today);
+        var prevInst = weeklyDueDate(rec.day_of_week, msYmd(ymdMs(today) - DAY_MS));
+        if (!curInst || (inst !== curInst && inst !== prevInst)) return { ok: false, msg: 'ไม่ใช่วันงวดปัจจุบัน — รีเฟรชแล้วลองใหม่' };
+        month = inst;
+      }
+      return ackWrite(recurringId, month, status);
+    }).catch(function (e) { return { ok: false, msg: errText(e) }; });
+  }
+  function ackWrite(recurringId, month, status) {
     return sb.from('recurring_ack').select('id').eq('recurring_id', recurringId).eq('month', month).limit(1).then(function (r) {
       if (r.error) throw r.error;
       var existing = (r.data && r.data[0]) || null;
@@ -666,6 +946,86 @@
     }).catch(function (e) { return { ok: false, msg: errText(e) }; });
   }
 
+  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69): เพิ่ม/ลบรายการประจำจากในแอป (รายเดือน/รายปี · หมวดไม่บังคับ)
+  function isIntIn(v, lo, hi) { return typeof v === 'number' && isFinite(v) && Math.floor(v) === v && v >= lo && v <= hi; }
+  function blank(v) { return v === undefined || v === null || v === ''; }
+  function addRecurring(payload) {
+    var p = payload || {};
+    var name = strv(p.name).replace(/\s+/g, ' ').trim();
+    if (!name || name.length > 60) return Promise.resolve({ ok: false, msg: 'ใส่ชื่อรายการ (ไม่เกิน 60 ตัวอักษร)' });
+    var amt = p.amount_minor;
+    // แก้โดย CC — TASK_cc_fix_v42.md (3 ต.ค. 69): ต้องเป็น number จริง (ไม่รับ true/[5]/สตริง ที่ Number() แปลงผ่าน)
+    if (typeof amt !== 'number' || !isIntIn(amt, 1, Number.MAX_SAFE_INTEGER)) return Promise.resolve({ ok: false, msg: 'ยอดไม่ถูกต้อง' });
+    // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): รับ freq 'weekly' — ต้องมี dow 0–6 (0=อา … 6=ส) · ไม่ใช้ day (ไม่เช็ค 1–31)
+    var freq = blank(p.freq) ? 'monthly' : strv(p.freq);
+    if (freq !== 'monthly' && freq !== 'yearly' && freq !== 'weekly') return Promise.resolve({ ok: false, msg: 'ความถี่ไม่ถูกต้อง' });
+    var dow = null;
+    if (freq === 'weekly') {
+      dow = Number(p.dow);
+      if (blank(p.dow) || typeof p.dow === 'boolean' || !isIntIn(dow, 0, 6)) return Promise.resolve({ ok: false, msg: 'รายการรายสัปดาห์ต้องเลือกวัน (อา–ส)' });
+    }
+    var day = Number(p.day);
+    if (freq !== 'weekly' && (blank(p.day) || !isIntIn(day, 1, 31))) return Promise.resolve({ ok: false, msg: 'วันที่จ่ายต้องเป็น 1–31' });
+    var direction = blank(p.direction) ? 'out' : strv(p.direction);
+    if (direction !== 'in' && direction !== 'out') return Promise.resolve({ ok: false, msg: 'ประเภทไม่ถูกต้อง (จ่าย/รับ)' });
+    var month = null;
+    if (freq === 'yearly') {
+      month = Number(p.month);
+      if (blank(p.month) || !isIntIn(month, 1, 12)) return Promise.resolve({ ok: false, msg: 'รายการรายปีต้องเลือกเดือน' });
+    }
+    var category = strv(p.category).trim();
+    if (category && !validCategory(category)) return Promise.resolve({ ok: false, msg: 'หมวดไม่ถูกต้อง' });
+    var row = {
+      user_id: CURRENT_UID, name: name, amount_minor: amt, day_of_month: day, kind: null, active: true,
+      direction: direction, freq: freq, month_of_year: month, category: category || null
+    };
+    if (freq === 'weekly') { row.day_of_month = null; row.day_of_week = dow; }  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): monthly/yearly payload เดิมเป๊ะ
+    return sb.from('recurring').insert(row).select('id').then(function (r) {
+      if (r.error) throw r.error;
+      var d = r.data;
+      var id = (d && d[0] && d[0].id !== undefined) ? d[0].id : null;
+      rememberRecurringName(name, category);  // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69)
+      return { ok: true, id: id };
+    }).catch(function (e) { return { ok: false, msg: errText(e) }; });
+  }
+  // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): "จำชื่อใหม่" — หลังเพิ่มรายการประจำสำเร็จ upsert ชื่อเข้า merchants memory
+  // (ครั้งถัดไปขึ้น suggest + ติดโลโก้) · ผ่าน upsertMerchant เดิม · ไม่ bumpHits (แถวใหม่ = 1 ตามกติกาเดิม · แถวเดิม hits คงเดิม)
+  // ไม่ทับชื่อที่ตั้งไว้/หมวดที่เรียนแล้ว · ทำแยกจังหวะ (ไม่รอ) และกลืน error — พังได้แต่ห้ามกระทบ { ok:true } ของ recurring
+  function rememberRecurringName(name, category) {
+    setTimeout(function () {
+      try {
+        var key = merchantKeyFor(name, '');
+        if (!key || key === 'card:unknown') return;
+        fetchMerchants().then(function (merchantRows) {
+          var found = findMerchantByKey(merchantRows, key);
+          var opts = {};
+          if (!found || !splitMerchantName(found.name).display) opts.display = name;
+          if (category && (!found || !found.category)) opts.category = category;
+          if (found && opts.display === undefined && opts.category === undefined) return null;
+          return upsertMerchant(key, opts);
+        }).catch(function () { /* เงียบ — ไม่กระทบ flow หลัก */ });
+      } catch (e) { /* เงียบ */ }
+    }, 0);
+  }
+  function removeRecurring(id) {
+    var rid = Number(id);
+    if (blank(id) || !isIntIn(rid, 1, Number.MAX_SAFE_INTEGER)) return Promise.resolve({ ok: false, msg: 'ไม่พบรายการ' });
+    // recurring_ack ผูก FK on delete cascade → ลบตามเอง
+    // แก้โดย CC — TASK_cc_fix_v42.md (3 ต.ค. 69): .select('id') → รู้ว่าลบจริงไหม (0 แถว = ไม่พบ/ไม่มีสิทธิ์ตาม RLS)
+    return sb.from('recurring').delete().eq('id', rid).select('id').then(function (r) {
+      if (r.error) throw r.error;
+      if (!r.data || !r.data.length) return { ok: false, msg: 'ไม่พบรายการนี้ (อาจถูกลบไปแล้ว)' };
+      return { ok: true };
+    }).catch(function (e) { return { ok: false, msg: errText(e) }; });
+  }
+
+  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): เปิดตัวช่วยบริสุทธิ์ของรายการประจำให้เทสต์ offline เรียกตรง (อ่านอย่างเดียว · ไม่แตะ DB)
+  window.NKF_FX = {
+    TH_DOW: TH_DOW.slice(0), weeklyDueDate: weeklyDueDate, weeklyWindow: weeklyWindow, weeklyDotDays: weeklyDotDays,
+    isDueMonth: isDueMonth, matchFixedRefs: matchFixedRefs, computeFixed: computeFixed,
+    computeBudgets: computeBudgets  // แก้โดย CC — TASK_cc_fix_v42x.md (3 ต.ค. 69): ให้เทสต์ยอดงบรายวันด้วยวันอ้างอิงตายตัว
+  };
+
   var ACTIONS = {
     getData: getData,
     saveCategory: saveCategory,
@@ -679,6 +1039,8 @@
     appendIncome: appendIncome,
     ackFixed: ackFixed,
     setBudget: setBudget,
+    addRecurring: addRecurring,        // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69)
+    removeRecurring: removeRecurring,  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69)
     importStatement: function (account, rows, meta) {
       // P5: ย้ายมาโหมดใหม่แล้ว — เขียนตรงผ่าน RPC "ingest_statement" (ประตูเดียว: ตรวจแถว/กันซ้ำ ref/ข้ามเงินเข้า/แคป 300)
       if (!CURRENT_UID) return Promise.resolve({ ok: false, msg: 'ยังไม่ได้ล็อกอิน — เข้าสู่ระบบก่อนนำเข้า' });

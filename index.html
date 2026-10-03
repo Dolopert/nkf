@@ -215,6 +215,30 @@
   .frowitem.open{background:rgba(101,220,255,.03)}
   .fchev{color:var(--dim);font-size:9px;margin-left:7px;flex:none}
   .fxdrop{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;padding:1px 0 10px;border-bottom:1px dashed #232329;margin-bottom:1px}
+  /* ---------- แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): ฟอร์มพิมพ์เร็ว + suggest + การ์ดพรีวิว v5 ---------- */
+  .incform input.qa-type{padding:11px 13px;margin-bottom:0}
+  .fcat{font-size:10px;color:var(--dim);margin-left:6px;font-weight:400;white-space:nowrap}
+  .rt2 .rtr{display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-bottom:3px}
+  .bdg{font-size:8.5px;font-weight:600;color:var(--grn);border:1px solid rgba(126,226,168,.45);border-radius:99px;padding:1px 7px;white-space:nowrap;flex:none}
+  .bdg.new{color:#8fe8ff;border-color:rgba(101,220,255,.45)}
+  .frowitem.preview{display:block;border:1px dashed rgba(101,220,255,.45);border-radius:12px;padding:10px 11px;background:rgba(101,220,255,.05);margin-top:8px;cursor:default}
+  .frowitem.preview .pvr{display:flex;align-items:center;gap:9px}
+  .frowitem.preview [data-act]{cursor:pointer}
+  .miniact.sug{border-color:rgba(245,185,67,.6);background:rgba(245,185,67,.09);color:#f5cf8f}
+  .miniact.warn{border-color:rgba(255,143,143,.55);background:rgba(255,143,143,.07);color:#ffb4b4}
+  .qa-err{font-size:10.5px;color:#ffb4b4;font-weight:600;margin:6px 2px 2px}
+  .qa-fixbox{border:1px dashed rgba(245,185,67,.5);background:rgba(245,185,67,.05);border-radius:12px;padding:8px 10px;margin-top:8px}
+  .qa-fixbox .fl{font-size:10px;color:var(--mut);margin:0 1px 6px}
+  .qa-sugbox{background:#101014;border:1px solid #2c2c36;border-radius:12px;padding:8px 10px 9px;margin-top:6px}
+  .qa-sugrow{display:flex;align-items:center;gap:8px;font-size:11.5px;padding:3px 1px;cursor:pointer}
+  .qa-sugrow .rn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .qa-sugrow .rr{font-weight:700;font-variant-numeric:tabular-nums;flex:none}
+  .qa-sugsub{font-size:9.5px;color:var(--dim);margin-top:1px}
+  .emx{width:21px;height:21px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;flex:none;background:#101014;border:1px solid #232329}
+  .lgi{width:15px;height:15px;border-radius:4px;vertical-align:-3px;margin-right:4px}
+  .incbtns .save.off{opacity:.45}
+  .rt2 .rtr .st{margin-top:0}
+  .qa-ed{margin-top:6px}
   /* ---------- v3: งบรายหมวด ---------- */
   .budtot{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:8px}
   .budtot .l{font-size:11px;color:var(--mut)}
@@ -415,8 +439,8 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.1.2-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json
-var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, fxOpen:{}, view:null, imp:null };
+var APP_BUILD = 'v4.2.0-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69)
+var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, view:null, imp:null };
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
 var SW = { OPEN:112, COMMIT:160, MAX:210, EASE:'cubic-bezier(.22,.8,.24,1)' };
@@ -520,7 +544,8 @@ function reload(silent){
     .getData();
 }
 function render(data){
-  if (UI.busy()){ // นิ้วยังทำงาน — พักข้อมูลไว้ วาดต่อเมื่อนิ้วว่าง (กันแถวถูกสับกลางจังหวะปัด)
+  // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): กำลังพิมพ์ในฟอร์มรายการประจำ → พักข้อมูลใหม่ไว้ก่อน (paint เต็มจะทำ focus/caret หลุด)
+  if (UI.busy() || recTyping()){ // นิ้วยังทำงาน — พักข้อมูลไว้ วาดต่อเมื่อนิ้วว่าง (กันแถวถูกสับกลางจังหวะปัด)
     S._defer = data;
     if (!S._deferT){
       S._deferT = setTimeout(function(){
@@ -546,14 +571,14 @@ function thToday(){
   var d = new Date();
   return TH_D[d.getDay()] + ' ' + d.getDate() + ' ' + TH_M[d.getMonth()] + ' ' + String(d.getFullYear()+543).slice(2);
 }
-function callAction(method, argsArr, okMsg){
+function callAction(method, argsArr, okMsg, onFail){  // onFail: แก้โดย CC — TASK_cc_fix_v42.md (3 ต.ค. 69) — ให้ผู้เรียกกู้สถานะคืนเมื่อ ok:false/เชื่อมต่อไม่ได้
   var r = google.script.run
     .withSuccessHandler(function(res){
-      if (res && !res.ok) toast(res.msg || 'ทำไม่สำเร็จ', true);
+      if (res && !res.ok) { toast(res.msg || 'ทำไม่สำเร็จ', true); if (onFail) onFail(res); }
       else if (okMsg) toast(okMsg);
       reloadSoon();
     })
-    .withFailureHandler(function(){ toast('เชื่อมต่อไม่ได้', true); reloadSoon(); });
+    .withFailureHandler(function(){ toast('เชื่อมต่อไม่ได้', true); if (onFail) onFail(null); reloadSoon(); });
   r[method].apply(r, argsArr);
 }
 
@@ -566,6 +591,7 @@ function reloadSoon(){
 
 /* ---------- render ---------- */
 function paint(){
+  recSyncInputs();  // แก้โดย CC — TASK_cc_fix_v42.md (3 ต.ค. 69): เก็บข้อความที่พิมพ์ค้างในฟอร์มรายการประจำก่อนวาดใหม่ทุกครั้ง
   var d = S.data; if (!d) return;
   if (S.tab === 0) el('pane0').innerHTML = htmlSummary(d);
   if (S.tab === 1) el('pane1').innerHTML = htmlPending(d);
@@ -601,15 +627,84 @@ function logoImg(key, cls){
   var u = LOGO_URL(key);
   return u ? '<img class="'+cls+'" src="'+u+'" alt="">' : '';
 }
-function brandOf(it){
-  var s = String((it.display_name || '') + ' ' + (it.counterparty || ''));
-  if (/grab/i.test(s)) return 'grab';
-  if (/truemoney|ทรูมันนี่/i.test(s)) return 'truemoney';
-  if (/netflix/i.test(s)) return 'netflix';
-  if (/claude/i.test(s)) return 'claude';
-  if (/spotify/i.test(s)) return 'spotify';
-  if (/kbank|k ?plus|กสิกร/i.test(s)) return 'kplus';
+// แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): ขยายเป็น 10 แบรนด์ครบ LOGO_URL
+// ชุดกติกา (ลำดับ + regex) ต้องตรงกับ fxLogo ใน bridge/supabase_bridge.js — เทสต์ quickadd_typing ข้อ 8 เช็ค parity
+var BRAND_RULES = [
+  ['truemoney', /truemoney|true money|ทรูมันนี่|ทรูมันนี/],
+  ['make', /\bmake\b/],
+  ['kplus', /kbank|k ?plus|กสิกร/],
+  ['bbl', /\bbbl\b|bualuang|บัวหลวง|ธนาคารกรุงเทพ/],
+  ['claude', /claude/],
+  ['netflix', /netflix|เน็ตฟลิกซ์/],
+  ['spotify', /spotify|สปอติฟาย/],
+  ['grab', /grab|แกร็บ/],
+  ['steam', /\bsteam\b|สตีม/],
+  ['apple', /\bapple\b|icloud|itunes|app store|แอปเปิ้ล|แอปเปิล/]
+];
+function brandKey(name){
+  var s = String(name || '').toLowerCase();
+  for (var i = 0; i < BRAND_RULES.length; i++) if (BRAND_RULES[i][1].test(s)) return BRAND_RULES[i][0];
   return '';
+}
+function brandOf(it){
+  return brandKey(String((it.display_name || '') + ' ' + (it.counterparty || '')));
+}
+// แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): ไอคอนรายการประจำ "ชุดเดียว" (ลิสต์ · การ์ดพรีวิว · suggest)
+// ลำดับ: โลโก้แบรนด์ → emoji หมวด → emoji เดิมของแถว → •
+function recIconHtml(logo, cat, emoji){
+  if (logo && LOGO_URL(logo)) return '<img src="'+LOGO_URL(logo)+'" alt="">';
+  var cm = cat ? catMeta(cat) : null;
+  if (cm && cm.e !== '❔') return cm.e;
+  return emoji || '•';
+}
+// แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): บรรทัดวันที่ของรายการประจำ — helper เดียวที่ fixedRow และการ์ดพรีวิวใช้ร่วมกัน
+// f = { day, freq, month_of_year, status?, date?, dir?, spent_minor? } · full=true → ต่อท้ายสถานะจ่าย/ใช้แล้ว (เฉพาะ fixedRow)
+// แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): รายสัปดาห์ — ชื่อวัน + งวด/จุดปฏิทิน ฝั่ง App
+// logic ต้องตรงกับ TH_DOW/weeklyDueDate/weeklyDotDays ใน bridge/supabase_bridge.js (เดโม่ไม่มี bridge จึงเขียนซ้ำ — แก้ต้องแก้คู่)
+// dow 0=อาทิตย์ … 6=เสาร์ (= getDay() = ลำดับหัวปฏิทิน อา จ อ พ พฤ ศ ส)
+var TH_DOW = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+var TH_DOW_S = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+function recDowOk(dow){ return dow !== null && dow !== '' && dow !== undefined && /^[0-6]$/.test(String(dow)); }
+// งวดนี้ = วัน dow ที่ใกล้สุดย้อนหลัง ≤ todayStr ('YYYY-MM-DD') — คิดผ่าน Date.UTC (ปี/เดือน/วันจริง ข้ามเดือน/ปีถูก) · ไม่ถูกต้อง → ''
+function weeklyDueDate(dow, todayStr){
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(todayStr || ''));
+  if (!m || !recDowOk(dow)) return '';
+  var t = Date.UTC(+m[1], +m[2] - 1, +m[3]);
+  var c = new Date(t - ((new Date(t).getUTCDay() - Number(dow) + 7) % 7) * 86400000);
+  var mo = String(c.getUTCMonth() + 1), dd = String(c.getUTCDate());
+  return c.getUTCFullYear() + '-' + (mo.length < 2 ? '0' + mo : mo) + '-' + (dd.length < 2 ? '0' + dd : dd);
+}
+function weeklyDotDays(dow, y, m){  // m = 1..12 → วันในเดือนที่ตรง dow
+  var out = []; if (!recDowOk(dow)) return out;
+  var dim = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  for (var d = 1; d <= dim; d++) if (new Date(Date.UTC(y, m - 1, d)).getUTCDay() === Number(dow)) out.push(d);
+  return out;
+}
+function recDtLine(f, full){
+  var now = new Date();
+  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): รายสัปดาห์ → "(วันนี้) · ทุกวันเสาร์ · งวดนี้ 3 ต.ค." (งวด = f.due จาก bridge · ไม่มี = คิดจากวันนี้)
+  if (f.freq === 'weekly'){
+    if (!recDowOk(f.dow)) return 'ทุกสัปดาห์ · ยังไม่เลือกวัน';
+    var due = f.due || weeklyDueDate(f.dow, todayISO());
+    var wd = 'ทุกวัน' + TH_DOW[Number(f.dow)] + ' · งวดนี้ ' + fmtDayShort(due);
+    if (due === todayISO()) wd = '(วันนี้) · ' + wd;
+    if (full){
+      if (f.status === 'done' && f.date) wd += ' · ' + (f.dir === 'in' ? 'รับ ' : 'จ่าย ') + fmtDayShort(f.date);
+      if (f.spent_minor > 0) wd += ' · ใช้แล้ว ฿' + fmtBaht(f.spent_minor);
+    }
+    return wd;
+  }
+  var yearly = f.freq === 'yearly' && f.month_of_year >= 1 && f.month_of_year <= 12;
+  var dt = yearly
+    ? 'ครบ ' + f.day + ' ' + TH_M[f.month_of_year - 1] + ' · ทุกปี'
+    : 'ครบ ' + f.day + ' ' + TH_M[now.getMonth()];
+  var isToday = Number(f.day) === now.getDate() && (!yearly || f.month_of_year === now.getMonth() + 1);
+  if (isToday) dt = '(วันนี้) · ' + dt;
+  if (full){
+    if (f.status === 'done' && f.date) dt += ' · ' + (f.dir === 'in' ? 'รับ ' : 'จ่าย ') + fmtDayShort(f.date);
+    if (f.spent_minor > 0) dt += ' · ใช้แล้ว ฿' + fmtBaht(f.spent_minor);
+  }
+  return dt;
 }
 function rowIcon(it){
   var b = brandOf(it);
@@ -629,12 +724,12 @@ function summaryRow(it){
     + (xf ? '<div class="cchip xf">ไม่นับรายจ่าย</div>' : '')+'</div><div class="chev">›</div></div>';
 }
 function fixedRow(f){
-  var ML = TH_M[new Date().getMonth()];
   var open = !!(S.fxOpen && S.fxOpen[f.key]);
-  var ico = (f.logo && LOGO_URL(f.logo)) ? '<img src="'+LOGO_URL(f.logo)+'" alt="">' : (f.emoji || '•');
-  var dt = 'ครบ ' + f.day + ' ' + ML;
-  if (f.status === 'done' && f.date) dt += ' · ' + (f.dir === 'in' ? 'รับ ' : 'จ่าย ') + fmtDayShort(f.date);
-  if (f.spent_minor > 0) dt += ' · ใช้แล้ว ฿' + fmtBaht(f.spent_minor);
+  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69): รายปี → "ครบ <วัน> <เดือนของรายการ> · ทุกปี"
+  // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): ไอคอน โลโก้แบรนด์ → emoji หมวด → • (เดิม emoji หมวดชนะโลโก้ — ผิดลำดับ)
+  //   + บรรทัดวันที่ผ่าน recDtLine (helper ร่วมกับการ์ดพรีวิว — ห้ามเขียนตรรกะวันที่ซ้ำ)
+  var ico = recIconHtml(f.logo, f.category, f.emoji);
+  var dt = recDtLine(f, true);
   var stTxt = f.status === 'done' ? '<div class="st ok">✅ '+(f.dir === 'in' ? 'รับแล้ว' : 'จ่ายแล้ว')+'</div>'
     : f.status === 'pending' ? '<div class="st warn">⚠️ ยังไม่ยืนยัน</div>'
     : '<div class="st wait">⏳ รอ</div>';
@@ -642,14 +737,18 @@ function fixedRow(f){
   // hider: ปุ่มยืนยัน/แก้ ซ่อนไว้ — แตะแถวแล้วค่อยกางลงมา
   var drop = '';
   if (open){
-    var bDone = '<button class="miniact cy2" data-act="ackFixed" data-key="'+esc(f.key)+'" data-v="done">'+(f.dir === 'in' ? '✅ รับแล้ว' : '✅ จ่ายแล้ว')+'</button>';
-    var bWait = '<button class="miniact" data-act="ackFixed" data-key="'+esc(f.key)+'" data-v="wait">🕐 ยังไม่'+(f.dir === 'in' ? 'ได้' : 'จ่าย')+'</button>';
-    var bAuto = '<button class="miniact" data-act="ackFixed" data-key="'+esc(f.key)+'" data-v="auto">↩︎ อัตโนมัติ</button>';
+    // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): รายสัปดาห์ = ยืนยันรายงวด → ปุ่มแนบ data-inst="<วันที่งวดนี้>" (monthly/yearly ไม่มี — เหมือนเดิม)
+    var inst = (f.freq === 'weekly' && f.due) ? ' data-inst="'+esc(f.due)+'"' : '';
+    var bDone = '<button class="miniact cy2" data-act="ackFixed" data-key="'+esc(f.key)+'"'+inst+' data-v="done">'+(f.dir === 'in' ? '✅ รับแล้ว' : '✅ จ่ายแล้ว')+'</button>';
+    var bWait = '<button class="miniact" data-act="ackFixed" data-key="'+esc(f.key)+'"'+inst+' data-v="wait">🕐 ยังไม่'+(f.dir === 'in' ? 'ได้' : 'จ่าย')+'</button>';
+    var bAuto = '<button class="miniact" data-act="ackFixed" data-key="'+esc(f.key)+'"'+inst+' data-v="auto">↩︎ อัตโนมัติ</button>';
     var list = '';
     if (f.status === 'pending') list = bDone + bWait;
     else if (f.status === 'wait') list = bDone + bAuto;
     else list = bWait + (f.src === 'ack' ? bAuto : '');
-    drop = '<div class="fxdrop" data-key="'+esc(f.key)+'">'+list+'</div>';
+    // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69) · แก้โดย CC — TASK_cc_fix_v42.md (3 ต.ค. 69): โหมด GAS เก่าไม่มี action ลบ → ซ่อน
+    if (IS_SUPA || IS_DEMO) list += '<button class="miniact" data-act="recDel" data-key="'+esc(f.key)+'">🗑 ลบ</button>';
+    drop ='<div class="fxdrop" data-key="'+esc(f.key)+'">'+list+'</div>';
   }
   return '<div class="frowitem'+(open ? ' open' : '')+'" data-act="fxToggle" data-key="'+esc(f.key)+'">'
     + '<div class="ic">'+ico+'</div><div class="mid"><div class="nm">'+esc(f.label)+'</div><div class="dt">'+dt+'</div></div>'
@@ -727,7 +826,9 @@ function htmlSummary(d){
   var calHtml = fixed.length
     ? '<div class="sec-t">ปฏิทินรายจ่ายประจำ</div><div class="card" style="padding:10px 14px">'
       + fx.slice(0, 3).map(function(f){ return fixedRow(f); }).join('')
-      + '<div style="text-align:right;margin-top:6px"><button class="miniact cy2" data-act="tab" data-i="2">ดูทั้งหมด →</button></div></div>'
+      // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69): ปุ่มเพิ่มรายการประจำ (พาไปแท็บปฏิทินแล้วเปิดฟอร์ม)
+      // แก้โดย CC — TASK_cc_fix_v42.md (3 ต.ค. 69): ซ่อนปุ่มเพิ่มในโหมด GAS เก่า (ไม่มี action addRecurring)
+      + '<div style="display:flex;gap:7px;justify-content:flex-end;flex-wrap:wrap;margin-top:6px">'+((IS_SUPA || IS_DEMO) ? '<button class="miniact" data-act="recNew">＋ เพิ่มรายการประจำ</button>' : '')+'<button class="miniact cy2" data-act="tab" data-i="2">ดูทั้งหมด →</button></div></div>'
     : '';
   // แถบงบรายหมวด — ตัวเลขชุดเดียวกับแท็บปฏิทิน (budgets จากเซิร์ฟเวอร์เดียวกัน)
   var budPrev = '';
@@ -950,7 +1051,7 @@ function htmlSettings(d){
   var isSupa = d.meta.mode === 'supabase';
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.1.2-supabase</span></div>'
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.0-supabase</span></div>'  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69)
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -1167,6 +1268,20 @@ document.addEventListener('click', function(e){
   if (act === 'incNew') { S.incForm = true; paint(); animPop('.incform'); focusInput('incName'); return; }
   if (act === 'incCancel') { S.incForm = false; paint(); return; }
   if (act === 'incSave') { incSave(); return; }
+  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69): รายการประจำ เพิ่ม/ลบ
+  if (act === 'recNew') { recOpen(); return; }
+  if (act === 'recCancel') { recFlushCancel(); S.recForm = null; paint(); return; }
+  if (act === 'recSet') { recSet(t.getAttribute('data-f'), t.getAttribute('data-v')); return; }
+  if (act === 'recSave') { recSave(); return; }
+  // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): โหมดพิมพ์ — แก้ช่อง/เดาคำ/suggest
+  if (act === 'recEdit') { recEdit(t.getAttribute('data-v'), t.getAttribute('data-open') === '1'); return; }
+  if (act === 'recGuess') { recGuessPick(parseInt(t.getAttribute('data-i'), 10), t.getAttribute('data-v')); return; }
+  if (act === 'recGuessAll') { recGuessAll(); return; }
+  if (act === 'recCatOk') { recCatOk(); return; }
+  if (act === 'recSelf') { focusInput('recType'); return; }
+  if (act === 'recFill') { recFill(parseInt(t.getAttribute('data-i'), 10)); return; }
+  if (act === 'recOpenEx') { recOpenExisting(t.getAttribute('data-key'), parseInt(t.getAttribute('data-i'), 10)); return; }
+  if (act === 'recDel') { recDel(t.getAttribute('data-key')); return; }
   if (act === 'vopen') {
     var v = t.getAttribute('data-v') || '';
     if (v === 'month'){ var ms = detailMonths(); S.view = { t: 'month', m: ms.length ? ms[0].m : '' }; }
@@ -1223,7 +1338,7 @@ document.addEventListener('click', function(e){
     if (S.fxOpen[fk]) animPop('.fxdrop[data-key="' + fk + '"]');
     return;
   }
-  if (act === 'ackFixed') { ackFixedLocal(t.getAttribute('data-key'), t.getAttribute('data-v')); return; }
+  if (act === 'ackFixed') { ackFixedLocal(t.getAttribute('data-key'), t.getAttribute('data-v'), t.getAttribute('data-inst') || ''); return; }  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): + งวด
   if (act === 'skip' || act === 'delGo') {
     var it = findItem(ref);
     var rowItem = sw ? sw.querySelector('.item') : null;
@@ -1620,10 +1735,20 @@ function htmlCalendar(d){
   var daysIn = new Date(y, m + 1, 0).getDate();
   var today = now.getDate();
   var byDay = {};
-  fixed.forEach(function(f){ (byDay[f.day] = byDay[f.day] || []).push(f); });
+  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): รายสัปดาห์ลงจุดทุกวันของเดือนที่ตรง dow (weeklyDotDays — logic เดียวกับ bridge)
+  //   สีตามสถานะเฉพาะวันของ "งวดนี้" (f.due) · วันอื่นของเดือน = สี "รอ" (ยังไม่ติดตามสถานะงวดอื่น — เฟส 2)
+  var curYm = y + '-' + (m + 1 < 10 ? '0' : '') + (m + 1);
+  fixed.forEach(function(f){
+    if (f.freq === 'weekly'){
+      var dueD = (f.due && f.due.slice(0, 7) === curYm) ? parseInt(f.due.slice(8, 10), 10) : 0;
+      weeklyDotDays(f.dow, y, m + 1).forEach(function(wd){ (byDay[wd] = byDay[wd] || []).push(wd === dueD ? f : { status: 'wait' }); });
+      return;
+    }
+    (byDay[f.day] = byDay[f.day] || []).push(f);
+  });
   function colorOf(f){ return f.status === 'done' ? '#22c55e' : (f.status === 'pending' ? '#f5b943' : '#3f3f4b'); }
   var cells = '';
-  ['อา','จ','อ','พ','พฤ','ศ','ส'].forEach(function(n){ cells += '<div class="ck">'+n+'</div>'; });
+  TH_DOW_S.forEach(function(n){ cells += '<div class="ck">'+n+'</div>'; });
   for (var i = 0; i < startIdx; i++) cells += '<div class="cd b"></div>';
   for (var dd = 1; dd <= daysIn; dd++){
     var dots = (byDay[dd] || []).map(function(f){ return '<span class="dd" style="background:'+colorOf(f)+'"></span>'; }).join('');
@@ -1636,31 +1761,713 @@ function htmlCalendar(d){
   if (budgets.length){
     var tpct = bt.cap_minor > 0 ? Math.round(bt.spent_minor / bt.cap_minor * 100) : 0;
     var tcol = tpct >= 100 ? 'bred' : (tpct >= 80 ? 'bamb' : 'bcy');
-    budHtml = '<div class="sec-t">งบเดือนนี้</div><div class="card">'
+    // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69): ส่วน "ใช้จ่ายรายวัน" แยกจากรายการประจำ (ยอดถูกหักฝั่ง bridge แล้ว)
+    budHtml = '<div class="sec-t">ใช้จ่ายรายวัน (ไม่รวมรายการประจำ)</div><div class="card">'
       + '<div class="budtot"><div class="l">ใช้ไป <b>฿'+fmtBaht(bt.spent_minor)+'</b> จาก ฿'+fmtBaht(bt.cap_minor)+'</div><div class="pc">'+tpct+'<small>%</small></div></div>'
-      + '<div class="bar"><i class="'+tcol+'" style="width:'+Math.min(100, tpct)+'%"></i></div></div>'
+      + '<div class="bar"><i class="'+tcol+'" style="width:'+Math.min(100, tpct)+'%"></i></div>'
+      + '<div class="hint" style="margin:7px 1px 0">ตัวเลขไม่รวมยอดที่จับคู่กับรายการประจำด้านล่าง</div></div>'
       + '<div class="sec-t">งบรายหมวด</div><div class="card" style="padding:8px 14px">'
       + budgets.map(function(b){ return budgetRow(b); }).join('') + '</div>';
   }
   var fxList = fixed.filter(function(f){ return !bkeys[f.key]; });
   var rows = fxList.slice(0).sort(function(a, b){ return a.day - b.day; }).map(function(f){ return fixedRow(f); }).join('');
+  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69): ส่วน "รายจ่ายประจำ" — สรุป + ปุ่ม/ฟอร์มเพิ่ม + ลิสต์
+  var outL = fxList.filter(function(f){ return f.dir !== 'in'; });
+  var inL = fxList.filter(function(f){ return f.dir === 'in'; });
+  var outSum = outL.reduce(function(a, f){ return a + (f.amount_minor || 0); }, 0);
+  var outDone = outL.filter(function(f){ return f.status === 'done'; }).length;
+  var inDone = inL.filter(function(f){ return f.status === 'done'; }).length;
+  var fxSum = '<div class="budtot" style="margin:2px 0 6px;align-items:center"><div class="l">รวมออก <b>฿'+fmtBaht(outSum)+'</b> · จ่ายแล้ว '+outDone+'/'+outL.length
+    + (inL.length ? ' · รับ '+inDone+'/'+inL.length : '') + '</div>'
+    + ((S.recForm || !(IS_SUPA || IS_DEMO)) ? '' : '<button class="miniact cy2" data-act="recNew">＋ เพิ่มรายการประจำ</button>') + '</div>';  // แก้โดย CC — TASK_cc_fix_v42.md (3 ต.ค. 69): ซ่อนในโหมด GAS เก่า
   return '<div class="sec-t">ปฏิทิน · '+TH_M[m]+' '+String(y + 543).slice(2)+'</div>'
     + '<div class="card" style="padding:10px 10px"><div class="cal">'+cells+'</div>'
     + '<div class="segl" style="margin-top:8px"><span><span class="dot" style="background:#22c55e"></span>จ่าย/รับแล้ว</span><span><span class="dot" style="background:#f5b943"></span>ยังไม่ยืนยัน</span><span><span class="dot" style="background:#3f3f4b"></span>รอ</span><span><span class="dot" style="background:var(--cy)"></span>วันนี้</span></div></div>'
     + budHtml
-    + '<div class="sec-t">รายการประจำ</div>'
-    + '<div class="card" style="padding:8px 14px">'+(rows || '<div class="hint" style="margin:4px 2px">— ยังไม่มี —</div>')+'</div>'
-    + '<div class="hint">แตะรายการเพื่อยืนยัน/แก้ · จับคู่อัตโนมัติแล้วจะขึ้น ✅ เอง</div>';
+    + '<div class="sec-t">รายจ่ายประจำ</div>'
+    + '<div class="card" id="recCard" style="padding:8px 14px">' + fxSum + htmlRecForm()
+    + (rows || '<div class="hint" style="margin:4px 2px">— ยังไม่มี —</div>')+'</div>'
+    + '<div class="hint">แตะรายการเพื่อยืนยัน/แก้ · ลบได้ในปุ่มที่กาง · จับคู่อัตโนมัติแล้วจะขึ้น ✅ เอง</div>';
 }
-function ackFixedLocal(key, v){
+/* ---------- แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69): ฟอร์มเพิ่มรายการประจำ (client-first แบบ incform) ---------- */
+function recFormDefault(){
+  // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): เพิ่ม state โหมดพิมพ์ (ฟิลด์เดิม name/amt/day/dir/cat/freq/month คงชื่อเดิม — recSave อ่านตัวเดิม)
+  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): + dow (รายสัปดาห์ 0=อา … 6=ส · null = ยังไม่เลือก)
+  return { name:'', amt:'', day:'', dir:'out', cat:'', freq:'monthly', month: new Date().getMonth() + 1, dow: null,
+    type:'', guesses:[], warn:[], catGuess:'', catTouched:false, edit:'', recallOpen:false, brand:'' };
+}
+function recSyncInputs(){  // เก็บค่าที่พิมพ์ไว้ก่อน paint ใหม่ (กดชิปแล้วข้อความไม่หาย)
+  var f = S.recForm; if (!f) return;
+  var n = el('recName'), a = el('recAmt'), d = el('recDay'), ty = el('recType');
+  if (ty) f.type = ty.value;  // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): ประโยคที่พิมพ์ต้องไม่หายตอน paint
+  if (n) f.name = n.value;
+  if (a) f.amt = a.value;
+  if (d) f.day = d.value;
+}
+
+/* ---------- แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): โหมดพิมพ์เร็ว — parser ในเครื่อง (deterministic · ฟรี · ไม่ใช้เน็ต) ---------- */
+var REC_MONTH_FULL = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+// คำเพี้ยน/คำย่อที่ระบบ "เดาให้" (ต้องขึ้นกล่องเหลืองให้ตรวจเสมอ) — config ล้วน: เพิ่มคู่คำได้โดยไม่แก้ logic
+// raw = คำที่ผู้ใช้พิมพ์ · fixed = คำที่แก้ให้ (ต้องเป็นคำที่ parser รู้จักตรงตัว) · alts = ตัวเลือกให้แตะเปลี่ยน (ตัวแรก = ที่เดา)
+// (TASK weekly จะเพิ่มคำวัน เช่น { raw:['เสา'], fixed:'เสาร์', alts:[...] } ต่อท้ายตารางนี้)
+// แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): ช่องเสริมของ config — field (ค่าเริ่ม 'month') · after (regex บริบทข้างหน้าที่ต้องมี
+// แทนเงื่อนไขขอบคำด้านหน้า — คำวันมักติดกับ "ทุกวัน")
+var REC_WK_AFTER = /(?:ทุก\s*วัน|ทุก\s*อาทิต(?:ย์)?|(?:ทุก|ราย)\s*สัปดาห์\s*(?:วัน)?)\s*$/;
+// คำวันที่ parser รู้จักตรงตัว (ไม่ต้องเดา) → dow · คำย่อหัวปฏิทินรับได้ (ต้องไม่ติดตัวอักษรตามหลัง)
+var REC_DOW_WORDS = [['อาทิตย์',0],['จันทร์',1],['อังคาร',2],['พุธ',3],['พฤหัสบดี',4],['พฤหัส',4],['ศุกร์',5],['เสาร์',6],
+  ['อา',0],['จ',1],['อ',2],['พ',3],['พฤ',4],['ศ',5],['ส',6]];
+var REC_DOW_SRC = '(' + REC_DOW_WORDS.map(function(x){ return x[0]; }).sort(function(a, b){ return b.length - a.length; }).join('|') + ')(?![฀-๿a-zA-Z])';
+function recDowOf_(tok){
+  for (var i = 0; i < REC_DOW_WORDS.length; i++) if (REC_DOW_WORDS[i][0] === tok) return REC_DOW_WORDS[i][1];
+  return null;
+}
+var REC_FUZZY = [
+  { raw:['มค','มกรา'], fixed:'ม.ค.', alts:['ม.ค.','ธ.ค.','ก.พ.'] },
+  { raw:['กพ','กุมภา'], fixed:'ก.พ.', alts:['ก.พ.','ม.ค.','มี.ค.'] },
+  { raw:['มีค','มีนา'], fixed:'มี.ค.', alts:['มี.ค.','ก.พ.','เม.ย.'] },
+  { raw:['เมย','เมษา'], fixed:'เม.ย.', alts:['เม.ย.','มี.ค.','พ.ค.'] },
+  { raw:['พค','พฤษภา'], fixed:'พ.ค.', alts:['พ.ค.','เม.ย.','มิ.ย.'] },
+  { raw:['มิย','มิถุนา'], fixed:'มิ.ย.', alts:['มิ.ย.','พ.ค.','ก.ค.'] },
+  { raw:['กค','กรกฎา'], fixed:'ก.ค.', alts:['ก.ค.','มิ.ย.','ส.ค.'] },
+  { raw:['สค','สิงหา'], fixed:'ส.ค.', alts:['ส.ค.','ก.ค.','ก.ย.'] },
+  { raw:['กย','กันยา'], fixed:'ก.ย.', alts:['ก.ย.','ส.ค.','ต.ค.'] },
+  { raw:['ตค','ตุลา'], fixed:'ต.ค.', alts:['ต.ค.','ก.ย.','พ.ย.'] },
+  { raw:['พย','พฤศจิกา'], fixed:'พ.ย.', alts:['พ.ย.','ต.ค.','ธ.ค.'] },
+  { raw:['ธค','ธันวา'], fixed:'ธ.ค.', alts:['ธ.ค.','พ.ย.','ม.ค.'] },
+  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): คำวันเพี้ยน (รายสัปดาห์) — field:'dow' · after = ต้องตามหลังคำรายสัปดาห์เท่านั้น
+  // (เช่น "ทุกวันเสา") — กันไปเดาคำในชื่อรายการ · alts = วันข้างเคียงให้แตะเปลี่ยน
+  { raw:['เสา'], fixed:'เสาร์', alts:['เสาร์','ศุกร์','อาทิตย์'], field:'dow', after: REC_WK_AFTER },
+  { raw:['อาทิต','อาทิด'], fixed:'อาทิตย์', alts:['อาทิตย์','เสาร์','จันทร์'], field:'dow', after: REC_WK_AFTER },
+  { raw:['จัน'], fixed:'จันทร์', alts:['จันทร์','อาทิตย์','อังคาร'], field:'dow', after: REC_WK_AFTER },
+  { raw:['พุท'], fixed:'พุธ', alts:['พุธ','อังคาร','พฤหัส'], field:'dow', after: REC_WK_AFTER },
+  { raw:['พฤหัด','พฤหัสฯ'], fixed:'พฤหัส', alts:['พฤหัส','พุธ','ศุกร์'], field:'dow', after: REC_WK_AFTER },
+  { raw:['ศุก','สุก','สุกร์'], fixed:'ศุกร์', alts:['ศุกร์','พฤหัส','เสาร์'], field:'dow', after: REC_WK_AFTER }
+];
+// คำในชื่อ → หมวดที่ "เดาให้" (ติดธง ⭐ + กล่องเหลืองให้ตรวจ) — config ล้วน · ลำดับสำคัญ (ตัวแรกที่เจอชนะ: น้ำมัน ก่อน ค่าน้ำ)
+var CAT_WORDS = [
+  { cat:'fuel', words:['น้ำมัน','ปั๊ม','ปตท','บางจาก'] },
+  { cat:'education', words:['ค่าเทอม','เทอม','เรียน','คอร์ส','ติว'] },
+  { cat:'health', words:['ทำฟัน','หมอฟัน','จัดฟัน','หมอ','โรงพยาบาล','คลินิก','ประกัน'] },
+  { cat:'house', words:['ค่าไฟ','ค่าน้ำ','ค่าเช่า','ค่าบ้าน','ค่าห้อง','คอนโด','ส่วนกลาง','ค่าเน็ต','อินเทอร์เน็ต'] },
+  { cat:'sports', words:['ฟิตเนส','ยิม','gym','fitness'] },
+  { cat:'subscriptions', words:['netflix','spotify','youtube','claude','icloud','disney','chatgpt','สมาชิก'] },
+  { cat:'entertainment', words:['หนัง','ฟิล์ม','ภาพยนตร์','คอนเสิร์ต','เกม'] },
+  { cat:'topup', words:['เติมเงิน','truemoney','ทรูมันนี่'] },
+  { cat:'transport', words:['ค่ารถ','bts','mrt'] },
+  { cat:'food', words:['ค่าข้าว','อาหาร','กาแฟ'] },
+  { cat:'income', words:['เงินเดือน','โบนัส'] }
+];
+function recIsL_(c){ return !!c && /[฀-๿a-zA-Z]/.test(c); }  // ตัวอักษรไทย/อังกฤษ (ใช้เช็คขอบคำ)
+function recIsD_(c){ return !!c && /[\d.,]/.test(c); }
+function recEscRe_(s){ return String(s).replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&'); }
+function recBlank_(w, i, j){ return w.slice(0, i) + new Array(j - i + 1).join(' ') + w.slice(j); }
+// หาแมตช์แรกที่ผ่านเงื่อนไขขอบคำ (prevOk/nextOk รับอักขระก่อน/หลัง — '' = ต้นสตริง/ท้ายสตริง)
+function recFind_(w, re, prevOk, nextOk){
+  var g = new RegExp(re.source, 'g'), m;
+  while ((m = g.exec(w))){
+    var i = m.index, j = i + m[0].length;
+    var p = i > 0 ? w.charAt(i - 1) : '', n = j < w.length ? w.charAt(j) : '';
+    if ((!prevOk || prevOk(p)) && (!nextOk || nextOk(n))) return { i: i, j: j, m: m };
+    if (!m[0].length) g.lastIndex++;
+  }
+  return null;
+}
+function recNoL_(c){ return !recIsL_(c); }
+var REC_MONTH_RE = (function(){
+  var a = [];
+  for (var i = 0; i < 12; i++){ a.push(TH_M[i], TH_M[i].replace(/\.$/, ''), REC_MONTH_FULL[i]); }
+  a.sort(function(x, y){ return y.length - x.length; });
+  return new RegExp('(' + a.map(recEscRe_).join('|') + ')');
+})();
+function recMonthOf_(tok){
+  var t = String(tok || '');
+  for (var i = 0; i < 12; i++) if (t === TH_M[i] || t === TH_M[i].replace(/\.$/, '') || t === REC_MONTH_FULL[i]) return i + 1;
+  return 0;
+}
+function recNorm(s){ return String(s || '').toLowerCase().replace(/[^a-z0-9ก-๙]/g, ''); }
+// ประโยค → ช่องฟอร์ม · คืน { name, amt (สตริงบาทตามที่พิมพ์ — parseBahtMinor แปลงตอน save), day, month, dir, freq,
+//   catGuess, guesses:[{raw, fixed, alts, at, field}], warn:[{field, msg, block?}], brand }
+// recall (ไม่บังคับ) = รายการของฉัน ใช้เดาหมวดจากชื่อที่เคยมี · ไม่มีสุ่ม/ไม่อิงเวลา → ผลเดิมทุกครั้ง
+function parseRecText(text, recall){
+  var raw = String(text == null ? '' : text).slice(0, 100);
+  var out = { name:'', amt:'', day:null, month:null, dow:null, dir:'out', freq:'monthly', catGuess:'', guesses:[], warn:[], brand:'' };  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): + dow
+  if (!raw.replace(/\s+/g, '')) return out;
+
+  // 1) เดาคำ (REC_FUZZY) — จดตำแหน่งในข้อความเดิม แล้วแทนด้วยคำที่แก้ในสตริงทำงาน
+  var hits = [];
+  REC_FUZZY.forEach(function(fz){
+    fz.raw.forEach(function(r){
+      var g = new RegExp(recEscRe_(r), 'g'), m;
+      while ((m = g.exec(raw))){
+        var p = m.index > 0 ? raw.charAt(m.index - 1) : '', n = raw.charAt(m.index + r.length);
+        var pOk = fz.after ? fz.after.test(raw.slice(0, m.index)) : !recIsL_(p);  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69)
+        if (pOk && !recIsL_(n)) hits.push({ at: m.index, raw: r, fz: fz });
+      }
+    });
+  });
+  hits.sort(function(a, b){ return a.at - b.at || b.raw.length - a.raw.length; });
+  var w = '', pos = 0;
+  hits.forEach(function(h){
+    if (h.at < pos) return;  // ทับกัน — เอาตัวแรก/ยาวกว่า
+    w += raw.slice(pos, h.at) + ' ' + h.fz.fixed + ' ';
+    pos = h.at + h.raw.length;
+    out.guesses.push({ raw: h.raw, fixed: h.fz.fixed, alts: (h.fz.alts || [h.fz.fixed]).slice(0), at: h.at, field: h.fz.field || 'month' });
+  });
+  w = ' ' + w + raw.slice(pos) + ' ';
+
+  // 2a) แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): รายสัปดาห์ (รองรับแล้ว) — ต้องทำก่อนข้อ 2 (ไม่งั้น "ทุกวันเสาร์" ตกเป็นรายวัน)
+  //   "ทุกวัน<X>" / "ทุกอาทิต<X>" (X = คำวัน/คำย่อ) → weekly + dow · "ทุกสัปดาห์/รายสัปดาห์/ทุกอาทิตย์…" ไม่มีวัน → weekly รอเลือกวัน
+  //   (ตามด้วย "วัน<X>" ได้ เช่น ทุกสัปดาห์ วันเสาร์) · "ทุกวัน" เดี่ยว ๆ = รายวัน (ข้อ 2 — ยังไม่รองรับ)
+  var weekly = false, mwk;
+  var WK_DAY = new RegExp('(?:ทุก\\s*วัน|ทุก\\s*อาทิต(?:ย์)?)\\s*' + REC_DOW_SRC);
+  while ((mwk = recFind_(w, WK_DAY))){
+    weekly = true;
+    if (out.dow == null) out.dow = recDowOf_(mwk.m[1]);
+    w = recBlank_(w, mwk.i, mwk.j);
+  }
+  var WK_GEN = /(?:ทุก|ราย)\s*สัปดาห์|สัปดาห์ละ(?:ครั้ง)?|ต่อ\s*สัปดาห์|\/\s*สัปดาห์|ทุก\s*อาทิต(?:ย์)?|รายอาทิต(?:ย์)?|อาทิต(?:ย์)?ละ(?:ครั้ง)?/;
+  while ((mwk = recFind_(w, WK_GEN))){ weekly = true; w = recBlank_(w, mwk.i, mwk.j); }
+  if (weekly && out.dow == null){
+    var mwd = recFind_(w, new RegExp('วัน\\s*' + REC_DOW_SRC));
+    if (mwd){ out.dow = recDowOf_(mwd.m[1]); w = recBlank_(w, mwd.i, mwd.j); }
+  }
+  // 2) ความถี่ที่ยังไม่รองรับ (รายวัน) — เตือนชัด ไม่เงียบ ไม่เดา
+  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): เอาคำรายสัปดาห์ออก (ย้ายไปข้อ 2a ที่รองรับแล้ว)
+  var UNSUP = /ทุก\s*วัน(?!\s*ที่)[ก-๙]*|รายวัน|วันละ|ต่อวัน|\/\s*วัน/;
+  var unsup = null, mu;
+  while ((mu = recFind_(w, UNSUP))){
+    if (!unsup) unsup = mu.m[0].replace(/\s+/g, '');
+    w = recBlank_(w, mu.i, mu.j);
+  }
+  // 3) ความถี่ที่รองรับ
+  var yearly = false, my, mm2;
+  while ((my = recFind_(w, /ทุก\s*ปี|รายปี|\/\s*ปี|ต่อปี|ปีละ(?:ครั้ง)?/))){ yearly = true; w = recBlank_(w, my.i, my.j); }
+  while ((mm2 = recFind_(w, /ทุก\s*เดือน|รายเดือน|\/\s*เดือน|ต่อเดือน|เดือนละ(?:ครั้ง)?/))){ w = recBlank_(w, mm2.i, mm2.j); }
+  out.freq = unsup ? '' : (weekly ? 'weekly' : (yearly ? 'yearly' : 'monthly'));  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): + weekly
+  if (out.freq !== 'weekly') out.dow = null;
+
+  // 4) วัน/เดือน (ก่อนยอด — ตัวเลขที่เป็นวันที่ห้ามถูกหยิบเป็นยอด)
+  var notNum = function(c){ return !recIsD_(c) && !/[a-zA-Z]/.test(c); };
+  var md = recFind_(w, /(\d{1,2})\s*\/\s*(\d{1,2})(?:\s*\/\s*\d{2,4})?/, notNum, function(c){ return !/\d/.test(c); });
+  if (md){
+    var da = parseInt(md.m[1], 10), mb = parseInt(md.m[2], 10);
+    if (da > 31 || (mb > 12 && da <= 12)){ var tmp = da; da = mb; mb = tmp; }
+    out.day = da;
+    if (mb >= 1 && mb <= 12) out.month = mb;
+    else out.warn.push({ field: 'month', msg: 'เดือน ' + mb + ' ไม่มีจริง — เลือกเดือนใหม่', block: true });
+    w = recBlank_(w, md.i, md.j);
+  }
+  var mw = recFind_(w, /(?:ทุก\s*)?วันที่\s*(\d{1,3})/, null, function(c){ return !/\d/.test(c); });
+  if (mw){
+    if (out.day == null) out.day = parseInt(mw.m[1], 10);
+    w = recBlank_(w, mw.i, mw.j);
+  }
+  var mdm = recFind_(w, new RegExp('(\\d{1,2})\\s*' + REC_MONTH_RE.source), notNum, recNoL_);
+  if (mdm){
+    if (out.day == null) out.day = parseInt(mdm.m[1], 10);
+    if (out.month == null) out.month = recMonthOf_(mdm.m[2]);
+    w = recBlank_(w, mdm.i, mdm.j);
+  }
+  var mo;
+  while ((mo = recFind_(w, REC_MONTH_RE, recNoL_, recNoL_))){
+    if (out.month == null) out.month = recMonthOf_(mo.m[1]);
+    w = recBlank_(w, mo.i, mo.j);
+  }
+  var mv;
+  while ((mv = recFind_(w, /(?:ทุก\s*)?วันที่/))) w = recBlank_(w, mv.i, mv.j);
+
+  // 5) ยอด — ตัวเลขที่เหลือ (ไม่ติดตัวอักษรอังกฤษ เช่น 3BB/5G) · มี , หรือ . หรือ บาท/฿ = ชัดกว่า · ไม่งั้นเอาตัวท้ายสุด
+  var cands = [], g5 = /(\d{1,3}(?:,\d{3})+|\d+)(\.\d{1,2})?/g, m5;
+  while ((m5 = g5.exec(w))){
+    var i5 = m5.index, j5 = i5 + m5[0].length;
+    var p5 = w.charAt(i5 - 1), n5 = w.charAt(j5);
+    if (recIsD_(p5) || /[a-zA-Z]/.test(p5) || /[\da-zA-Z]/.test(n5) || (/[.,]/.test(n5) && /\d/.test(w.charAt(j5 + 1)))) continue;
+    var strong = /[.,]/.test(m5[0]) || p5 === '฿' || /^\s*(บาท|฿)/.test(w.slice(j5));
+    cands.push({ i: i5, j: j5, s: m5[0], strong: strong });
+  }
+  var pick = null;
+  for (var ci = 0; ci < cands.length; ci++) if (cands[ci].strong){ pick = cands[ci]; break; }
+  if (!pick && cands.length) pick = cands[cands.length - 1];
+  if (pick){ out.amt = pick.s; w = recBlank_(w, pick.i, pick.j); }
+  w = w.replace(/฿/g, ' ');
+
+  // 6) ทิศทาง — คำสั่งที่แยกเป็นคำเดี่ยว (คำแรกที่เจอชนะ) · ไม่ระบุ = จ่าย
+  var dIn = recFind_(w, /(ได้รับ|รับ|ได้|เงินเข้า)/, function(c){ return !c || /\s/.test(c); }, function(c){ return !c || /\s/.test(c); });
+  var dGlue = recFind_(w, /เงินเข้า/);
+  if (!dIn && dGlue) dIn = dGlue;
+  var dOut = recFind_(w, /(จ่าย|ชำระ|หัก)/, function(c){ return !c || /\s/.test(c); }, function(c){ return !c || /\s/.test(c); });
+  if (dIn && (!dOut || dIn.i < dOut.i)) out.dir = 'in';
+  // 7) ตัดคำสั่ง/คำฟุ่มเฟือย (คำเดี่ยว) + "จ่าย/เพิ่ม/บันทึก" ที่ติดหน้าประโยค
+  var FILL = /(ได้รับ|รับ|ได้|เงินเข้า|จ่าย|ชำระ|หัก|เพิ่ม|บันทึก|รายการ|บาท)/, mf;
+  while ((mf = recFind_(w, FILL, function(c){ return !c || /\s/.test(c); }, function(c){ return !c || /\s/.test(c); }))) w = recBlank_(w, mf.i, mf.j);
+  w = w.replace(/^\s*(จ่าย|เพิ่ม|บันทึก)(?=[ก-๙a-zA-Z])/, ' ');
+
+  // 8) ชื่อ = ที่เหลือ
+  var name = w.replace(/[·•,:;|]+/g, ' ').replace(/\s+/g, ' ').replace(/^[\s\-–]+|[\s\-–]+$/g, '').trim();
+  out.name = name.slice(0, 60).trim();
+  out.brand = brandKey(out.name);
+
+  // 9) เตือนช่องที่ยังไม่ครบ/ไม่ถูก — ระบบไม่เดาให้
+  var W = [];
+  if (!out.name) W.push({ field: 'name', msg: 'ใส่ชื่อรายการด้วย' });
+  if (!out.amt) W.push({ field: 'amt', msg: 'ใส่ยอดด้วย' });
+  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): รายสัปดาห์ไม่ใช้วันที่ 1–31 → เตือน "เลือกวัน" แทน (บล็อกจนกว่าจะเลือก)
+  if (out.freq === 'weekly'){
+    if (out.dow == null) W.push({ field: 'dow', msg: 'เลือกวัน (จ–อา)', block: true });
+  }
+  else if (out.day == null) W.push({ field: 'day', msg: 'ใส่วันที่จ่าย (เช่น วันที่ 5)' });
+  else if (!(out.day >= 1 && out.day <= 31)) W.push({ field: 'day', msg: 'วันที่ ' + out.day + ' ไม่มีจริง — ต้องเป็น 1–31' });
+  if (unsup) W.push({ field: 'freq', msg: '"' + unsup + '" (รายวัน) ยังไม่รองรับ — แตะเลือก ทุกสัปดาห์/ทุกเดือน/ทุกปี', block: true });
+  if (out.freq === 'yearly' && !out.month && !out.warn.length) W.push({ field: 'month', msg: 'รายปี — ระบุเดือนด้วย (เช่น 25 ต.ค.)', block: true });
+  out.warn = W.concat(out.warn);
+
+  // 10) เดาหมวด: ชื่อตรงรายการของฉัน → หมวดนั้น · แบรนด์เดียวกัน → หมวดนั้น · คำใน CAT_WORDS · ไม่เจอ = ว่าง
+  var nq = recNorm(out.name), cg = '';
+  if (nq){
+    var rc = recall || [], byBrand = '';
+    for (var ri = 0; ri < rc.length; ri++){
+      if (!rc[ri] || !rc[ri].cat) continue;
+      if (recNorm(rc[ri].name) === nq){ cg = rc[ri].cat; break; }
+      if (!byBrand && out.brand && (rc[ri].brand || brandKey(rc[ri].name)) === out.brand) byBrand = rc[ri].cat;
+    }
+    if (!cg) cg = byBrand;
+    if (!cg){
+      var low = out.name.toLowerCase();
+      for (var wi = 0; wi < CAT_WORDS.length && !cg; wi++){
+        for (var wj = 0; wj < CAT_WORDS[wi].words.length; wj++){
+          if (low.indexOf(CAT_WORDS[wi].words[wj]) >= 0){ cg = CAT_WORDS[wi].cat; break; }
+        }
+      }
+    }
+  }
+  if (cg === 'income' && out.dir !== 'in') cg = '';
+  out.catGuess = cg;
+  return out;
+}
+
+// เติมผล parse ลงฟอร์ม (ทับทั้งชุด) — หมวดที่ผู้ใช้แตะเองแล้ว (catTouched) ห้ามทับ
+function recRecall(){ return (S.data && S.data.recall) || []; }
+function recApply(f){
+  var p = parseRecText(f.type, recRecall());
+  f.name = p.name; f.amt = p.amt; f.day = p.day == null ? '' : String(p.day);
+  f.dir = p.dir; f.freq = p.freq;
+  if (p.month) f.month = p.month;
+  f.guesses = p.guesses; f.warn = p.warn; f.brand = p.brand;
+  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): วันที่ parse ได้ทับ · ไม่ระบุ = คงที่แตะชิปไว้ (แบบเดียวกับ month) → มีวันแล้วไม่ต้องเตือน "เลือกวัน"
+  if (p.dow != null) f.dow = p.dow;
+  if (f.freq === 'weekly' && recDowOk(f.dow)) f.warn = f.warn.filter(function(w){ return w.field !== 'dow'; });
+  if (!f.catTouched){
+    var g = (p.catGuess && catMeta(p.catGuess).e !== '❔') ? p.catGuess : '';
+    f.catGuess = g; f.cat = g;
+  }
+}
+function recDropWarn(f, field){
+  f.warn = (f.warn || []).filter(function(w){ return w.field !== field; });
+  if (field === 'month' || field === 'dow') f.guesses = (f.guesses || []).filter(function(g){ return g.field !== field; });  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): + dow
+}
+// เหตุที่ยังบันทึกไม่ได้ (ว่าง = ครบ) — ใช้ทั้ง recSave (toast) และสถานะปุ่ม "เพิ่มรายการ" (ชุดเดียว)
+function recIssues(f){
+  var out = [];
+  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): weekly รองรับแล้ว — ต้องมี dow (ไม่ใช้วันที่ 1–31)
+  var weekly = f.freq === 'weekly';
+  if (f.freq !== 'monthly' && f.freq !== 'yearly' && !weekly) out.push('ความถี่นี้ยังไม่รองรับ — เลือก ทุกสัปดาห์/ทุกเดือน/ทุกปี');  // เหตุหลักขึ้นก่อน
+  if (!String(f.name || '').replace(/\s+/g, ' ').trim()) out.push('ใส่ชื่อรายการด้วย');
+  if (!(parseBahtMinor(f.amt) > 0)) out.push('ใส่ยอดด้วย');
+  var dayStr = String(f.day == null ? '' : f.day).trim();
+  var day = /^\d{1,2}$/.test(dayStr) ? parseInt(dayStr, 10) : NaN;
+  if (weekly){ if (!recDowOk(f.dow)) out.push('เลือกวัน (จ–อา)'); }
+  else if (!(day >= 1 && day <= 31)) out.push('วันที่จ่ายต้องเป็น 1–31');
+  (f.warn || []).forEach(function(w){ if (w.block && w.field !== 'freq' && w.field !== 'dow') out.push(w.msg); });
+  // แก้โดย CC — TASK_cc_fix_v42.md (3 ต.ค. 69): รายปี → วันต้องมีจริงในเดือนที่เลือก (เช็คกับปีปัจจุบัน · ก.พ. 29 ตามปีอธิกสุรทิน)
+  if (f.freq === 'yearly' && day >= 1 && day <= 31){
+    var dim = new Date(new Date().getFullYear(), f.month, 0).getDate();
+    if (day > dim) out.push('เดือน ' + TH_M[f.month - 1] + ' มีไม่ถึง ' + day + ' วัน');
+  }
+  return out;
+}
+function recWarnPiece(field){ return field === 'day' || field === 'month' || field === 'dow' ? 'freq' : field; }  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): + dow
+function recExisting(f){
+  var nq = recNorm(f.name); if (!nq) return null;
+  var rc = recRecall();
+  for (var i = 0; i < rc.length; i++) if (rc[i] && rc[i].isRec && recNorm(rc[i].name) === nq) return rc[i];
+  return null;
+}
+function recMatches(f){
+  var q = recNorm(f.name || f.type); if (q.length < 2) return [];
+  var rc = recRecall(), out = [];
+  for (var i = 0; i < rc.length && out.length < 3; i++){
+    var nn = recNorm(rc[i] && rc[i].name);
+    if (nn && (nn.indexOf(q) >= 0 || (nn.length >= 2 && q.indexOf(nn) >= 0))) out.push({ it: rc[i], i: i });
+  }
+  return out;
+}
+function recSentence(it){  // ข้อมูลรายการ → ประโยค (แล้ว parse ทางเดียวกับพิมพ์จริง)
+  var s = (it.dir === 'in' ? 'รับ ' : '') + String(it.name || '').replace(/\s+/g, ' ').trim();
+  if (it.amount_minor > 0) s += ' ' + fmtBaht(it.amount_minor).replace(/\.00$/, '');
+  if (it.freq === 'weekly') return s + (recDowOk(it.dow) ? ' ทุกวัน' + TH_DOW[Number(it.dow)] : ' ทุกสัปดาห์');  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69)
+  if (it.day >= 1 && it.day <= 31) s += ' วันที่ ' + it.day;
+  if (it.freq === 'yearly') s += ' ทุกปี' + (it.month >= 1 && it.month <= 12 ? ' ' + TH_M[it.month - 1] : '');
+  return s;
+}
+function recAmtShort(minor){ return fmtBaht(minor).replace(/\.00$/, ''); }
+
+/* ---------- ส่วน HTML ของฟอร์ม (แยกโซน — ระหว่างพิมพ์วาดใหม่เฉพาะโซน ไม่แตะช่องที่กำลังพิมพ์) ---------- */
+function recChip(f, field, val, label, cls){
+  var on = String(f[field]) === String(val);
+  return '<button class="miniact'+(on ? ' cy2' : '')+(cls || '')+'" data-act="recSet" data-f="'+field+'" data-v="'+esc(val)+'">'+label+'</button>';
+}
+function recHtmlFreqChips(f){
+  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): + ชิป "ทุกสัปดาห์" (เลือกแล้วโชว์ "(เสาร์)") · weekly → ชิปวัน อา–ส (ลำดับหัวปฏิทิน · ฟิลด์ dow · ช่องวันที่ 1–31 ถูกซ่อน)
+  var wkLabel = 'ทุกสัปดาห์' + (f.freq === 'weekly' && recDowOk(f.dow) ? ' (' + TH_DOW[Number(f.dow)] + ')' : '');
+  var h = '<div class="incbtns" style="margin-top:0">' + recChip(f, 'freq', 'weekly', wkLabel) + recChip(f, 'freq', 'monthly', 'ทุกเดือน') + recChip(f, 'freq', 'yearly', 'ทุกปี') + '</div>';
+  if (f.freq === 'weekly'){
+    h += '<div class="hint" style="margin:6px 1px 3px">วันในสัปดาห์</div><div class="incbtns" style="margin-top:0">'
+      + TH_DOW_S.map(function(dn, i){ return recChip(f, 'dow', i, dn, recDowOk(f.dow) ? '' : ' warn'); }).join('') + '</div>';
+  }
+  if (f.freq === 'yearly'){
+    h += '<div class="hint" style="margin:6px 1px 3px">เดือนที่ครบ</div><div class="incbtns" style="margin-top:0">'
+      + TH_M.map(function(mn, i){ return recChip(f, 'month', i + 1, mn); }).join('') + '</div>';
+  }
+  return h;
+}
+function recHtmlDirChips(f){
+  return '<div class="incbtns" style="margin-top:0">' + recChip(f, 'dir', 'out', 'จ่าย') + recChip(f, 'dir', 'in', 'รับ') + '</div>';
+}
+function recHtmlCatChips(f){
+  var cats = (S.data && S.data.cats) || [];
+  var star = f.catGuess && !f.catTouched && f.cat === f.catGuess;
+  return '<div class="hint" style="margin:6px 1px 3px">หมวด (ไม่บังคับ · แตะซ้ำเพื่อยกเลิก'+(star ? ' · ⭐ = ระบบเดาให้' : '')+')</div>'
+    + '<div class="incbtns" style="margin-top:0">'
+    + cats.filter(function(c){ return c[0] !== 'income' || f.dir === 'in'; }).map(function(c){
+        var g = star && c[0] === f.catGuess;
+        return recChip(f, 'cat', c[0], c[1] + ' ' + esc(c[2]) + (g ? ' ⭐' : ''), g ? ' sug' : '');
+      }).join('') + '</div>';
+}
+function recSugIcon(it, cls){  // โลโก้แบรนด์ → emoji หมวด → • (กติกาเดียวกับ recIconHtml)
+  var ic = recIconHtml(it.brand || brandKey(it.name), it.cat, '');
+  return ic.indexOf('<img') === 0 ? ic.replace('<img ', '<img class="'+cls+'" ') : (cls === 'lgx' ? '<span class="emx">'+ic+'</span>' : ic + ' ');
+}
+function recHtmlPreview(f){
+  var v = parseBahtMinor(f.amt), name = String(f.name || '').trim();
+  if (!name || !(v > 0)) return '';
+  var dayN = /^\d{1,2}$/.test(String(f.day).trim()) ? parseInt(f.day, 10) : 0;
+  var dt = (dayN >= 1 && dayN <= 31)
+    ? recDtLine({ day: dayN, freq: f.freq, month_of_year: f.freq === 'yearly' ? f.month : null }, false)
+    : 'ยังไม่ระบุวันที่';
+  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): รายสัปดาห์ → "(วันนี้) · ทุกวันเสาร์ · งวดนี้ <D>" (D = งวดนี้จากวันนี้ ผ่าน recDtLine)
+  if (f.freq === 'weekly') dt = recDtLine({ freq: 'weekly', dow: recDowOk(f.dow) ? Number(f.dow) : null }, false);
+  if (f.freq !== 'monthly' && f.freq !== 'yearly' && f.freq !== 'weekly') dt += ' · ความถี่ยังไม่รองรับ';
+  var cm = f.cat ? catMeta(f.cat) : null;
+  var fcat = (cm && cm.e !== '❔') ? cm.e + ' ' + esc(cm.t) : '＋ หมวด';
+  var ex = recExisting(f);
+  return '<div class="frowitem preview"><div class="pvr">'
+    + '<div class="ic" data-act="recEdit" data-v="cat">' + recIconHtml(f.brand || brandKey(name), f.cat, '') + '</div>'
+    + '<div class="mid"><div class="nm"><span data-act="recEdit" data-v="name">' + esc(name) + '</span><span class="fcat" data-act="recEdit" data-v="cat">' + fcat + '</span></div>'
+    + '<div class="dt" data-act="recEdit" data-v="freq">' + esc(dt) + '</div></div>'
+    + '<div class="rt2"><div class="rtr"><span class="st wait">⏳ รอ</span><span class="bdg' + (ex ? '' : ' new') + '">' + (ex ? 'มีอยู่แล้ว ✓' : 'รายการใหม่') + '</span></div>'
+    + '<div class="amt3" data-act="recEdit" data-v="amt"' + (f.dir === 'in' ? ' style="color:var(--grn)"' : '') + '>' + (f.dir === 'in' ? '+' : '') + '฿' + fmtBaht(v) + '</div></div>'
+    + '</div></div>';
+}
+function recHtmlA(f){  // โซน ⚠ · suggest · การ์ดพรีวิว · ชิปแก้ (ฟ้า)
+  var h = '', typed = String(f.type || '').replace(/\s+/g, '');
+  var ws = typed ? (f.warn || []) : [];
+  if (ws.length){
+    h += '<div class="qa-err">⚠ ยังไม่ครบ ' + ws.length + ' จุด — ระบบไม่เดาให้ (แตะชิป ⚠ เพื่อแก้)</div><div class="incbtns" style="margin-top:4px">'
+      + ws.map(function(w){ return '<button class="miniact warn" data-act="recEdit" data-open="1" data-v="' + esc(recWarnPiece(w.field)) + '">⚠ ' + esc(w.msg) + '</button>'; }).join('')
+      + '</div>';
+  }
+  var ms = recMatches(f);
+  if (ms.length){
+    var anyRec = false;
+    h += '<div class="qa-sugbox">' + ms.map(function(x){
+      var it = x.it, sub = [];
+      if (it.isRec) anyRec = true;
+      var cm = it.cat ? catMeta(it.cat) : null;
+      if (cm && cm.e !== '❔') sub.push(cm.t);
+      if (it.freq === 'yearly') sub.push('ทุกปี' + (it.month >= 1 && it.month <= 12 ? ' ' + TH_M[it.month - 1] : ''));
+      if (it.freq === 'weekly') sub.push(recDowOk(it.dow) ? 'ทุกวัน' + TH_DOW[Number(it.dow)] : 'ทุกสัปดาห์');  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69)
+      if (it.amount_minor > 0) sub.push('ล่าสุด ฿' + recAmtShort(it.amount_minor));
+      if (it.day >= 1 && it.freq !== 'weekly') sub.push('วันที่ ' + it.day);
+      return '<div class="qa-sugrow" data-act="' + (it.isRec ? 'recOpenEx' : 'recFill') + '" data-key="' + esc(it.rid || '') + '" data-i="' + x.i + '">'
+        + recSugIcon(it, 'lgx') + '<div class="rn">' + esc(it.name) + (sub.length ? '<div class="qa-sugsub">' + esc(sub.join(' · ')) + '</div>' : '') + '</div>'
+        + '<span class="bdg' + (it.isRec ? '' : ' new') + '">' + (it.isRec ? 'มีอยู่แล้ว ✓' : 'รายการใหม่') + '</span>'
+        + '<span class="rr">' + (it.amount_minor > 0 ? '฿' + recAmtShort(it.amount_minor) : '') + '</span></div>';
+    }).join('') + (anyRec ? '<div class="hint" style="margin:5px 1px 0">แตะ "มีอยู่แล้ว" = เปิดรายการเดิม (ไม่เพิ่มซ้ำ) · แตะ "รายการใหม่" = เติมให้ทั้งประโยค</div>' : '') + '</div>';
+  }
+  var pv = recHtmlPreview(f);
+  if (pv) h += pv + '<div class="hint" style="margin:7px 2px 0">แบบตัวอย่าง: การ์ดจะขึ้นในลิสต์แบบนี้ — แตะจุดไหน = แก้ช่องนั้น</div>';
+  if (typed || String(f.name || '').trim()){
+    h += '<div class="incbtns" style="margin-top:8px">'
+      + [['name', '✎ แก้ชื่อ'], ['amt', '✎ แก้ยอด'], ['freq', '✎ แก้ความถี่/วัน'], ['dir', '✎ แก้จ่าย/รับ']].map(function(b){
+          return '<button class="miniact cy2" data-act="recEdit" data-v="' + b[0] + '">' + b[1] + (f.edit === b[0] ? ' ▾' : '') + '</button>';
+        }).join('') + '</div>';
+  }
+  return h;
+}
+function recHtmlB(f){  // โซน เดาให้ตรวจ (เหลือง) · รายการของฉัน · ตัวเลือกเพิ่มเติม · ปุ่มเพิ่ม
+  var h = '', gs = f.guesses || [];
+  var catG = f.catGuess && !f.catTouched && f.cat === f.catGuess;
+  var cm = catG ? catMeta(f.cat) : null;
+  var n = gs.length + (catG ? 1 : 0);
+  if (n){
+    h += '<div class="qa-fixbox"><div class="fl">⚡ เดาให้ ' + n + ' จุด — ตรวจก่อนกดเพิ่ม (แตะแก้ถ้าไม่ใช่):</div><div class="incbtns" style="margin-top:0">'
+      + gs.map(function(g, i){
+          var alt = (g.alts || []).filter(function(a){ return a !== g.fixed; });
+          return '<button class="miniact sug" data-act="recGuess" data-i="' + i + '" data-v="' + esc(g.fixed) + '">“' + esc(g.raw) + '” → ' + esc(g.fixed) + ' ✓</button>'
+            + (alt.length ? alt.map(function(a){ return '<button class="miniact" data-act="recGuess" data-i="' + i + '" data-v="' + esc(a) + '">' + esc(a) + '</button>'; }).join('') : '');
+        }).join('')
+      + (catG ? '<button class="miniact sug" data-act="recCatOk">หมวด · ' + cm.e + ' ' + esc(cm.t) + ' ✓</button><button class="miniact" data-act="recEdit" data-open="1" data-v="cat">เปลี่ยนหมวด ▸</button>' : '')
+      + '</div><div class="incbtns" style="margin-top:6px"><button class="miniact sug" data-act="recGuessAll">✓ ใช้ตามนี้</button><button class="miniact" data-act="recSelf">✏️ แก้เอง</button></div></div>';
+  }
+  var rc = recRecall(), picks = [];
+  for (var i = 0; i < rc.length && picks.length < 5; i++) if (rc[i] && rc[i].name && rc[i].amount_minor > 0) picks.push(i);
+  if (picks.length){
+    h += '<div class="hint" style="margin:9px 2px 3px">รายการของฉัน — แตะ = เติมทั้งประโยค:</div><div class="incbtns" style="margin-top:0">'
+      + picks.map(function(ix){
+          var it = rc[ix], nm = String(it.name);
+          if (nm.length > 18) nm = nm.slice(0, 17) + '…';
+          return '<button class="miniact cy2" data-act="recFill" data-i="' + ix + '">' + recSugIcon(it, 'lgi') + esc(nm) + ' · ' + recAmtShort(it.amount_minor) + '</button>';
+        }).join('') + '</div>'
+      + '<div class="hint" style="margin:7px 2px 0">ชื่อใหม่ (ครั้งแรก) พิมพ์ใส่ได้เลย — ระบบจับแบรนด์/ติดโลโก้ให้เอง ครั้งถัดไปขึ้น suggest</div>';
+  }
+  h += '<div class="incbtns"><button class="miniact" data-act="recEdit" data-v="more">'
+    + (f.edit === 'more' ? '− ซ่อนตัวเลือกเพิ่มเติม' : '＋ ตัวเลือกเพิ่มเติม <span style="color:var(--dim)">· กดชิปเองก็ได้</span>') + '</button></div>';
+  var iss = recIssues(f);
+  h += '<div class="incbtns"><button class="save' + (iss.length ? ' off' : '') + '" data-act="recSave"'
+    + (iss.length ? ' aria-disabled="true" title="' + esc(iss[0]) + '"' : '') + '>เพิ่มรายการ</button>'
+    + '<button class="cancel" data-act="recCancel">ยกเลิก</button></div>';
+  return h;
+}
+function recPiece(f, key, inner){  // โซนคลาสสิกแยกชิ้น: เปิดทีละช่อง (✎) หรือทั้งหมด (＋ ตัวเลือกเพิ่มเติม)
+  var show = f.edit === 'more' || f.edit === key;
+  return '<div class="qa-ed" data-pc="' + key + '"' + (show ? '' : ' style="display:none"') + '>' + inner + '</div>';
+}
+function htmlRecForm(){
+  var f = S.recForm; if (!f) return '';
+  // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): ฟอร์ม v2 — กล่องพิมพ์เดียว + โซนเติมสด · ช่อง/ชิปคลาสสิกเดิมยังอยู่ครบ (ซ่อนจนกว่าจะแตะแก้)
+  return '<div class="incform" style="margin:2px 0 10px;padding-bottom:10px;border-bottom:1px dashed #232329">'
+    + '<input id="recType" class="qa-type" type="text" maxlength="100" autocomplete="off" enterkeyhint="done" placeholder="พิมพ์สั้น ๆ เช่น · ค่าเทอม 25,000 ทุกปี 25 ต.ค." value="' + esc(f.type) + '">'
+    + '<div class="hint" style="margin:6px 2px 2px">พิมพ์แล้วช่องจะถูกเติมให้เองทันที — เช็คครบแล้วค่อยกด “เพิ่มรายการ”</div>'
+    + '<div id="recZA">' + recHtmlA(f) + '</div>'
+    + recPiece(f, 'name', '<input id="recName" type="text" maxlength="60" placeholder="ชื่อรายการ เช่น ชำระทุนประกัน / ชำระค่าเทอม" value="' + esc(f.name) + '">')
+    + recPiece(f, 'amt', '<input id="recAmt" type="text" inputmode="decimal" placeholder="ยอด ฿" value="' + esc(f.amt) + '">')
+    + recPiece(f, 'freq', '<div id="recDayW"' + (f.freq === 'weekly' ? ' style="display:none"' : '') + '><input id="recDay" type="number" min="1" max="31" inputmode="numeric" placeholder="วันที่ของเดือน (1–31)" value="' + esc(f.day) + '"></div>'  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): weekly ซ่อนช่องวันที่
+        + '<div id="recZF">' + recHtmlFreqChips(f) + '</div>')
+    + recPiece(f, 'dir', '<div id="recZD">' + recHtmlDirChips(f) + '</div>')
+    + recPiece(f, 'cat', '<div id="recZK">' + recHtmlCatChips(f) + '</div>')
+    + '<div id="recZB">' + recHtmlB(f) + '</div></div>';
+}
+
+/* ---------- live typing: พิมพ์แล้วเติมสด (debounce) — วาดใหม่เฉพาะโซน ไม่ paint เต็ม (focus/caret ไม่หลุด) ---------- */
+var REC_DEBOUNCE_MS = 250;
+function recPushInputs(f, force){  // ค่าในฟอร์ม → ช่อง input (ข้ามช่องที่กำลังพิมพ์ เว้นแต่ force)
+  var map = [['recType', f.type], ['recName', f.name], ['recAmt', f.amt], ['recDay', f.day]];
+  for (var i = 0; i < map.length; i++){
+    var n = el(map[i][0]);
+    if (n && (force || n !== document.activeElement)) n.value = map[i][1] == null ? '' : map[i][1];
+  }
+}
+function recRefresh(){
+  var f = S.recForm; if (!f) return;
+  var z = [['recZA', recHtmlA], ['recZB', recHtmlB], ['recZF', recHtmlFreqChips], ['recZD', recHtmlDirChips], ['recZK', recHtmlCatChips]];
+  for (var i = 0; i < z.length; i++){ var n = el(z[i][0]); if (n) n.innerHTML = z[i][1](f); }
+  var dw = el('recDayW'); if (dw) dw.style.display = f.freq === 'weekly' ? 'none' : '';  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): พิมพ์จนเป็น weekly → ซ่อนช่องวันที่สด
+  recPushInputs(f, false);
+}
+function recRepaint(){ var f = S.recForm; if (f) recPushInputs(f, true); paint(); }  // ค่าเปลี่ยนจากโค้ด → ดันลงช่องก่อน (paint จะอ่านช่องกลับ)
+function recLiveApply(){
+  if (S._recT){ clearTimeout(S._recT); S._recT = null; }
+  S._recPending = false;
+  var f = S.recForm; if (!f) return;
+  recSyncInputs();
+  recApply(f);
+  recRefresh();
+}
+function recLiveTick(){  // นิ้วเพิ่งแตะจอ (กำลังกดชิป) → เลื่อนไปก่อน กันโซนถูกวาดใหม่ระหว่าง pointerdown→click (คลิกหาย) · การกดจะ flush เอง
+  if (Date.now() - (UI.lastTouch || 0) < 350){ S._recT = setTimeout(recLiveTick, 200); return; }
+  recLiveApply();
+}
+function recFlush(){ if (S._recPending) recLiveApply(); }  // มีข้อความค้าง debounce → parse ให้เสร็จก่อนทำอย่างอื่น
+function recFlushCancel(){ if (S._recT) clearTimeout(S._recT); S._recT = null; S._recPending = false; }
+function recTyping(){
+  var a = document.activeElement;
+  return !!(S.recForm && a && /^rec(Type|Name|Amt|Day)$/.test(a.id || ''));
+}
+document.addEventListener('input', function(e){
+  var t = e.target, f = S.recForm;
+  if (!t || !f) return;
+  if (t.id === 'recType'){
+    f.type = t.value;
+    S._recPending = true;
+    if (S._recT) clearTimeout(S._recT);
+    S._recT = setTimeout(recLiveTick, REC_DEBOUNCE_MS);
+    return;
+  }
+  var fld = t.id === 'recName' ? 'name' : (t.id === 'recAmt' ? 'amt' : (t.id === 'recDay' ? 'day' : ''));
+  if (fld){ recFlush(); recSyncInputs(); recDropWarn(f, fld); recRefresh(); }
+});
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Enter' && e.target && e.target.id === 'recType'){ e.preventDefault(); recSave(); }
+});
+function recEdit(v, forceOpen){
+  var f = S.recForm; if (!f) return;
+  recFlush(); recSyncInputs();
+  f.edit = (f.edit === v && !forceOpen) ? '' : v;
+  recRepaint();
+  var foc = f.edit === 'name' ? 'recName' : (f.edit === 'amt' ? 'recAmt' : (f.edit === 'freq' && f.freq !== 'weekly' ? 'recDay' : ''));  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): weekly ไม่มีช่องวันที่
+  if (foc) focusInput(foc);
+}
+function recGuessPick(i, val){  // แตะชิปเดาคำ = แทนโทเคนนั้นในประโยคด้วยค่าที่เลือก แล้ว parse ใหม่
+  var f = S.recForm; if (!f) return;
+  recFlush(); recSyncInputs();
+  var g = (f.guesses || [])[i];
+  if (!g || f.type.slice(g.at, g.at + g.raw.length) !== g.raw) return;
+  f.type = f.type.slice(0, g.at) + (val || g.fixed) + f.type.slice(g.at + g.raw.length);
+  recApply(f);
+  recRepaint();
+}
+function recGuessAll(){  // ✓ ใช้ตามนี้ — ยอมรับทุกคำที่เดา + หมวดที่เดา (คงค่าไว้ เคลียร์ธง)
+  var f = S.recForm; if (!f) return;
+  recFlush(); recSyncInputs();
+  var gs = (f.guesses || []).slice(0).sort(function(a, b){ return b.at - a.at; });
+  gs.forEach(function(g){
+    if (f.type.slice(g.at, g.at + g.raw.length) === g.raw) f.type = f.type.slice(0, g.at) + g.fixed + f.type.slice(g.at + g.raw.length);
+  });
+  var keepCat = f.cat;
+  recApply(f);
+  if (keepCat){ f.cat = keepCat; f.catTouched = true; }
+  f.catGuess = ''; f.guesses = [];
+  recRepaint();
+}
+function recCatOk(){
+  var f = S.recForm; if (!f) return;
+  recFlush(); recSyncInputs();
+  f.catTouched = true; f.catGuess = '';
+  recRepaint();
+}
+function recFill(i){  // แตะ suggest/ชิป "รายการของฉัน" → ประกอบประโยค แล้ว parse ทางเดียวกับพิมพ์จริง
+  var f = S.recForm, it = recRecall()[i]; if (!f || !it) return;
+  recFlushCancel();
+  f.type = recSentence(it);
+  f.edit = ''; f.catTouched = false;
+  recApply(f);
+  recRepaint();
+  focusInput('recType');
+}
+function recOpenExisting(rid, i){  // แตะ "มีอยู่แล้ว" → เลื่อนไปแถวเดิม + กางปุ่ม (โหมดแก้ไข = เฟสถัดไป)
+  var it = recRecall()[i] || {};
+  var d = S.data || {}, row = null;
+  (d.fixed || []).forEach(function(x){ if (rid && x.key === rid) row = x; });
+  if (!row){
+    toast('มีอยู่แล้ว' + (it.freq === 'yearly' && it.month >= 1 ? ' — ครบเดือน ' + TH_M[it.month - 1] + ' (ยังไม่ขึ้นลิสต์เดือนนี้)' : ''));
+    return;
+  }
+  recFlush(); recSyncInputs();
+  S.fxOpen = {}; S.fxOpen[rid] = 1;
+  recRepaint();
+  var sel = '.frowitem[data-key="' + String(rid).replace(/"/g, '') + '"]';
+  setTimeout(function(){
+    var rw = document.querySelector(sel);
+    if (rw && rw.scrollIntoView){ try { rw.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_e) { try { rw.scrollIntoView(); } catch (_e2) {} } }
+  }, 60);
+  animPop('.fxdrop[data-key="' + String(rid).replace(/"/g, '') + '"]');
+  toast('มีอยู่แล้ว — เปิดรายการเดิมให้แล้ว (ลบ/เพิ่มใหม่ได้ในปุ่มที่กาง)');
+}
+function recOpen(){
+  // แก้โดย CC — TASK_cc_fix_v42.md (3 ต.ค. 69): ฟอร์มเปิดค้างอยู่ (สลับแท็บไป) → ใช้ของเดิม ไม่งั้น paint จะดึงข้อความเก่าจาก DOM มาปนฟอร์มใหม่
+  if (!S.recForm) S.recForm = recFormDefault();
+  S.tab = 2;  // ฟอร์มอยู่ที่เดียว (แท็บปฏิทิน) — กดจากการ์ดภาพรวมก็พามาที่นี่
+  paint();
+  var c = el('recCard');
+  if (c && c.scrollIntoView){ try { c.scrollIntoView({ block: 'start' }); } catch (_e) {} }
+  animPop('#recCard .incform');
+  focusInput('recType');  // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): โฟกัสกล่องพิมพ์
+}
+function recSet(field, v){
+  var f = S.recForm; if (!f) return;
+  recFlush();  // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): parse ข้อความค้างให้เสร็จก่อน แล้วค่อยทับด้วยชิป
+  recSyncInputs();
+  if (field === 'cat') { f.cat = (f.cat === v) ? '' : v; f.catTouched = true; f.catGuess = ''; }  // แตะซ้ำ = ยกเลิกเลือก · แตะเอง = ไม่ถูก guess ทับ
+  else if (field === 'month') { f.month = parseInt(v, 10) || f.month; recDropWarn(f, 'month'); }
+  else if (field === 'dow') { if (recDowOk(v)) f.dow = Number(v); recDropWarn(f, 'dow'); }  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69)
+  else if (field === 'freq' && v === 'weekly') { f.freq = v; recDropWarn(f, 'freq'); recDropWarn(f, 'day'); recDropWarn(f, 'month'); }  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): weekly ไม่ใช้วันที่/เดือน
+  else if (field === 'dir') { f.dir = v; if (v !== 'in' && f.cat === 'income') f.cat = ''; recDropWarn(f, 'dir'); }
+  else { f[field] = v; recDropWarn(f, field); if (field === 'freq' && v === 'monthly') recDropWarn(f, 'month'); if (field === 'freq') recDropWarn(f, 'dow'); }  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): ออกจาก weekly → warn เลือกวันหาย
+  paint();
+}
+function recSave(){
+  var f = S.recForm; if (!f) return;
+  recFlush();  // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): Enter/กดเพิ่มระหว่าง debounce → parse ให้ทันก่อน
+  recSyncInputs();
+  // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): ตรวจผ่าน recIssues ชุดเดียวกับสถานะปุ่ม (ข้อความเดิมของ v4.2 คงไว้)
+  var iss = recIssues(f);
+  if (iss.length){ toast(iss[0], true); return; }
+  var name = String(f.name || '').replace(/\s+/g,' ').trim();
+  var v = parseBahtMinor(f.amt);
+  var day = parseInt(String(f.day).trim(), 10);
+  var payload = { name: name, amount_minor: v, day: day, direction: f.dir === 'in' ? 'in' : 'out',
+    freq: f.freq === 'yearly' ? 'yearly' : 'monthly', month: f.freq === 'yearly' ? f.month : null, category: f.cat || '' };
+  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): รายสัปดาห์ → { freq:'weekly', dow, day:null } (monthly/yearly payload เดิมเป๊ะ)
+  var weekly = f.freq === 'weekly';
+  if (weekly){ payload.freq = 'weekly'; payload.dow = Number(f.dow); payload.day = null; payload.month = null; }
+  var snap = JSON.parse(JSON.stringify(f));  // แก้โดย CC — TASK_cc_fix_v42.md (3 ต.ค. 69): เก็บฟอร์มไว้ เปิดคืนถ้าบันทึกไม่สำเร็จ
+  S.recForm = null;
+  if (IS_DEMO){
+    // เดโม่: เพิ่มในเครื่องเท่านั้น (ไม่ยิง network) — แสดงเฉพาะที่ถึงกำหนดเดือนนี้ เหมือน bridge
+    var curM = new Date().getMonth() + 1;
+    var lkey = 'local-' + Date.now();
+    if (weekly){
+      // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): งวดนี้ = weeklyDueDate(วันนี้) · สถานะ pending (งวด ≤ วันนี้ — กติกาเดียวกับ computeFixed)
+      var due = weeklyDueDate(payload.dow, todayISO());
+      S.data.fixed = S.data.fixed || [];
+      S.data.fixed.push({ key: lkey, label: name, emoji: '', logo: brandKey(name), amount_minor: v, day: parseInt(due.slice(8, 10), 10), dir: payload.direction,
+        status: 'pending', date: '', spent_minor: 0, src: 'auto', freq: 'weekly', month_of_year: null, category: payload.category, dow: payload.dow, due: due });
+    }
+    else if (payload.freq !== 'yearly' || payload.month === curM){
+      S.data.fixed = S.data.fixed || [];
+      S.data.fixed.push({ key: lkey, label: name, emoji: '', logo: brandKey(name), amount_minor: v, day: day, dir: payload.direction,
+        status: day <= new Date().getDate() ? 'pending' : 'wait', date: '', spent_minor: 0, src: 'auto',
+        freq: payload.freq, month_of_year: payload.month, category: payload.category });
+    }
+    // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): เดโม่จำชื่อใหม่ในเครื่อง → ขึ้น suggest ครั้งถัดไป (ทางเดียวกับ recall ของ bridge)
+    S.data.recall = (S.data.recall || []).filter(function(r){ return recNorm(r.name) !== recNorm(name); });
+    S.data.recall.unshift({ key: recNorm(name), name: name, brand: brandKey(name), cat: payload.category, amount_minor: v, day: day,
+      dir: payload.direction, freq: payload.freq, month: payload.month, dow: weekly ? payload.dow : null, src: 'rec', hits: 0, isRec: true, rid: lkey });
+    paint();
+    toast('เพิ่มรายการประจำแล้ว ✓' + (payload.freq === 'yearly' && payload.month !== curM ? ' (จะขึ้นเดือน ' + TH_M[payload.month - 1] + ')' : ''));
+    return;
+  }
+  paint();
+  callAction('addRecurring', [payload], 'เพิ่มรายการประจำแล้ว ✓', function(){  // แก้โดย CC — TASK_cc_fix_v42.md (3 ต.ค. 69)
+    if (!S.recForm) { S.recForm = snap; S.tab = 2; paint(); }
+  });
+}
+function recDel(key){
   var d = S.data; if (!d || !d.fixed) return;
+  var f = null;
+  for (var i = 0; i < d.fixed.length; i++) if (d.fixed[i].key === key) f = d.fixed[i];
+  if (!f) return;
+  if (!confirm('ลบรายการประจำ "' + f.label + '" ?\nประวัติการยืนยันของรายการนี้จะถูกลบด้วย')) return;
+  d.fixed = d.fixed.filter(function(x){ return x.key !== key; });
+  if (S.fxOpen) delete S.fxOpen[key];
+  paint();
+  if (d.recall) d.recall.forEach(function(r){ if (r.rid === key){ r.isRec = false; r.rid = ''; } });  // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): ลบแล้ว suggest ไม่ขึ้น "มีอยู่แล้ว"
+  if (IS_DEMO){ toast('ลบแล้ว ✓'); return; }
+  var id = parseInt(key, 10);
+  callAction('removeRecurring', [id], 'ลบแล้ว ✓');
+}
+// แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): inst = วันที่งวด (รายสัปดาห์) → ส่งเป็นอาร์กิวเมนต์ที่ 3 + อัปเดตเฉพาะแถวที่งวดตรง
+// ไม่มี inst (monthly/yearly) → เรียกแบบเดิมเป๊ะ [key, v]
+function ackFixedLocal(key, v, inst){
+  var d = S.data; if (!d || !d.fixed) return;
+  var args = inst ? [key, v, inst] : [key, v];
   if (v === 'auto'){
     toast('กำลังคืนเป็นอัตโนมัติ…');
-    if (!IS_DEMO) callAction('ackFixed', [key, 'auto'], '');
+    if (!IS_DEMO) callAction('ackFixed', inst ? [key, 'auto', inst] : [key, 'auto'], '');
     return;
   }
   for (var i = 0; i < d.fixed.length; i++){
-    if (d.fixed[i].key === key){
+    if (d.fixed[i].key === key && (!inst || d.fixed[i].due === inst)){
       d.fixed[i].status = v;
       d.fixed[i].src = 'ack';
       if (v === 'done') d.fixed[i].date = todayISO();
@@ -1669,7 +2476,7 @@ function ackFixedLocal(key, v){
   paint();
   toast(v === 'done' ? 'บันทึกว่าจ่ายแล้ว ✓' : 'รับทราบ — รอต่อ');
   if (IS_DEMO) return;
-  callAction('ackFixed', [key, v], '');
+  callAction('ackFixed', args, '');
 }
 
 /* ---------- บิลรอเงินคืน + รายรับ (ฝั่ง client — อัปเดตจอก่อนทันที ค่อยยิงเซิร์ฟเวอร์เบื้องหลัง) ---------- */
@@ -1792,11 +2599,34 @@ var DEMO = {
     {key:'tmn', label:'เติม TrueMoney', logo:'truemoney', amount_minor:70000, day:8, dir:'out', status:'done', date:'2026-09-08', spent_minor:70000, src:'auto'},
     {key:'claude', label:'Claude ผ่าน Apple', logo:'claude', amount_minor:69900, day:9, dir:'out', status:'pending', date:'', src:'auto'},
     {key:'netflix', label:'Netflix ครอบครัว', logo:'netflix', amount_minor:10500, day:13, dir:'out', status:'done', date:'2026-09-13', src:'auto'},
-    {key:'fuel', label:'งบน้ำมัน', emoji:'⛽', amount_minor:48000, day:30, dir:'out', status:'done', date:'2026-09-08', spent_minor:13000, src:'auto'}
+    {key:'fuel', label:'งบน้ำมัน', emoji:'⛽', amount_minor:48000, day:30, dir:'out', status:'done', date:'2026-09-08', spent_minor:13000, src:'auto'},
+    // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69): ตัวอย่างรายเดือนทั่วไป + รายปี (เดือนปัจจุบัน ให้เห็นในเดโม่)
+    {key:'gym', label:'ค่าสมาชิกฟิตเนส (ตัวอย่าง)', emoji:'', amount_minor:59000, day:20, dir:'out', status:'wait', date:'', src:'auto', freq:'monthly', month_of_year:null, category:'sports'},
+    {key:'insure', label:'ชำระทุนประกัน (ตัวอย่าง)', emoji:'', amount_minor:1250000, day:25, dir:'out', status:'wait', date:'', src:'auto', freq:'yearly', month_of_year:new Date().getMonth() + 1, category:'health'},
+    // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): ตัวอย่างรายสัปดาห์ (ทุกวันเสาร์ · งวดนี้คิดจากวันนี้ รูปเดียวกับ computeFixed ของ bridge)
+    {key:'wine', label:'ค่าไวน์ (ตัวอย่าง)', emoji:'', amount_minor:20000, day:parseInt(weeklyDueDate(6, todayISO()).slice(8, 10), 10), dir:'out', status:'pending', date:'', src:'auto', freq:'weekly', month_of_year:null, category:'food', dow:6, due:weeklyDueDate(6, todayISO())}
+  ],
+  // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): "รายการของฉัน" สำหรับ suggest (ข้อมูลสมมติล้วน — รูปเดียวกับ recall ของ bridge)
+  // rec = รายการใน DEMO.fixed (rid = key ของแถว) · mem/hist = ร้านตัวอย่างจากประวัติเดโม่
+  recall:[
+    {key:'ค่าบ้านให้พี่', name:'ค่าบ้านให้พี่', brand:'', cat:'house', amount_minor:400000, day:1, dir:'out', freq:'monthly', month:null, src:'rec', hits:0, isRec:true, rid:'house'},
+    {key:'claude ผ่าน apple', name:'Claude ผ่าน Apple', brand:'claude', cat:'subscriptions', amount_minor:69900, day:9, dir:'out', freq:'monthly', month:null, src:'rec', hits:0, isRec:true, rid:'claude'},
+    {key:'netflix ครอบครัว', name:'Netflix ครอบครัว', brand:'netflix', cat:'subscriptions', amount_minor:10500, day:13, dir:'out', freq:'monthly', month:null, src:'rec', hits:0, isRec:true, rid:'netflix'},
+    {key:'เติม truemoney', name:'เติม TrueMoney', brand:'truemoney', cat:'topup', amount_minor:70000, day:8, dir:'out', freq:'monthly', month:null, src:'rec', hits:0, isRec:true, rid:'tmn'},
+    {key:'เงินจากพ่อ', name:'เงินจากพ่อ', brand:'', cat:'income', amount_minor:1600000, day:1, dir:'in', freq:'monthly', month:null, src:'rec', hits:0, isRec:true, rid:'income'},
+    {key:'งบน้ำมัน', name:'งบน้ำมัน', brand:'', cat:'fuel', amount_minor:48000, day:30, dir:'out', freq:'monthly', month:null, src:'rec', hits:0, isRec:true, rid:'fuel'},
+    {key:'ค่าสมาชิกฟิตเนส ตัวอย่าง', name:'ค่าสมาชิกฟิตเนส (ตัวอย่าง)', brand:'', cat:'sports', amount_minor:59000, day:20, dir:'out', freq:'monthly', month:null, src:'rec', hits:0, isRec:true, rid:'gym'},
+    {key:'ชำระทุนประกัน ตัวอย่าง', name:'ชำระทุนประกัน (ตัวอย่าง)', brand:'', cat:'health', amount_minor:1250000, day:25, dir:'out', freq:'yearly', month:new Date().getMonth() + 1, src:'rec', hits:0, isRec:true, rid:'insure'},
+    {key:'ค่าไวน์ ตัวอย่าง', name:'ค่าไวน์ (ตัวอย่าง)', brand:'', cat:'food', amount_minor:20000, day:0, dir:'out', freq:'weekly', month:null, dow:6, src:'rec', hits:0, isRec:true, rid:'wine'},  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69)
+    {key:'spotify ตัวอย่าง', name:'Spotify (ตัวอย่าง)', brand:'spotify', cat:'subscriptions', amount_minor:14900, day:20, dir:'out', freq:'monthly', month:null, src:'mem', hits:3, isRec:false},
+    {key:'ร้านกาแฟตัวอย่าง', name:'ร้านกาแฟตัวอย่าง', brand:'', cat:'food', amount_minor:7500, day:17, dir:'out', freq:'monthly', month:null, src:'hist', hits:0, isRec:false},
+    {key:'ปั๊มน้ำมันตัวอย่าง', name:'ปั๊มน้ำมันตัวอย่าง', brand:'', cat:'fuel', amount_minor:10000, day:8, dir:'out', freq:'monthly', month:null, src:'hist', hits:0, isRec:false},
+    {key:'ร้านซักผ้าตัวอย่าง', name:'ร้านซักผ้าตัวอย่าง', brand:'', cat:'house', amount_minor:5000, day:7, dir:'out', freq:'monthly', month:null, src:'hist', hits:0, isRec:false}
   ],
   budgets:[
     {key:'fuel', label:'งบน้ำมัน', emoji:'⛽', cats:['fuel'], per_day:0, cap_minor:48000, spent_minor:13000, remain_minor:35000, over_minor:0, pct:27, day:30, overlap:true},
-    {key:'daily', label:'ใช้รายวัน', emoji:'🍜', cats:['food'], per_day:25000, cap_minor:750000, spent_minor:430000, remain_minor:320000, over_minor:0, pct:57, day:0, overlap:false},
+    // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69): งบรายวันครอบหมวดบ้านด้วย แต่ยอดไม่รวมค่าบ้านที่จับคู่รายการประจำแล้ว (สาธิตการแยก)
+    {key:'daily', label:'ใช้รายวัน', emoji:'🍜', cats:['food','house'], per_day:25000, cap_minor:750000, spent_minor:430000, remain_minor:320000, over_minor:0, pct:57, day:0, overlap:false},
     {key:'fun', label:'ใช้ส่วนตัว', emoji:'🛍', cats:['shop','ent'], per_day:0, cap_minor:40000, spent_minor:54000, remain_minor:0, over_minor:14000, pct:135, day:0, overlap:false}
   ],
   budgetTotals:{ spent_minor:497000, cap_minor:838000 },
