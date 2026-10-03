@@ -439,7 +439,7 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.2.1-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69)
+var APP_BUILD = 'v4.2.2-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69)
 var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, view:null, imp:null };
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
@@ -1051,7 +1051,7 @@ function htmlSettings(d){
   var isSupa = d.meta.mode === 'supabase';
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.1-supabase</span></div>'  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69)
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.2-supabase</span></div>'  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69)
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -1812,11 +1812,14 @@ var REC_MONTH_FULL = ['มกราคม','กุมภาพันธ์','ม
 // (TASK weekly จะเพิ่มคำวัน เช่น { raw:['เสา'], fixed:'เสาร์', alts:[...] } ต่อท้ายตารางนี้)
 // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): ช่องเสริมของ config — field (ค่าเริ่ม 'month') · after (regex บริบทข้างหน้าที่ต้องมี
 // แทนเงื่อนไขขอบคำด้านหน้า — คำวันมักติดกับ "ทุกวัน")
-var REC_WK_AFTER = /(?:ทุก\s*วัน|ทุก\s*อาทิต(?:ย์)?|(?:ทุก|ราย)\s*สัปดาห์\s*(?:วัน)?)\s*$/;
+var REC_WK_AFTER = /(?:ทุก\s*วัน|ทุก\s*อาทิต(?:ย์)?|(?:ทุก|ราย)\s*สัปดาห์\s*(?:วัน)?|ทุก)\s*$/;  // แก้โดย Hermes — 3 ต.ค. 69 (เธรด quick app): + "ทุก" เดี่ยว ให้ "ทุกเสา" เดาเป็น เสาร์ ได้
 // คำวันที่ parser รู้จักตรงตัว (ไม่ต้องเดา) → dow · คำย่อหัวปฏิทินรับได้ (ต้องไม่ติดตัวอักษรตามหลัง)
 var REC_DOW_WORDS = [['อาทิตย์',0],['จันทร์',1],['อังคาร',2],['พุธ',3],['พฤหัสบดี',4],['พฤหัส',4],['ศุกร์',5],['เสาร์',6],
   ['อา',0],['จ',1],['อ',2],['พ',3],['พฤ',4],['ศ',5],['ส',6]];
 var REC_DOW_SRC = '(' + REC_DOW_WORDS.map(function(x){ return x[0]; }).sort(function(a, b){ return b.length - a.length; }).join('|') + ')(?![฀-๿a-zA-Z])';
+// แก้โดย Hermes — 3 ต.ค. 69 (P แจ้ง เธรด quick app): คำวัน "เต็ม" สำหรับ "ทุก<วัน>" ที่ไม่มีคำว่า "วัน" (เช่น "ทุกเสาร์")
+//   ไม่รวม อาทิตย์ (คงความหมาย "รายสัปดาห์ทั่วไป" ของ "ทุกอาทิตย์") · ไม่รวมอักษรย่อ (กันชนเดือนย่อ ส.ค./พ.ย./พ.ค.)
+var REC_DOW_BARE_SRC = '(' + ['จันทร์','อังคาร','พุธ','พฤหัสบดี','พฤหัส','ศุกร์','เสาร์'].sort(function(a, b){ return b.length - a.length; }).join('|') + ')(?![฀-๿a-zA-Z])';
 function recDowOf_(tok){
   for (var i = 0; i < REC_DOW_WORDS.length; i++) if (REC_DOW_WORDS[i][0] === tok) return REC_DOW_WORDS[i][1];
   return null;
@@ -1927,6 +1930,13 @@ function parseRecText(text, recall){
   }
   var WK_GEN = /(?:ทุก|ราย)\s*สัปดาห์|สัปดาห์ละ(?:ครั้ง)?|ต่อ\s*สัปดาห์|\/\s*สัปดาห์|ทุก\s*อาทิต(?:ย์)?|รายอาทิต(?:ย์)?|อาทิต(?:ย์)?ละ(?:ครั้ง)?/;
   while ((mwk = recFind_(w, WK_GEN))){ weekly = true; w = recBlank_(w, mwk.i, mwk.j); }
+  // 2a-2) แก้โดย Hermes — 3 ต.ค. 69 (P แจ้ง เธรด quick app): "ทุก<วัน>" ตรง ๆ ไม่มีคำว่า "วัน" (เช่น "ทุกเสาร์") → weekly + วันนั้น
+  //   ต้องอยู่หลัง WK_GEN — "ทุกอาทิตย์" ต้องคงเป็นรายสัปดาห์ทั่วไป (ไม่ถูกอ่านเป็น "อาทิตย์=วันอาทิตย์") · อ่านจาก w หลังเดาคำแล้ว ("ทุกเสา" → "ทุก เสาร์")
+  while ((mwk = recFind_(w, new RegExp('ทุก\\s*' + REC_DOW_BARE_SRC)))){
+    weekly = true;
+    if (out.dow == null) out.dow = recDowOf_(mwk.m[1]);
+    w = recBlank_(w, mwk.i, mwk.j);
+  }
   if (weekly && out.dow == null){
     var mwd = recFind_(w, new RegExp('วัน\\s*' + REC_DOW_SRC));
     if (mwd){ out.dow = recDowOf_(mwd.m[1]); w = recBlank_(w, mwd.i, mwd.j); }
