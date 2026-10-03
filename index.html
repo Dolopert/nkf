@@ -439,7 +439,7 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.2.0-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69)
+var APP_BUILD = 'v4.2.1-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69)
 var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, view:null, imp:null };
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
@@ -799,8 +799,8 @@ function htmlSummary(d){
     + connChip('kplus')+'</div>'
     + '<div class="acct" data-act="vopen" data-v="acct:truemoney" style="cursor:pointer"><span class="chev">›</span><div class="a1">'+(LOGO_URL('truemoney') ? logoImg('truemoney','lgx') : '👛')+' TrueMoney</div>'
     + '<div class="a2">กระเป๋า</div>'
-    + '<div class="a3">฿'+fmtBaht(tm.spent_minor || 0)+'</div>'
-    + '<div class="a4">ใช้เดือนนี้ · เติมเข้า ฿'+fmtBaht(tm.in_minor || 0)+'</div>'
+    + '<div class="a3">'+((tm.spent_month || tm.spent_is_current) ? '฿'+fmtBaht(tm.spent_minor || 0) : '—')+'</div>'
+    + '<div class="a4">'+(tm.spent_is_current ? 'ใช้เดือนนี้' : (tm.spent_month ? 'ใช้ ('+TH_M[parseInt(tm.spent_month.slice(5,7),10)-1]+')' : 'รอ statement'))+' · เติมเข้า ฿'+fmtBaht(tm.in_minor || 0)+'</div>'
     + connChip('truemoney')+'</div>'
     + '<div class="acct soon" data-act="vopen" data-v="soon" style="cursor:pointer"><span class="chev">›</span><div class="a1">💳 บัตรเครดิต</div><div class="a2">ช่องว่างไว้</div><div class="a3">—</div><div class="a4">เมื่อมีบัตร: ใบแจ้งยอด → อีเมล</div></div>'
     + '</div>';
@@ -1051,7 +1051,7 @@ function htmlSettings(d){
   var isSupa = d.meta.mode === 'supabase';
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.0-supabase</span></div>'  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69)
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.1-supabase</span></div>'  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69)
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -2591,7 +2591,7 @@ var DEMO = {
     {ref:'D2',name:'ร้านสินค้าตัวอย่าง',at:'2026-09-18T00:02:38',amount_minor:25000,expect_minor:25000,returned_minor:10000,remaining_minor:15000,status:'open'}
   ],
   accts:{ kplus:{ balance_minor:1234567, out_minor:681050, in_minor:2500000 },
-          truemoney:{ spent_minor:71050, in_minor:180000, remain_minor:108950 } },
+          truemoney:{ spent_minor:71050, spent_month:'', spent_is_current:true, in_minor:180000, remain_minor:108950 } },
   flow:{ out_total:681050, spend:501050, wallet_in:180000, wallet_count:4, wallet_spent:71050, wallet_remain:108950 },
   fixed:[
     {key:'income', label:'เงินจากพ่อ', emoji:'💰', amount_minor:1600000, day:1, dir:'in', status:'done', date:'2026-09-01', src:'auto'},

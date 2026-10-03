@@ -698,7 +698,7 @@
           display_name: (mm && mm.display) ? mm.display : '',
           suggested: strv(r.suggested),
           bill_expect: 0, bill_returned: 0, bill_status: '',
-          balance_minor: 0,
+          balance_minor: numv(r.balance_minor),
           account: strv(r.account)
         };
       });
@@ -706,6 +706,10 @@
       var pending = [], history = [], bills = [];
       var pendingSum = 0, monthSpent = 0, monthIncome = 0, skippedCount = 0;
       var monthOut = 0, walletIn = 0, walletCount = 0, walletSpent = 0, latestBalance = 0;
+      // แก้โดย Hermes 3 ต.ค. 69 (บัคบัญชีของฉัน): การ์ด K PLUS = ยอดคงเหลือล่าสุดจากแถวจริง (คอลัมน์ balance_minor — เพิ่มใน migration 0008)
+      //   · การ์ด TrueMoney = ยอดใช้จากกระเป๋าของ "เดือนล่าสุดที่มีข้อมูล" (statement ป้อนรายเดือน — เดือนว่างโชว์ 0 หลอกตา)
+      var balAt = '';
+      var walletByMonth = {};
 
       for (var ri = 0; ri < rows.length; ri++) {
         var it = rows[ri];
@@ -714,9 +718,11 @@
         var xf = isWalletXfer(it);
         it.xf = xf;
         it.acct = (isWalletKind(it) || strv(it.account).toLowerCase() === 'truemoney') ? 'truemoney' : 'kplus';
+        if (it.balance_minor && (!balAt || it.at >= balAt)) { latestBalance = it.balance_minor; balAt = it.at; }
         if (!isIn) {
           var day = it.at.slice(0, 10);
           if (!xf && daily[day] !== undefined) daily[day] += it.amount_minor;
+          if (!xf && isWalletKind(it)) { var wmk = it.at.slice(0, 7); walletByMonth[wmk] = (walletByMonth[wmk] || 0) + it.amount_minor; }
         }
         if (it.at.slice(0, 7) === monthPrefix) {
           if (isIn) monthIncome += it.amount_minor;
@@ -752,9 +758,15 @@
       var recall = [];
       try { recall = computeRecall(recurringRows, merchantRows, rows, RECALL_SEED); } catch (e) { recall = []; }
 
+      // แก้โดย Hermes 3 ต.ค. 69: เดือนล่าสุดที่มีข้อมูลใช้จากกระเป๋า (การ์ด TrueMoney ใช้ค่านี้เมื่อเดือนปัจจุบันว่าง)
+      var tmMonth = '';
+      for (var mk in walletByMonth) { if (walletByMonth[mk] > 0 && (!tmMonth || mk > tmMonth)) tmMonth = mk; }
+      var tmSpent = tmMonth ? walletByMonth[tmMonth] : 0;
+
       var accts = {
         kplus: { balance_minor: latestBalance, out_minor: monthOut, in_minor: monthIncome },
-        truemoney: { spent_minor: walletSpent, in_minor: walletIn, remain_minor: Math.max(0, walletIn - walletSpent) }
+        truemoney: { spent_minor: tmSpent, spent_month: tmMonth, spent_is_current: (tmMonth !== '' && tmMonth === monthPrefix),
+                     in_minor: walletIn, remain_minor: Math.max(0, walletIn - walletSpent) }
       };
       var flow = {
         out_total: monthOut, spend: monthSpent, wallet_in: walletIn, wallet_count: walletCount,
