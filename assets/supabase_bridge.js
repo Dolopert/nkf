@@ -778,7 +778,7 @@
         cats: WEB_CATS,
         main: WEB_MAIN,
         pending: pending,
-        history: history.slice(0, 80),
+        history: history.slice(0, 400),  // แก้โดย Hermes 4 ต.ค. 69: เพิ่มจาก 80 — แท็บประวัติแยกเดือน+แก้ได้ ต้องเห็นย้อนหลังครบ (ตอนนี้ 165 แถว/2 เดือน) · กันเพดานไว้ 400
         bills: bills,
         accts: accts,
         flow: flow,
@@ -843,6 +843,15 @@
   }
 
   function undoSkip(ref) {
+    if (!ref) return Promise.resolve({ ok: false, msg: 'ไม่พบรายการ' });
+    return sb.from('transactions').update({ status: 'new' }).eq('ref', ref).then(function (r) {
+      if (r.error) throw r.error;
+      return { ok: true };
+    }).catch(function (e) { return { ok: false, msg: errText(e) }; });
+  }
+
+  // แก้โดย Hermes 4 ต.ค. 69 (P สั่ง · เธรดประวัติ): คืนแถวที่บันทึกแล้ว → 'new' (กลับเข้าคิว "รอยืนยัน") — ใช้กับปุ่ม ↩︎ ในแท็บประวัติ
+  function unsaveItem(ref) {
     if (!ref) return Promise.resolve({ ok: false, msg: 'ไม่พบรายการ' });
     return sb.from('transactions').update({ status: 'new' }).eq('ref', ref).then(function (r) {
       if (r.error) throw r.error;
@@ -1043,6 +1052,7 @@
     saveCategory: saveCategory,
     skipItem: skipItem,
     undoSkip: undoSkip,
+    unsaveItem: unsaveItem,  // แก้โดย Hermes 4 ต.ค. 69: แถวบันทึกแล้ว → กลับเป็นรอยืนยัน (ปุ่ม ↩︎ ในแท็บประวัติ)
     renameMerchant: renameMerchant,
     markBill: notMoved,
     addBillReturn: notMoved,

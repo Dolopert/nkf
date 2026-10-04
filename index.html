@@ -68,6 +68,11 @@
   .list-hd{display:flex;justify-content:space-between;align-items:center;margin:2px 2px 10px}
   .list-hd .l .t1{font-size:13.5px;font-weight:700}
   .list-hd .l .t2{font-size:11px;color:var(--dim);margin-top:2px;font-variant-numeric:tabular-nums}
+  /* แก้โดย Hermes 4 ต.ค. 69 (P สั่ง · เธรด): ประวัติรายการ — หัวเดือนแยกส่วน (แต่ละเดือนเรียงของตัวเอง) */
+  .mgroup-t{display:flex;justify-content:space-between;align-items:baseline;margin:6px 3px 8px;padding-top:10px;border-top:1px solid #1e1e23}
+  .mgroup-t .mt{font-size:12.5px;font-weight:700;letter-spacing:.2px}
+  .mgroup-t .mn{font-size:10.5px;color:var(--dim);font-variant-numeric:tabular-nums}
+  .list-hd + .mgroup-t{border-top:none;padding-top:2px;margin-top:0}
   /* ---------- swipe row (iOS Clock style: ปัดได้เลย เด้งนุ่ม ไม่ต้องกดค้าง) ---------- */
   .swrow{position:relative;margin-bottom:8px;border-radius:16px;overflow:hidden;touch-action:pan-y;
     -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
@@ -107,7 +112,9 @@
   .cg i{display:block;font-size:16.5px;font-style:normal;margin-bottom:2.5px}
   .cg.more{color:var(--mut)}
   .cg.sug{border-color:rgba(245,185,67,.6);background:rgba(245,185,67,.09)}
+  .cg.cur{border-color:rgba(101,220,255,.55);background:rgba(101,220,255,.07)}  /* แก้โดย Hermes 4 ต.ค. 69: หมวดปัจจุบันของแถวที่บันทึกแล้ว */
   .cg .st{position:absolute;top:4px;right:6px;font-size:8.5px;color:var(--amb);line-height:1}
+  .cg .st.cur{color:var(--cy)}
   .sgdot{font-size:9px;color:var(--amb);margin-top:3px;font-weight:600}
   /* ---------- บิลรอเงินคืน ---------- */
   .billbox{margin-top:10px;padding:9px 11px;border:1px solid #26262e;border-radius:12px;background:#111116;font-size:11px}
@@ -439,7 +446,7 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.2.2-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69)
+var APP_BUILD = 'v4.2.3-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69) · Hermes 4 ต.ค. 69: v4.2.3 = ประวัติแก้ได้+แยกเดือน
 var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, view:null, imp:null };
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
@@ -1005,10 +1012,14 @@ function billBlock(it){
 }
 function categoryGrid(d, it){
   var sug = it.suggested || '';
+  // แก้โดย Hermes 4 ต.ค. 69 (P สั่ง): แถวที่บันทึกแล้ว — ติ๊ก ✓ ที่หมวดปัจจุบัน (แถวรอยืนยันยังใช้ ★ แนะนำ เหมือนเดิม)
+  var saved = (it.status === 'saved');
+  var cur = saved ? (it.category || '') : '';
   function cell(slug, e, t){
-    var isSug = (sug === slug);
-    return '<div class="cg'+(isSug?' sug':'')+'" data-act="pick" data-ref="'+esc(it.ref)+'" data-cat="'+slug+'">'
-      + '<i>'+e+'</i>'+esc(t)+(isSug?'<span class="st">★ แนะนำ</span>':'')+'</div>';
+    var isCur = !!(cur && cur === slug);
+    var isSug = (!saved && sug === slug);
+    return '<div class="cg'+(isCur?' cur':(isSug?' sug':''))+'" data-act="pick" data-ref="'+esc(it.ref)+'" data-cat="'+slug+'">'
+      + '<i>'+e+'</i>'+esc(t)+(isCur?'<span class="st cur">✓</span>':(isSug?'<span class="st">★ แนะนำ</span>':''))+'</div>';
   }
   var cells = d.main.map(function(slug){
     var m = catMeta(slug);
@@ -1024,24 +1035,63 @@ function categoryGrid(d, it){
   return '<div class="catgrid">' + cells + more + '</div>';
 }
 
+/* แก้โดย Hermes 4 ต.ค. 69 (P สั่ง · เธรด "ประวัติรายการ"): 3 อย่าง —
+   ① แถวบันทึกแล้วแตะแก้ได้ (หมวด/ชื่อ) ② แยกเดือน (เดิมรวมทุกเดือนเป็นลิสต์เดียว) ③ ในแต่ละเดือนเรียง "เวลาล่าสุดขึ้นก่อน"
+   — แต่ละเดือนเรียงของตัวเอง ไม่รวมเป็นก้อนเดียว · เดือนล่าสุดขึ้นก่อน */
 function htmlHistory(d){
   if (!d.history.length) return '<div class="empty">ยังไม่มีรายการที่บันทึก — ปัดขวาหรือกดหมวดได้เลย</div>';
-  var rows = d.history.slice(0, 40).map(function(it){
-    var m = catMeta(it.category);
-    var xf = it.xf;
-    var billChip = '';
-    if (it.bill_status === 'open') billChip = '<div class="cchip amber">💸 รอ '+fmtBaht(Math.max(0,(it.bill_expect||0)-(it.bill_returned||0)))+'฿</div>';
-    else if (it.bill_status === 'done') billChip = '<div class="cchip amber">💸 ครบแล้ว</div>';
-    else if (it.bill_status === 'closed') billChip = '<div class="cchip">💸 ปิดแล้ว</div>';
-    return '<div class="item" style="margin-bottom:8px">'
-      + '<div class="icw">'+rowIcon(it)+'</div>'
-      + '<div class="mid"><div class="nm">'+esc(shortName(it))+'</div><div class="sub">'+fmtWhen(it.at)+' · '+(xf ? 'ย้ายเข้ากระเป๋า' : (KIND[it.kind]||it.kind))+'</div></div>'
-      + '<div class="rt"><div class="amt'+(it.direction==='in'?' in':(xf?' amtxf':''))+'">'+fmtBaht(it.amount_minor)+'฿</div>'
-      + (xf ? '<div class="cchip xf">ไม่นับรายจ่าย</div>' : '<div class="cchip done">'+m.t+'</div>')
-      + billChip+'</div></div>';
-  }).join('');
-  return '<div class="list-hd"><div class="l"><div class="t1">รายการ · '+monthLabel()+'</div><div class="t2">บันทึกแล้ว '+d.meta.savedCount+' รายการ</div></div></div>'
-    + rows;
+  var groups = {}, order = [];
+  for (var i = 0; i < d.history.length; i++){
+    var mk = (d.history[i].at || '').slice(0, 7);
+    if (!groups[mk]) { groups[mk] = []; order.push(mk); }
+    groups[mk].push(d.history[i]);
+  }
+  order.sort(function(a, b){ return a > b ? -1 : (a < b ? 1 : 0); }); // เดือนล่าสุดก่อน
+  var hid = 0;
+  var out = '<div class="list-hd"><div class="l"><div class="t1">ประวัติรายการ</div>'
+    + '<div class="t2">บันทึกแล้ว '+d.meta.savedCount+' รายการ · '+order.length+' เดือน · แตะแถวเพื่อแก้หมวด/ชื่อ</div></div></div>';
+  for (var gi = 0; gi < order.length; gi++){
+    var items = groups[order[gi]].slice().sort(function(a, b){ return a.at > b.at ? -1 : (a.at < b.at ? 1 : 0); }); // ในเดือนนี้: ล่าสุดขึ้นก่อน
+    out += '<div class="mgroup-t"><span class="mt">'+monthLabelOf(order[gi])+'</span><span class="mn">'+items.length+' รายการ</span></div>';
+    for (var ri = 0; ri < items.length; ri++) out += historyRow(d, items[ri]);
+    hid += items.length;
+  }
+  if (d.meta.savedCount > hid) out += '<div class="hint" style="margin:4px 3px">แสดง '+hid+' รายการล่าสุด · ทั้งหมด '+d.meta.savedCount+' รายการ</div>';
+  return out;
+}
+function historyRow(d, it){
+  var m = catMeta(it.category);
+  var xf = it.xf;
+  var open = !!S.open[it.ref];
+  var renaming = S.renaming === it.ref;
+  var billChip = '';
+  if (it.bill_status === 'open') billChip = '<div class="cchip amber">💸 รอ '+fmtBaht(Math.max(0,(it.bill_expect||0)-(it.bill_returned||0)))+'฿</div>';
+  else if (it.bill_status === 'done') billChip = '<div class="cchip amber">💸 ครบแล้ว</div>';
+  else if (it.bill_status === 'closed') billChip = '<div class="cchip">💸 ปิดแล้ว</div>';
+  var inner = '';
+  if (open){
+    if (renaming){
+      var cur = it.display_name || it.counterparty || '';
+      inner = '<div class="renbox"><input id="renInput" type="text" maxlength="60" value="'+esc(cur)+'" placeholder="ชื่อร้าน/ผู้รับ">'
+        + '<button class="save" data-act="renSave" data-ref="'+esc(it.ref)+'">บันทึก</button>'
+        + '<button class="cancel" data-act="renCancel" data-ref="'+esc(it.ref)+'">ยกเลิก</button></div>';
+    } else {
+      // เหมือนสเปกในม็อกเฟรม 5: แก้หมวด (กริด) · เปลี่ยนชื่อร้าน · กลับเป็น "รอยืนยัน" (Supabase/เดโม่)
+      inner = categoryGrid(d, it)
+        + '<div class="rowacts">'
+        + '<button class="miniact" data-act="rename" data-ref="'+esc(it.ref)+'">✎ เปลี่ยนชื่อร้าน</button>'
+        + ((IS_SUPA || IS_DEMO) ? '<button class="miniact" data-act="histUnsave" data-ref="'+esc(it.ref)+'">↩︎ กลับเป็น "รอยืนยัน"</button>' : '')
+        + '</div>';
+    }
+  }
+  return '<div class="item hitem'+(open?' open':'')+'" data-act="toggle" data-ref="'+esc(it.ref)+'">'
+    + '<div class="icw">'+rowIcon(it)+'</div>'
+    + '<div class="mid"><div class="nm">'+esc(shortName(it))+'</div><div class="sub">'+fmtWhen(it.at)+' · '+(xf ? 'ย้ายเข้ากระเป๋า' : (KIND[it.kind]||it.kind))+'</div></div>'
+    + '<div class="rt"><div class="amt'+(it.direction==='in'?' in':(xf?' amtxf':''))+'">'+fmtBaht(it.amount_minor)+'฿</div>'
+    + (xf ? '<div class="cchip xf">ไม่นับรายจ่าย</div>' : '<div class="cchip done">'+m.t+'</div>')
+    + billChip+'</div>'
+    + (inner ? '<div class="exp">'+inner+'</div>' : '')
+    + '</div>';
 }
 function htmlSettings(d){
   var logs = (d.meta.logTail || []).map(function(l){
@@ -1051,7 +1101,7 @@ function htmlSettings(d){
   var isSupa = d.meta.mode === 'supabase';
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.2-supabase</span></div>'  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69)
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.3-supabase</span></div>'  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69) · Hermes 4 ต.ค. 69: v4.2.3
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -1239,7 +1289,7 @@ document.addEventListener('click', function(e){
     if (!S.open[ref]){ S.renaming = null; delete S.billEdit[ref]; delete S.billRet[ref]; }
     paint();
     if (S.open[ref]){ // กางแล้วเลื่อนให้เห็นทั้งกล่อง — กันแผงย้อยตกขอบล่าง
-      var _sel = '.swrow[data-ref="' + ref + '"]';
+      var _sel = '.swrow[data-ref="' + ref + '"], .hitem[data-ref="' + ref + '"]';  // แก้โดย Hermes 4 ต.ค. 69: แถวประวัติ (.hitem) กางแล้วเลื่อนให้เห็นด้วย
       setTimeout(function(){
         var rw = document.querySelector(_sel);
         if (rw && rw.scrollIntoView){
@@ -1339,6 +1389,7 @@ document.addEventListener('click', function(e){
     return;
   }
   if (act === 'ackFixed') { ackFixedLocal(t.getAttribute('data-key'), t.getAttribute('data-v'), t.getAttribute('data-inst') || ''); return; }  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): + งวด
+  if (act === 'histUnsave') { histUnsave(ref); return; }  // แก้โดย Hermes 4 ต.ค. 69: แถวประวัติ → กลับเป็น "รอยืนยัน"
   if (act === 'skip' || act === 'delGo') {
     var it = findItem(ref);
     var rowItem = sw ? sw.querySelector('.item') : null;
@@ -1449,6 +1500,7 @@ function findItem(ref){
 }
 function pick(ref, cat){
   var it = findItem(ref); if (!it) return;
+  if (it.status === 'saved'){ pickSaved(ref, cat); return; } // แก้โดย Hermes 4 ต.ค. 69: แถวบันทึกแล้ว → แก้หมวด (ไม่ปลุกกลับคิว)
   var m = catMeta(cat);
   it.status = 'saved'; it.category = cat;
   S.open[ref] = false; S.ext[ref] = false; if (S.renaming === ref) S.renaming = null;
@@ -1470,6 +1522,48 @@ function pick(ref, cat){
     .withFailureHandler(function(){ toast('บันทึกไม่สำเร็จ — เชื่อมต่อไม่ได้', true); reloadSoon(); })
     .saveCategory(ref, cat);
 }
+/* แก้โดย Hermes 4 ต.ค. 69 (P สั่ง · ม็อกเฟรม 5): แก้หมวดของแถวที่บันทึกแล้ว (จากแท็บประวัติ) —
+   อัปเดต DB + ความจำร้านผ่าน saveCategory ชุดเดิม (แก้แล้วระบบจำค่านั้นให้) · มี ↩ เลิกทำ = เซฟหมวดเดิมกลับ */
+function pickSaved(ref, cat){
+  var it = findItem(ref); if (!it) return;
+  var oldCat = it.category || '';
+  S.open[ref] = false; S.ext[ref] = false; if (S.renaming === ref) S.renaming = null;
+  if (oldCat === cat){ paint(); return; }
+  var m = catMeta(cat);
+  it.category = cat;
+  toast('✓ เปลี่ยนหมวด: ' + shortName(it) + ' → ' + m.e + ' ' + m.t, false, '↩ เลิกทำ', function(){
+    it.category = oldCat; paint();
+    if (!IS_DEMO) google.script.run.withSuccessHandler(function(){ reloadSoon(); }).saveCategory(ref, oldCat);
+  });
+  paint();
+  if (IS_DEMO) return;
+  google.script.run
+    .withSuccessHandler(function(res){
+      if (!res || !res.ok) { toast('แก้หมวดไม่สำเร็จ' + (res && res.msg ? ' — ' + res.msg : ''), true); reloadSoon(); return; }
+      reloadSoon();
+    })
+    .withFailureHandler(function(){ toast('แก้หมวดไม่สำเร็จ — เชื่อมต่อไม่ได้', true); reloadSoon(); })
+    .saveCategory(ref, cat);
+}
+/* แก้โดย Hermes 4 ต.ค. 69 (P สั่ง · ม็อกเฟรม 5): คืนแถวที่บันทึกแล้ว → "รอยืนยัน" (แก้/ทำต่อ/ทิ้งได้จากคิวเดิม · บันทึกใหม่ได้)
+   · ปุ่มโชว์เฉพาะ Supabase/เดโม่ (โหมด GAS เก่าไม่มี action unsaveItem) */
+function histUnsave(ref){
+  var it = findItem(ref); if (!it) return;
+  it.status = 'new';
+  S.open[ref] = false; S.ext[ref] = false; if (S.renaming === ref) S.renaming = null;
+  S.data.history = (S.data.history || []).filter(function(x){ return x.ref !== ref; });
+  if (!S.data.pending.some(function(x){ return x.ref === ref; })) S.data.pending.push(it);
+  S.data.meta.savedCount = Math.max(0, (S.data.meta.savedCount || 0) - 1);
+  S.data.summary.pendingCount = (S.data.summary.pendingCount || 0) + 1;
+  if (it.direction !== 'in') S.data.summary.pendingSum = (S.data.summary.pendingSum || 0) + it.amount_minor; // ตามกติกา bridge: sum เฉพาะขาออก
+  updateBadge(); paint();
+  toast('↩︎ ย้ายกลับ "รอยืนยัน" แล้ว — แตะแก้/ทำต่อได้ที่แท็บรอยืนยัน');
+  if (IS_DEMO) return;
+  google.script.run
+    .withSuccessHandler(function(res){ if (res && !res.ok) toast(res.msg || 'ย้ายกลับไม่สำเร็จ', true); reloadSoon(); })
+    .withFailureHandler(function(){ toast('ย้ายกลับไม่สำเร็จ — เชื่อมต่อไม่ได้', true); reloadSoon(); })
+    .unsaveItem(ref);
+}
 function doSave(ref){
   var it = findItem(ref); if (!it) return;
   var sug = it.suggested;
@@ -1478,7 +1572,7 @@ function doSave(ref){
 }
 function openRename(ref){
   var it = findItem(ref); if (!it) return;
-  S.tab = 1;
+  // แก้โดย Hermes 4 ต.ค. 69: เดิมบังคับ S.tab=1 (ใช้ได้แค่แถวรอยืนยัน) — ตอนนี้แถวประวัติก็เปิดแก้ชื่อได้ ต้องอยู่แท็บเดิม
   S.open[ref] = true;
   S.renaming = ref;
   paint();
@@ -2589,6 +2683,10 @@ var DEMO = {
     {at:'2026-09-18T08:48:37',ref:'D6',kind:'transfer',direction:'out',amount_minor:2500,counterparty:'ผู้ใช้ทดสอบ สี่',status:'new',category:'',saved_at:'',display_name:'',suggested:'',bill_expect:0,bill_returned:0,bill_status:''}
   ],
   history:[
+    // แก้โดย Hermes 4 ต.ค. 69: เพิ่มตัวอย่าง 3 เดือน (ต.ค./ก.ย./ส.ค.) ให้เดโม่เห็นการแยกเดือน + เรียงล่าสุดก่อนต่อเดือน
+    {at:'2026-10-04T12:41:00',ref:'H7',kind:'qr_merchant',direction:'out',amount_minor:4500,counterparty:'คาเฟ่ตัวอย่าง',status:'saved',category:'food',saved_at:'',display_name:''},
+    {at:'2026-10-02T09:15:00',ref:'H8',kind:'transfer',direction:'out',amount_minor:12000,counterparty:'ผู้ใช้ทดสอบ หก',status:'saved',category:'food',saved_at:'',display_name:''},
+    {at:'2026-10-01T18:30:00',ref:'H9',kind:'topup',direction:'out',amount_minor:50000,counterparty:'เติม TrueMoney (ตัวอย่าง)',status:'saved',category:'topup',saved_at:'',display_name:'',xf:true},
     {at:'2026-09-18T00:07:52',ref:'H1',kind:'promptpay',direction:'out',amount_minor:2000,counterparty:'ผู้ใช้ทดสอบ สอง',status:'saved',category:'food',saved_at:'',display_name:''},
     {at:'2026-09-15T19:17:00',ref:'H2',kind:'topup',direction:'out',amount_minor:10000,counterparty:'เบอร์ทดสอบ 0000',status:'saved',category:'topup',saved_at:'',display_name:'',xf:true},
     {at:'2026-09-16T13:34:00',ref:'H6',kind:'qr_merchant',direction:'out',amount_minor:20000,counterparty:'กระเป๋าทดสอบ (Wallet)',status:'saved',category:'topup',saved_at:'',display_name:'',xf:true},
@@ -2596,6 +2694,8 @@ var DEMO = {
     {at:'2026-09-08T19:54:00',ref:'H4',kind:'qr_merchant',direction:'out',amount_minor:10000,counterparty:'ปั๊มน้ำมันตัวอย่าง (ชื่อบัญชี: บจก.)',status:'saved',category:'fuel',saved_at:'',display_name:''},
     {at:'2026-09-07T00:42:00',ref:'H5',kind:'qr_merchant',direction:'out',amount_minor:5000,counterparty:'ร้านซักผ้าตัวอย่าง',status:'saved',category:'house',saved_at:'',display_name:''},
     {at:'2026-09-03T04:05:00',ref:'H0',kind:'manual_in',direction:'in',amount_minor:2500000,counterparty:'เงินเดือน (เดโม่)',status:'saved',category:'income',saved_at:'',display_name:''},
+    {at:'2026-08-25T18:20:00',ref:'H10',kind:'qr_merchant',direction:'out',amount_minor:15000,counterparty:'ปั๊มน้ำมันตัวอย่าง',status:'saved',category:'fuel',saved_at:'',display_name:''},
+    {at:'2026-08-14T12:05:00',ref:'H11',kind:'qr_merchant',direction:'out',amount_minor:23000,counterparty:'ร้านอาหารตัวอย่าง',status:'saved',category:'food',saved_at:'',display_name:''},
   ],
   bills:[
     {ref:'D2',name:'ร้านสินค้าตัวอย่าง',at:'2026-09-18T00:02:38',amount_minor:25000,expect_minor:25000,returned_minor:10000,remaining_minor:15000,status:'open'}
@@ -2655,7 +2755,7 @@ var DEMO = {
   summary:{ monthSpent:501050, monthIncome:2500000, cashflow:1998950, pendingCount:6, pendingSum:60000, today:5000,
     monthOut:681050, walletIn:180000, walletSpent:71050, walletCount:4,
     daily:[{d:'2026-09-10',n:10500},{d:'2026-09-11',n:8200},{d:'2026-09-12',n:1000},{d:'2026-09-13',n:7600},{d:'2026-09-14',n:3000},{d:'2026-09-15',n:6800},{d:'2026-09-16',n:2700},{d:'2026-09-17',n:1500},{d:'2026-09-18',n:5000}] },
-  meta:{ total:24, savedCount:6, skippedCount:0, sheetUrl:'#', logTail:[{time:'2026-09-18 09:20:00',ok:'OK',scanned:20,parsed:0,dup:19,skipped:1,appended:0}], genAt:'2026-09-18T09:35:00', triggerMinutes:10, memCount:24, llmOn:true }
+  meta:{ total:24, savedCount:12, skippedCount:0, sheetUrl:'#', logTail:[{time:'2026-09-18 09:20:00',ok:'OK',scanned:20,parsed:0,dup:19,skipped:1,appended:0}], genAt:'2026-09-18T09:35:00', triggerMinutes:10, memCount:24, llmOn:true }
 };
 
 /* ---------- v3.2: นำเข้า statement เอง ---------- */
