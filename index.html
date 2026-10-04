@@ -831,7 +831,7 @@ function htmlSummary(d){
     return a.day - b.day;
   });
   var calHtml = fixed.length
-    ? '<div class="sec-t">ปฏิทินรายจ่ายประจำ</div><div class="card" style="padding:10px 14px">'
+    ? '<div class="sec-t">รายการประจำเดือนนี้</div><div class="card" style="padding:10px 14px">'
       + fx.slice(0, 3).map(function(f){ return fixedRow(f); }).join('')
       // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69): ปุ่มเพิ่มรายการประจำ (พาไปแท็บปฏิทินแล้วเปิดฟอร์ม)
       // แก้โดย CC — TASK_cc_fix_v42.md (3 ต.ค. 69): ซ่อนปุ่มเพิ่มในโหมด GAS เก่า (ไม่มี action addRecurring)
@@ -1864,23 +1864,31 @@ function htmlCalendar(d){
       + budgets.map(function(b){ return budgetRow(b); }).join('') + '</div>';
   }
   var fxList = fixed.filter(function(f){ return !bkeys[f.key]; });
-  var rows = fxList.slice(0).sort(function(a, b){ return a.day - b.day; }).map(function(f){ return fixedRow(f); }).join('');
-  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69): ส่วน "รายจ่ายประจำ" — สรุป + ปุ่ม/ฟอร์มเพิ่ม + ลิสต์
+  // แก้โดย Hermes — 4 ต.ค. 69 (พี่เคาะ "แบบ B" เธรด 🛒fullauto): แยกรายรับ/รายจ่ายเป็นคนละการ์ด
+  //   "รายจ่ายประจำ" = สรุป รวมออก + ปุ่ม/ฟอร์มเพิ่ม (คอนเทนเนอร์เดิม #recCard) · "รายรับประจำ" = สรุป รวมเข้า — โชว์เมื่อมีรายการรับ
   var outL = fxList.filter(function(f){ return f.dir !== 'in'; });
   var inL = fxList.filter(function(f){ return f.dir === 'in'; });
   var outSum = outL.reduce(function(a, f){ return a + (f.amount_minor || 0); }, 0);
+  var inSum = inL.reduce(function(a, f){ return a + (f.amount_minor || 0); }, 0);
   var outDone = outL.filter(function(f){ return f.status === 'done'; }).length;
   var inDone = inL.filter(function(f){ return f.status === 'done'; }).length;
-  var fxSum = '<div class="budtot" style="margin:2px 0 6px;align-items:center"><div class="l">รวมออก <b>฿'+fmtBaht(outSum)+'</b> · จ่ายแล้ว '+outDone+'/'+outL.length
-    + (inL.length ? ' · รับ '+inDone+'/'+inL.length : '') + '</div>'
-    + ((S.recForm || !(IS_SUPA || IS_DEMO)) ? '' : '<button class="miniact cy2" data-act="recNew">＋ เพิ่มรายการประจำ</button>') + '</div>';  // แก้โดย CC — TASK_cc_fix_v42.md (3 ต.ค. 69): ซ่อนในโหมด GAS เก่า
+  var byDaySort = function(a, b){ return a.day - b.day; };
+  var addBtn = ((S.recForm || !(IS_SUPA || IS_DEMO)) ? '' : '<button class="miniact cy2" data-act="recNew">＋ เพิ่มรายการประจำ</button>');  // แก้โดย CC — TASK_cc_fix_v42.md (3 ต.ค. 69): ซ่อนในโหมด GAS เก่า
+  var sumOut = outL.length
+    ? '<div class="budtot" style="margin:2px 0 6px;align-items:center"><div class="l">รวมออก <b>฿'+fmtBaht(outSum)+'</b> · จ่ายแล้ว '+outDone+'/'+outL.length+'</div>'+addBtn+'</div>'
+    : '<div style="display:flex;justify-content:flex-end;margin:2px 0 6px">'+addBtn+'</div>';
+  var outCard = '<div class="sec-t">รายจ่ายประจำ</div><div class="card" id="recCard" style="padding:8px 14px">' + sumOut + htmlRecForm()
+    + (outL.slice(0).sort(byDaySort).map(function(f){ return fixedRow(f); }).join('') || '<div class="hint" style="margin:4px 2px">— ยังไม่มี —</div>') + '</div>';
+  var inCard = inL.length
+    ? '<div class="sec-t">รายรับประจำ</div><div class="card" style="padding:8px 14px">'
+      + '<div class="budtot" style="margin:2px 0 6px"><div class="l">รวมเข้า <b>฿'+fmtBaht(inSum)+'</b> · รับแล้ว '+inDone+'/'+inL.length+'</div></div>'
+      + inL.slice(0).sort(byDaySort).map(function(f){ return fixedRow(f); }).join('') + '</div>'
+    : '';
   return '<div class="sec-t">ปฏิทิน · '+TH_M[m]+' '+String(y + 543).slice(2)+'</div>'
     + '<div class="card" style="padding:10px 10px"><div class="cal">'+cells+'</div>'
     + '<div class="segl" style="margin-top:8px"><span><span class="dot" style="background:#22c55e"></span>จ่าย/รับแล้ว</span><span><span class="dot" style="background:#f5b943"></span>ยังไม่ยืนยัน</span><span><span class="dot" style="background:#3f3f4b"></span>รอ</span><span><span class="dot" style="background:var(--cy)"></span>วันนี้</span></div></div>'
     + budHtml
-    + '<div class="sec-t">รายจ่ายประจำ</div>'
-    + '<div class="card" id="recCard" style="padding:8px 14px">' + fxSum + htmlRecForm()
-    + (rows || '<div class="hint" style="margin:4px 2px">— ยังไม่มี —</div>')+'</div>'
+    + outCard + inCard
     + '<div class="hint">แตะรายการเพื่อยืนยัน/แก้ · ลบได้ในปุ่มที่กาง · จับคู่อัตโนมัติแล้วจะขึ้น ✅ เอง</div>';
 }
 /* ---------- แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69): ฟอร์มเพิ่มรายการประจำ (client-first แบบ incform) ---------- */
