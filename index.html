@@ -494,8 +494,8 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.2.3-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69) · Hermes 4 ต.ค. 69: v4.2.3 = ประวัติแก้ได้+แยกเดือน
-var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, view:null, imp:null };
+var APP_BUILD = 'v4.2.4-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · Hermes 4 ต.ค. 69: v4.2.4 = งบรายหมวดสร้างเองได้ (รอรับ forecast)
+var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, budForm:null, budOpen:{}, view:null, imp:null };
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
 var SW = { OPEN:112, COMMIT:160, MAX:210, EASE:'cubic-bezier(.22,.8,.24,1)' };
@@ -813,7 +813,10 @@ function fmtShort(minor){
   var v = minor / 100;
   return (Math.abs(v % 1) < 0.005) ? String(Math.round(v)) : v.toFixed(2);
 }
-function budgetRow(b){
+function budgetRow(b, opts){
+  opts = opts || {};
+  var open = !!opts.open;
+  var tap = !!opts.tap;
   var ico = (b.logo && LOGO_URL(b.logo)) ? '<img src="'+LOGO_URL(b.logo)+'" alt="">' : (b.emoji || '•');
   var col = b.pct >= 100 ? 'bred' : (b.pct >= 80 ? 'bamb' : 'bgrn');
   var daysIn = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
@@ -822,13 +825,149 @@ function budgetRow(b){
   var st = b.over_minor > 0 ? '<div class="st over">เกิน ฿'+fmtBaht(b.over_minor)+'</div>'
     : (b.pct >= 80 ? '<div class="st warn">⚠️ เหลือ ฿'+fmtBaht(b.remain_minor)+'</div>'
     : '<div class="st ok">เหลือ ฿'+fmtBaht(b.remain_minor)+'</div>');
-  return '<div class="budrow">'
+  // แก้โดย Hermes 4 ต.ค. 69 (P สั่ง · เธรด 🛒fullauto): แถวในการ์ดปฏิทินแตะได้ — กางปุ่ม แก้ไข/ลบ (ภาพรวม/GAS เก่า อ่านอย่างเดียว)
+  var html = '<div class="budrow'+(tap && open ? ' open' : '')+'"'+(tap ? ' data-act="budToggle" data-key="'+esc(b.key)+'"' : '')+'>'
     + '<div class="ic">'+ico+'</div>'
     + '<div class="mid"><div class="nm">'+esc(b.label)+(b.overlap ? ' <span class="ovl">ทับซ้อน</span>' : '')+'</div>'
     + '<div class="cap">'+capTxt+'</div>'
     + '<div class="bar"><i class="'+col+'" style="width:'+Math.min(100, b.pct)+'%"></i></div></div>'
     + '<div class="rt"><div class="num">฿'+fmtShort(b.spent_minor)+'<small> / '+fmtShort(b.cap_minor)+'</small></div>'+st+'</div>'
+    + (tap ? '<span class="fchev">'+(open ? '▾' : '▸')+'</span>' : '')
     + '</div>';
+  if (tap && open && (IS_SUPA || IS_DEMO)){
+    html += '<div class="fxdrop" data-key="'+esc(b.key)+'">'
+      + '<button class="miniact cy2" data-act="budEdit" data-key="'+esc(b.key)+'">✎ แก้ไขงบ</button>'
+      + '<button class="miniact" data-act="budDel" data-key="'+esc(b.key)+'">🗑 ลบ</button>'
+      + '</div>';
+  }
+  return html;
+}
+
+/* ============ v4.2.4: งบรายหมวดสร้างเองได้ (แก้โดย Hermes 4 ต.ค. 69 · P สั่งในเธรด 🛒fullauto — รอรับ forecast) ============
+   งบ 1 แถว = ชื่อ + หมวด (เลือกหลายหมวดได้) + แบบ (ต่อเดือน/ต่อวัน) + ยอด → เก็บตาราง budgets (key/label/emoji/cats/cap_minor|cap_per_day)
+   เพิ่ม/แก้ = setBudget (upsert by key) · ลบ = deleteBudget · เดโม่แก้ในเครื่องอย่างเดียว */
+function budCats(){  // หมวดที่ตั้งงบได้ — ตัดรายรับ/เติมเงิน (ไม่เข้าเงื่อนไขงบ — ตรงกับ computeBudgets ฝั่ง bridge)
+  return ((S.data && S.data.cats) || []).filter(function(c){ return c[0] !== 'income' && c[0] !== 'topup'; });
+}
+function budFormDefault(){ return { key:'', label:'', emoji:'', cats:[], mode:'month', amt:'' }; }
+function budSyncInputs(){  // เก็บค่าที่พิมพ์ไว้ก่อนวาดใหม่ (กดชิป/สลับโหมดแล้วข้อความไม่หาย) — แบบ recSyncInputs
+  var f = S.budForm; if (!f) return;
+  var l = el('budLabel'), a = el('budAmt');
+  if (l && typeof l.value === 'string') f.label = l.value;
+  if (a && typeof a.value === 'string') f.amt = a.value;
+}
+function budIssues(f){
+  var out = [];
+  if (!f.cats || !f.cats.length) out.push('เลือกหมวดอย่างน้อย 1 หมวด');
+  if (!(parseBahtMinor(f.amt) > 0)) out.push('ใส่ยอดงบก่อน');
+  return out;
+}
+function budOpenForm(key){  // key = '' → เพิ่มใหม่ · ระบุ key → แก้ของเดิม (ฟอร์มอยู่การ์ด งบรายหมวด · แท็บปฏิทิน)
+  var f = null;
+  if (key){
+    var list = (S.data && S.data.budgets) || [];
+    for (var i = 0; i < list.length; i++){
+      if (list[i].key === key){
+        var b = list[i];
+        f = { key: b.key, label: b.label || '', emoji: b.emoji || '',
+              cats: (b.cats || []).slice(0), mode: (b.per_day > 0 ? 'day' : 'month'),
+              amt: fmtShort(b.per_day > 0 ? b.per_day : b.cap_minor) };
+      }
+    }
+    if (!f){ toast('ไม่พบงบนี้ — รีเฟรชแล้วลองใหม่', true); return; }
+  } else {
+    f = budFormDefault();
+  }
+  S.budForm = f;
+  S.budOpen = {};
+  S.tab = 2;
+  paint();
+  var c = el('budCard');
+  if (c && c.scrollIntoView){ try { c.scrollIntoView({ block: 'start' }); } catch (_e) {} }
+  animPop('#budCard .incform');
+  focusInput('budLabel');
+}
+function budOpenNew(){ budOpenForm(''); }
+function budChipCat(f, slug, e, t){
+  var on = f.cats.indexOf(slug) >= 0;
+  return '<button class="miniact'+(on ? ' cy2' : '')+'" data-act="budCat" data-v="'+esc(slug)+'">'+e+' '+esc(t)+'</button>';
+}
+function htmlBudForm(){
+  var f = S.budForm; if (!f) return '';
+  var editing = !!f.key;
+  var iss = budIssues(f);
+  return '<div class="incform" style="margin:2px 0 10px;padding-bottom:10px;border-bottom:1px dashed var(--bd2)">'
+    + '<input id="budLabel" type="text" maxlength="60" autocomplete="off" placeholder="ชื่องบ เช่น งบค่ากิน" value="'+esc(f.label)+'">'
+    + '<div class="hint" style="margin:6px 2px 3px">หมวดที่ใช้งบนี้ (เลือกได้หลายหมวด)</div>'
+    + '<div class="incbtns" style="margin-top:0">' + budCats().map(function(c){ return budChipCat(f, c[0], c[1], c[2]); }).join('') + '</div>'
+    + '<div class="hint" style="margin:8px 2px 3px">แบบงบ</div>'
+    + '<div class="incbtns" style="margin-top:0">'
+    + '<button class="miniact'+(f.mode === 'month' ? ' cy2' : '')+'" data-act="budMode" data-v="month">ต่อเดือน</button>'
+    + '<button class="miniact'+(f.mode === 'day' ? ' cy2' : '')+'" data-act="budMode" data-v="day">ต่อวัน</button></div>'
+    + '<input id="budAmt" type="text" inputmode="decimal" autocomplete="off" placeholder="'+(f.mode === 'day' ? 'ยอด ฿ ต่อวัน' : 'ยอด ฿ ต่อเดือน')+'" value="'+esc(f.amt)+'" style="margin-top:8px">'
+    + '<div class="incbtns"><button class="save'+(iss.length ? ' off' : '')+'" data-act="budSave"'+(iss.length ? ' aria-disabled="true" title="'+esc(iss[0])+'"' : '')+'>'+(editing ? 'บันทึกการแก้ไข' : 'เพิ่มงบ')+'</button>'
+    + '<button class="cancel" data-act="budCancel">ยกเลิก</button>'
+    + (editing ? '<button class="miniact" data-act="budDel" data-key="'+esc(f.key)+'">🗑 ลบงบนี้</button>' : '')
+    + '</div></div>';
+}
+function budSave(){
+  var f = S.budForm; if (!f) return;
+  budSyncInputs();
+  var iss = budIssues(f);
+  if (iss.length){ toast(iss[0], true); return; }
+  var v = parseBahtMinor(f.amt);
+  var cats = f.cats.slice(0);
+  var label = String(f.label || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+  if (!label) label = 'งบ' + cats.map(function(c){ return catMeta(c).t; }).join('/');
+  var emoji = f.emoji || (catMeta(cats[0]) || {}).e || '';
+  var key = f.key || ('ub-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 4)).replace(/[^a-z0-9\-_]/g, '');
+  var daysIn = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+  var snap = JSON.parse(JSON.stringify(f));
+  S.budForm = null;
+  if (IS_DEMO){
+    var list = S.data.budgets = S.data.budgets || [];
+    var row = null;
+    for (var i = 0; i < list.length; i++) if (list[i].key === key) row = list[i];
+    if (!row){ row = { key: key, spent_minor: 0, day: 0, overlap: false }; list.push(row); }
+    row.label = label; row.emoji = emoji; row.cats = cats;
+    row.per_day = (f.mode === 'day') ? v : 0;
+    row.cap_minor = (f.mode === 'day') ? v * daysIn : v;
+    budRecalcRow(row);
+    budRecalcTotals();
+    paint();
+    toast(f.key ? 'แก้ไขงบแล้ว ✓' : 'เพิ่มงบแล้ว ✓');
+    return;
+  }
+  paint();
+  callAction('setBudget', [key, { label: label, emoji: emoji, cats: cats.join(','),
+    cap_per_day: (f.mode === 'day') ? v : 0, cap_minor: (f.mode === 'day') ? 0 : v }],
+    f.key ? 'แก้ไขงบแล้ว ✓' : 'เพิ่มงบแล้ว ✓', function(){
+      if (!S.budForm){ S.budForm = snap; S.tab = 2; paint(); }  // บันทึกไม่สำเร็จ — เปิดฟอร์มคืน (แบบ recSave)
+    });
+}
+function budRecalcRow(row){
+  row.remain_minor = Math.max(0, (row.cap_minor || 0) - (row.spent_minor || 0));
+  row.over_minor = Math.max(0, (row.spent_minor || 0) - (row.cap_minor || 0));
+  row.pct = row.cap_minor > 0 ? Math.round(row.spent_minor / row.cap_minor * 100) : 0;
+}
+function budRecalcTotals(){
+  var t = { spent_minor: 0, cap_minor: 0 };
+  ((S.data && S.data.budgets) || []).forEach(function(b){ t.spent_minor += (b.spent_minor || 0); t.cap_minor += (b.cap_minor || 0); });
+  S.data.budgetTotals = t;
+}
+function budDel(key){
+  var list = (S.data && S.data.budgets) || [];
+  var b = null;
+  for (var i = 0; i < list.length; i++) if (list[i].key === key) b = list[i];
+  if (!b) return;
+  if (!confirm('ลบงบ "' + b.label + '" ?\nยอดที่ใช้ไปแล้วไม่หาย — แค่เลิกติดตามงบนี้')) return;
+  S.data.budgets = list.filter(function(x){ return x.key !== key; });
+  if (S.budForm && S.budForm.key === key) S.budForm = null;
+  delete S.budOpen[key];
+  budRecalcTotals();
+  paint();
+  if (IS_DEMO){ toast('ลบงบแล้ว ✓'); return; }
+  callAction('deleteBudget', [key], 'ลบงบแล้ว ✓');
 }
 function htmlSummary(d){
   var s = d.summary || {};
@@ -894,7 +1033,10 @@ function htmlSummary(d){
     budPrev = '<div class="sec-t">งบรายหมวด</div><div class="card" style="padding:8px 14px">'
       + '<div class="budtot" style="margin:2px 0 4px"><div class="l">ใช้ไป <b>฿'+fmtBaht(btt.spent_minor)+'</b> จาก ฿'+fmtBaht(btt.cap_minor)+'</div><div class="pc" style="font-size:15px">'+bpct+'<small>%</small></div></div>'
       + budList.slice(0, 3).map(function(b){ return budgetRow(b); }).join('')
-      + '<div style="text-align:right;margin-top:6px"><button class="miniact cy2" data-act="tab" data-i="2">ดูทั้งหมด →</button></div></div>';
+      // แก้โดย Hermes 4 ต.ค. 69 (P สั่ง · เธรด 🛒fullauto): ปุ่ม ＋ เพิ่มงบ (เปิดฟอร์มที่การ์ดงบ แท็บปฏิทิน)
+      + '<div style="display:flex;gap:7px;justify-content:flex-end;flex-wrap:wrap;margin-top:6px">'
+      + (((IS_SUPA || IS_DEMO) && !S.budForm) ? '<button class="miniact" data-act="budNew">＋ เพิ่มงบ</button>' : '')
+      + '<button class="miniact cy2" data-act="tab" data-i="2">ดูทั้งหมด →</button></div></div>';
   }
   var latestP = d.pending.slice(-3).reverse();
   var latest = latestP.map(function(it){ return summaryRow(it); }).join('');
@@ -1149,7 +1291,7 @@ function htmlSettings(d){
   var isSupa = d.meta.mode === 'supabase';
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.3-supabase</span></div>'  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69) · Hermes 4 ต.ค. 69: v4.2.3
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.4-supabase</span></div>'  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69) · Hermes 4 ต.ค. 69: v4.2.4 = งบรายหมวดสร้างเองได้
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -1380,6 +1522,15 @@ document.addEventListener('click', function(e){
   if (act === 'recFill') { recFill(parseInt(t.getAttribute('data-i'), 10)); return; }
   if (act === 'recOpenEx') { recOpenExisting(t.getAttribute('data-key'), parseInt(t.getAttribute('data-i'), 10)); return; }
   if (act === 'recDel') { recDel(t.getAttribute('data-key')); return; }
+  // แก้โดย Hermes 4 ต.ค. 69 (P สั่ง · เธรด 🛒fullauto): งบรายหมวด — เพิ่ม/แก้/ลบเองได้ (รอรับ forecast)
+  if (act === 'budNew') { budOpenNew(); return; }
+  if (act === 'budCancel') { S.budForm = null; paint(); return; }
+  if (act === 'budToggle') { budSyncInputs(); var bK = t.getAttribute('data-key'); if (bK){ S.budOpen[bK] = !S.budOpen[bK]; paint(); } return; }
+  if (act === 'budEdit') { budOpenForm(t.getAttribute('data-key')); return; }
+  if (act === 'budCat') { budSyncInputs(); var bF = S.budForm; if (bF){ var bC = t.getAttribute('data-v'); var bI = bF.cats.indexOf(bC); if (bI >= 0) bF.cats.splice(bI, 1); else bF.cats.push(bC); } paint(); return; }
+  if (act === 'budMode') { budSyncInputs(); if (S.budForm) S.budForm.mode = (t.getAttribute('data-v') === 'day') ? 'day' : 'month'; paint(); return; }
+  if (act === 'budSave') { budSave(); return; }
+  if (act === 'budDel') { budDel(t.getAttribute('data-key')); return; }
   if (act === 'vopen') {
     var v = t.getAttribute('data-v') || '';
     if (v === 'month'){ var ms = detailMonths(); S.view = { t: 'month', m: ms.length ? ms[0].m : '' }; }
@@ -1928,18 +2079,26 @@ function htmlCalendar(d){
   var budgets = d.budgets || [];
   var bt = d.budgetTotals || { spent_minor: 0, cap_minor: 0 };
   var bkeys = {}; budgets.forEach(function(b){ bkeys[b.key] = 1; });
+  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69): ส่วน "ใช้จ่ายรายวัน" แยกจากรายการประจำ (ยอดถูกหักฝั่ง bridge แล้ว)
+  // แก้โดย Hermes 4 ต.ค. 69 (P สั่ง · เธรด 🛒fullauto): งบรายหมวดสร้าง/แก้/ลบเองได้ —
+  //   ฟอร์ม + ปุ่ม ＋ เพิ่มงบ อยู่การ์ดนี้ (โชว์แม้ยังไม่มีงบ) · แถวแตะกางปุ่ม ✎/🗑 (เฉพาะโหมด Supabase/เดโม่)
+  var budAddBtn = ((S.budForm || !(IS_SUPA || IS_DEMO)) ? '' : '<button class="miniact cy2" data-act="budNew">＋ เพิ่มงบ</button>');
   var budHtml = '';
   if (budgets.length){
     var tpct = bt.cap_minor > 0 ? Math.round(bt.spent_minor / bt.cap_minor * 100) : 0;
     var tcol = tpct >= 100 ? 'bred' : (tpct >= 80 ? 'bamb' : 'bcy');
-    // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69): ส่วน "ใช้จ่ายรายวัน" แยกจากรายการประจำ (ยอดถูกหักฝั่ง bridge แล้ว)
     budHtml = '<div class="sec-t">ใช้จ่ายรายวัน (ไม่รวมรายการประจำ)</div><div class="card">'
       + '<div class="budtot"><div class="l">ใช้ไป <b>฿'+fmtBaht(bt.spent_minor)+'</b> จาก ฿'+fmtBaht(bt.cap_minor)+'</div><div class="pc">'+tpct+'<small>%</small></div></div>'
       + '<div class="bar"><i class="'+tcol+'" style="width:'+Math.min(100, tpct)+'%"></i></div>'
-      + '<div class="hint" style="margin:7px 1px 0">ตัวเลขไม่รวมยอดที่จับคู่กับรายการประจำด้านล่าง</div></div>'
-      + '<div class="sec-t">งบรายหมวด</div><div class="card" style="padding:8px 14px">'
-      + budgets.map(function(b){ return budgetRow(b); }).join('') + '</div>';
+      + '<div class="hint" style="margin:7px 1px 0">ตัวเลขไม่รวมยอดที่จับคู่กับรายการประจำด้านล่าง</div></div>';
   }
+  budHtml += '<div class="sec-t">งบรายหมวด</div><div class="card" id="budCard" style="padding:8px 14px">'
+    + '<div style="display:flex;justify-content:flex-end;margin:2px 0 6px">'+budAddBtn+'</div>'
+    + htmlBudForm()
+    + (budgets.length
+        ? budgets.map(function(b){ return budgetRow(b, { tap: (IS_SUPA || IS_DEMO), open: !!S.budOpen[b.key] }); }).join('')
+        : (S.budForm ? '' : '<div class="hint" style="margin:4px 2px">— ยังไม่มีงบ — กด ＋ เพิ่มงบ เพื่อตั้งงบรายหมวดแรก</div>'))
+    + '</div>';
   var fxList = fixed.filter(function(f){ return !bkeys[f.key]; });
   // แก้โดย Hermes — 4 ต.ค. 69 (พี่เคาะ "แบบ B" เธรด 🛒fullauto): แยกรายรับ/รายจ่ายเป็นคนละการ์ด
   //   "รายจ่ายประจำ" = สรุป รวมออก + ปุ่ม/ฟอร์มเพิ่ม (คอนเทนเนอร์เดิม #recCard) · "รายรับประจำ" = สรุป รวมเข้า — โชว์เมื่อมีรายการรับ

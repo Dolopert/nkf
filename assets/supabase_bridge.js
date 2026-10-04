@@ -898,6 +898,16 @@
     }).catch(function (e) { return { ok: false, msg: errText(e) }; });
   }
 
+  // แก้โดย Hermes 4 ต.ค. 69 (P สั่ง · เธรด 🛒): ลบงบรายหมวดทั้งแถว (ปุ่ม 🗑 ในกางแถวการ์ดปฏิทิน)
+  function deleteBudget(key) {
+    key = strv(key).replace(/[^a-z0-9\-_]/gi, '').slice(0, 32);
+    if (!key) return Promise.resolve({ ok: false, msg: 'ข้อมูลไม่ครบ' });
+    return sb.from('budgets').delete().eq('key', key).then(function (r) {
+      if (r.error) throw r.error;
+      return { ok: true };
+    }).catch(function (e) { return { ok: false, msg: errText(e) }; });
+  }
+
   // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): พารามิเตอร์ที่ 3 instDate = วันที่ของ "งวดนี้" (เฉพาะ weekly)
   //   อ่าน freq ของรายการก่อน → monthly/yearly: month = เดือนปัจจุบัน YYYY-MM (เดิมเป๊ะ · instDate ไม่สน)
   //   weekly: ต้องส่ง instDate 'YYYY-MM-DD' ที่มีจริง · ห่างวันนี้ไม่เกิน ±8 วัน · ตรงวันในสัปดาห์ของรายการ → ใช้เป็น month key
@@ -1061,6 +1071,7 @@
     appendIncome: appendIncome,
     ackFixed: ackFixed,
     setBudget: setBudget,
+    deleteBudget: deleteBudget,  // แก้โดย Hermes 4 ต.ค. 69: ลบงบรายหมวด (การ์ดปฏิทิน → กางแถว → 🗑)
     addRecurring: addRecurring,        // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69)
     removeRecurring: removeRecurring,  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69)
     importStatement: function (account, rows, meta) {
