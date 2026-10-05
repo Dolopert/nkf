@@ -118,6 +118,11 @@
   .mgroup-t .mt{font-size:12.5px;font-weight:700;letter-spacing:.2px}
   .mgroup-t .mn{font-size:10.5px;color:var(--dim);font-variant-numeric:tabular-nums}
   .list-hd + .mgroup-t{border-top:none;padding-top:2px;margin-top:0}
+  /* แก้โดย Hermes 5 ต.ค. 69 (P สั่ง · เธรด "หน้ารอยืนยัน"): ชิปเลือกเดือน — แท็บรอยืนยันแยกเดือน ไม่ปนกัน */
+  .pchips{display:flex;gap:7px;margin:2px 2px 10px;flex-wrap:wrap}
+  .pchip{background:transparent;border:1px solid var(--bd2);color:var(--mut);border-radius:99px;padding:6px 12px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;font-variant-numeric:tabular-nums}
+  .pchip.on{background:var(--cy-bg2);border-color:var(--cy-bd2);color:var(--cy2)}
+  .pchip:active{border-color:var(--bd3)}
   /* ---------- swipe row (iOS Clock style: ปัดได้เลย เด้งนุ่ม ไม่ต้องกดค้าง) ---------- */
   .swrow{position:relative;margin-bottom:8px;border-radius:16px;overflow:hidden;touch-action:pan-y;
     -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
@@ -494,8 +499,8 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.2.4-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · Hermes 4 ต.ค. 69: v4.2.4 = งบรายหมวดสร้างเองได้ (รอรับ forecast)
-var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, budForm:null, budOpen:{}, view:null, imp:null };
+var APP_BUILD = 'v4.2.5-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · Hermes 5 ต.ค. 69: v4.2.5 = แท็บรอยืนยันแยกเดือน — กดเลือกเดือนได้ + ในเดือนเรียงล่าสุดก่อน
+var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, budForm:null, budOpen:{}, view:null, imp:null, pMonth:null };  // pMonth: แก้โดย Hermes 5 ต.ค. 69 — เดือนที่เลือกในแท็บรอยืนยัน (แยกเดือน)
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
 var SW = { OPEN:112, COMMIT:160, MAX:210, EASE:'cubic-bezier(.22,.8,.24,1)' };
@@ -1127,10 +1132,35 @@ function buildGraph(daily){
 }
 
 /* ---------- pending ---------- */
+/* แก้โดย Hermes 5 ต.ค. 69 (P สั่ง · เธรด "หน้ารอยืนยัน"): แยกเดือน — กดชิปเลือกเดือนได้ (ไม่ปนกัน)
+   · ในเดือนที่เลือก เรียง "เวลาล่าสุดขึ้นก่อน" · เดือนที่เลือกหายไป (เคลียร์ครบ) → ถอยมาเดือนล่าสุดอัตโนมัติ */
+function pendingMonths(d){
+  var groups = {}, order = [];
+  for (var i = 0; i < d.pending.length; i++){
+    var mk = (d.pending[i].at || '').slice(0, 7);
+    if (!groups[mk]) { groups[mk] = []; order.push(mk); }
+    groups[mk].push(d.pending[i]);
+  }
+  order.sort(function(a, b){ return a > b ? -1 : (a < b ? 1 : 0); }); // เดือนล่าสุดก่อน
+  return { groups: groups, order: order };
+}
 function htmlPending(d){
   if (!d.pending.length) return '<div class="empty">🎉 เคลียร์ครบแล้ว<br>ไม่มีรายการรอยืนยัน — รออีเมลรอบใหม่</div>';
-  var rows = d.pending.map(function(it){ return pendingRow(d, it); }).join('');
+  var mm = pendingMonths(d);
+  if (!mm.groups[S.pMonth]) S.pMonth = mm.order[0];   // ยังไม่เลือก/เดือนเดิมหาย → เดือนล่าสุด
+  var items = mm.groups[S.pMonth].slice().sort(function(a, b){ return a.at > b.at ? -1 : (a.at < b.at ? 1 : 0); }); // ในเดือนนี้: ล่าสุดขึ้นก่อน
+  var chips = '';
+  if (mm.order.length > 1){
+    chips = '<div class="pchips">';
+    for (var ci = 0; ci < mm.order.length; ci++){
+      var mk = mm.order[ci];
+      chips += '<button class="pchip' + (mk === S.pMonth ? ' on' : '') + '" data-act="pmon" data-m="' + mk + '">' + monthLabelOf(mk) + ' · ' + mm.groups[mk].length + '</button>';
+    }
+    chips += '</div>';
+  }
+  var rows = items.map(function(it){ return pendingRow(d, it); }).join('');
   return '<div class="list-hd"><div class="l"><div class="t1">รอยืนยัน · '+d.summary.pendingCount+'</div><div class="t2">รวม ฿'+fmtBaht(d.summary.pendingSum)+'</div></div></div>'
+    + chips
     + rows
     + '<div class="hint"><b>ปัดซ้าย = ลบ · ปัดขวา = บันทึก</b> (เฉพาะร้านที่มี ★ แนะนำ) · แตะ = กางหมวด / ตั้งบิลรอคืน / แก้ชื่อ</div>';
 }
@@ -1291,7 +1321,7 @@ function htmlSettings(d){
   var isSupa = d.meta.mode === 'supabase';
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.4-supabase</span></div>'  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69) · Hermes 4 ต.ค. 69: v4.2.4 = งบรายหมวดสร้างเองได้
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.5-supabase</span></div>'  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69) · Hermes 5 ต.ค. 69: v4.2.5 = รอยืนยันแยกเดือน + กดเลือกเดือนได้
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -1491,7 +1521,8 @@ document.addEventListener('click', function(e){
     return;
   }
   if (act === 'more') { if (ref) { S.ext[ref] = !S.ext[ref]; paint(); } return; }
-  if (act === 'goitem') { S.tab = 1; if (ref) S.open[ref] = true; paint(); el('main').scrollTop = 0; return; }
+  if (act === 'goitem') { S.tab = 1; if (ref){ S.open[ref] = true; var gi = findItem(ref); if (gi) S.pMonth = (gi.at || '').slice(0, 7); } paint(); el('main').scrollTop = 0; return; }  // แก้โดย Hermes 5 ต.ค. 69: พาไปเดือนของแถวนั้นด้วย (แท็บรอยืนยันแยกเดือน)
+  if (act === 'pmon') { var pm = t.getAttribute('data-m'); if (pm && pm !== S.pMonth){ S.pMonth = pm; paint(); el('main').scrollTop = 0; } return; }  // แก้โดย Hermes 5 ต.ค. 69: กดชิปเลือกเดือนในแท็บรอยืนยัน
   if (act === 'pick') { pick(ref, t.getAttribute('data-cat')); return; }
   if (act === 'rename') { openRename(ref); return; }
   if (act === 'renCancel') { S.renaming = null; paint(); return; }
@@ -1736,6 +1767,7 @@ function pick(ref, cat){
     it.status = 'new'; it.category = '';
     S.data.history = S.data.history.filter(function(x){ return x.ref !== ref; });
     if (!S.data.pending.some(function(x){ return x.ref === ref; })) S.data.pending.push(it);
+    S.pMonth = (it.at || '').slice(0, 7); // แก้โดย Hermes 5 ต.ค. 69: เลือกเดือนของแถวที่กู้คืน ให้เห็นทันทีในแท็บรอยืนยัน
     recalcSummary(); paint();
     toast('กู้คืนแล้ว');
     if (!IS_DEMO) google.script.run.withSuccessHandler(function(){ reloadSoon(); }).undoSkip(ref);
@@ -1784,6 +1816,7 @@ function histUnsave(ref){
   S.data.meta.savedCount = Math.max(0, (S.data.meta.savedCount || 0) - 1);
   S.data.summary.pendingCount = (S.data.summary.pendingCount || 0) + 1;
   if (it.direction !== 'in') S.data.summary.pendingSum = (S.data.summary.pendingSum || 0) + it.amount_minor; // ตามกติกา bridge: sum เฉพาะขาออก
+  S.pMonth = (it.at || '').slice(0, 7); // แก้โดย Hermes 5 ต.ค. 69: เลือกเดือนของแถวที่เพิ่งย้ายกลับ ให้เห็นทันทีในแท็บรอยืนยัน
   updateBadge(); paint();
   toast('↩︎ ย้ายกลับ "รอยืนยัน" แล้ว — แตะแก้/ทำต่อได้ที่แท็บรอยืนยัน');
   if (IS_DEMO) return;
@@ -2924,7 +2957,10 @@ var DEMO = {
     {at:'2026-09-18T00:07:14',ref:'D3',kind:'transfer',direction:'out',amount_minor:5000,counterparty:'ลูกค้าตัวอย่าง หนึ่ง',status:'new',category:'',saved_at:'',display_name:'',suggested:'food',bill_expect:0,bill_returned:0,bill_status:''},
     {at:'2026-09-18T00:07:52',ref:'D4',kind:'promptpay',direction:'out',amount_minor:2000,counterparty:'ผู้ใช้ทดสอบ สอง',status:'new',category:'',saved_at:'',display_name:'',suggested:'',bill_expect:0,bill_returned:0,bill_status:''},
     {at:'2026-09-18T03:38:36',ref:'D5',kind:'transfer',direction:'out',amount_minor:100,counterparty:'ผู้ใช้ทดสอบ สาม',status:'new',category:'',saved_at:'',display_name:'',suggested:'',bill_expect:0,bill_returned:0,bill_status:''},
-    {at:'2026-09-18T08:48:37',ref:'D6',kind:'transfer',direction:'out',amount_minor:2500,counterparty:'ผู้ใช้ทดสอบ สี่',status:'new',category:'',saved_at:'',display_name:'',suggested:'',bill_expect:0,bill_returned:0,bill_status:''}
+    {at:'2026-09-18T08:48:37',ref:'D6',kind:'transfer',direction:'out',amount_minor:2500,counterparty:'ผู้ใช้ทดสอบ สี่',status:'new',category:'',saved_at:'',display_name:'',suggested:'',bill_expect:0,bill_returned:0,bill_status:''},
+    // แก้โดย Hermes 5 ต.ค. 69: เพิ่ม 2 แถวเดือน ต.ค. ให้เดโม่เห็นการแยกเดือนของรอยืนยัน + กดเลือกเดือนได้ (ข้อมูลสมมติล้วน)
+    {at:'2026-10-04T21:11:48',ref:'D7',kind:'qr_merchant',direction:'out',amount_minor:12900,counterparty:'ร้านสเต็กตัวอย่าง (ชื่อบัญชี: นาย ตัวอย่าง)',status:'new',category:'',saved_at:'',display_name:'',suggested:'food',bill_expect:0,bill_returned:0,bill_status:''},
+    {at:'2026-10-04T22:30:09',ref:'D8',kind:'transfer',direction:'out',amount_minor:10700,counterparty:'GrabPay Wallet (ตัวอย่าง)',status:'new',category:'',saved_at:'',display_name:'',suggested:'food',bill_expect:0,bill_returned:0,bill_status:''}
   ],
   history:[
     // แก้โดย Hermes 4 ต.ค. 69: เพิ่มตัวอย่าง 3 เดือน (ต.ค./ก.ย./ส.ค.) ให้เดโม่เห็นการแยกเดือน + เรียงล่าสุดก่อนต่อเดือน
@@ -2996,7 +3032,7 @@ var DEMO = {
     kplus:{ total_minor:677000, transfer_minor:180000, cats:[{cat:'food',n:308000},{cat:'shopping',n:54000},{cat:'fuel',n:45000},{cat:'house',n:10000}] },
     truemoney:{ total_minor:0, transfer_minor:0, cats:[] }
   },
-  summary:{ monthSpent:501050, monthIncome:2500000, cashflow:1998950, pendingCount:6, pendingSum:60000, today:5000,
+  summary:{ monthSpent:501050, monthIncome:2500000, cashflow:1998950, pendingCount:8, pendingSum:65700, today:5000,
     monthOut:681050, walletIn:180000, walletSpent:71050, walletCount:4,
     daily:[{d:'2026-09-10',n:10500},{d:'2026-09-11',n:8200},{d:'2026-09-12',n:1000},{d:'2026-09-13',n:7600},{d:'2026-09-14',n:3000},{d:'2026-09-15',n:6800},{d:'2026-09-16',n:2700},{d:'2026-09-17',n:1500},{d:'2026-09-18',n:5000}] },
   meta:{ total:24, savedCount:12, skippedCount:0, sheetUrl:'#', logTail:[{time:'2026-09-18 09:20:00',ok:'OK',scanned:20,parsed:0,dup:19,skipped:1,appended:0}], genAt:'2026-09-18T09:35:00', triggerMinutes:10, memCount:24, llmOn:true }
