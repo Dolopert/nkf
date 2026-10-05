@@ -204,6 +204,15 @@
     return (k === 'wallet_card' || k === 'wallet_online' || k === 'wallet_online_xb' || k === 'wallet_settle');
   }
 
+  // แก้โดย Hermes 5 ต.ค. 69 (P สั่ง · เธรด "ปุ่มเปิด-ปิดรายการย่อยใน TrueMoney"): โหมดสรุปกระเป๋า —
+  // ธง 'nkf_tm_track' = '0' → ตัดรายการกระเป๋า (kind wallet_* / account truemoney) ออกจากทุกยอด/ลิสต์ · ข้อมูลยังอยู่ครบ เปิดกลับเห็นเหมือนเดิม
+  function tmTrackOn_() {
+    try { return String(localStorage.getItem('nkf_tm_track') || '') !== '0'; } catch (e) { return true; }
+  }
+  function isTmWalletRow_(it) {
+    return isWalletKind(it) || strv(it.account).toLowerCase() === 'truemoney' || strv(it.kind).indexOf('wallet_') === 0;
+  }
+
   // ---------- มิเรอร์ computeBudgets_ ใน Web.gs (data source = ตาราง budgets แทนแท็บชีต) ----------
   // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69): excludeRefs = {ref:true} ของ tx ที่จับคู่รายการประจำแล้ว
   // (มาจาก matchFixedRefs ชุดเดียวกับ computeFixed) → ไม่นับซ้ำในยอด "ใช้ไป" ของงบรายหมวด
@@ -703,6 +712,17 @@
         };
       });
 
+      // แก้โดย Hermes 5 ต.ค. 69 (P สั่ง · เธรด "ปุ่มเปิด-ปิดรายการย่อยใน TrueMoney"): โหมดสรุปกระเป๋า — กรองตั้งแต่ต้นทาง
+      var tmHiddenN = 0;
+      if (!tmTrackOn_()) {
+        var keepRows = [];
+        for (var wr = 0; wr < rows.length; wr++) {
+          if (isTmWalletRow_(rows[wr])) tmHiddenN++;
+          else keepRows.push(rows[wr]);
+        }
+        rows = keepRows;
+      }
+
       var pending = [], history = [], bills = [];
       var pendingSum = 0, monthSpent = 0, monthIncome = 0, skippedCount = 0;
       var monthOut = 0, walletIn = 0, walletCount = 0, walletSpent = 0, latestBalance = 0;
@@ -797,7 +817,7 @@
         meta: {
           total: rows.length, savedCount: history.length, skippedCount: skippedCount,
           sheetUrl: '', logTail: [], genAt: nowLocal, triggerMinutes: 0,
-          memCount: merchantRows.length, llmOn: false, mode: 'supabase'
+          memCount: merchantRows.length, llmOn: false, mode: 'supabase', tmHiddenCount: tmHiddenN
         }
       };
     }).catch(function (e) {

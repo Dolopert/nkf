@@ -123,6 +123,17 @@
   .pchip{background:transparent;border:1px solid var(--bd2);color:var(--mut);border-radius:99px;padding:6px 12px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;font-variant-numeric:tabular-nums}
   .pchip.on{background:var(--cy-bg2);border-color:var(--cy-bd2);color:var(--cy2)}
   .pchip:active{border-color:var(--bd3)}
+  /* แก้โดย Hermes 5 ต.ค. 69 (P สั่ง · เธรด "ปุ่มเปิด-ปิดรายการย่อยใน TrueMoney"): สวิตช์ติดตามรายการย่อยของกระเป๋า + โหมดสรุป */
+  .trkcard{display:flex;align-items:center;gap:10px;border:1px solid var(--bd);background:var(--card);border-radius:14px;padding:10px 12px;margin:8px 0 4px}
+  .trkcard .ic{width:30px;height:30px;border-radius:9px;background:var(--inset);border:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:15px;flex:none}
+  .trkcard .mid{flex:1;min-width:0}
+  .trkcard .nm{font-size:12.5px;font-weight:600;color:var(--tx)}
+  .trkcard .sub{font-size:10px;color:var(--dim);margin-top:2px;line-height:1.55}
+  .tmsw{width:46px;height:27px;border-radius:99px;border:1px solid var(--bd2);background:var(--inset);position:relative;flex:none;cursor:pointer;padding:0;transition:background .15s,border-color .15s}
+  .tmsw i{position:absolute;top:2px;left:2px;width:21px;height:21px;border-radius:50%;background:var(--dim);transition:left .15s,background .15s}
+  .tmsw.on{background:var(--cy-bg2);border-color:var(--cy-bd2)}
+  .tmsw.on i{left:22px;background:var(--cy2)}
+  .trknote{border:1px dashed var(--bd2);border-radius:12px;padding:9px 11px;margin:2px 0 8px;font-size:10.5px;color:var(--mut);line-height:1.7}
   /* ---------- swipe row (iOS Clock style: ปัดได้เลย เด้งนุ่ม ไม่ต้องกดค้าง) ---------- */
   .swrow{position:relative;margin-bottom:8px;border-radius:16px;overflow:hidden;touch-action:pan-y;
     -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
@@ -499,7 +510,7 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.2.5-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · Hermes 5 ต.ค. 69: v4.2.5 = แท็บรอยืนยันแยกเดือน — กดเลือกเดือนได้ + ในเดือนเรียงล่าสุดก่อน
+var APP_BUILD = 'v4.2.6-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · Hermes 5 ต.ค. 69 ค่ำ: v4.2.6 = ปุ่มติดตามรายการย่อยกระเป๋า TrueMoney เปิด-ปิด (v4.2.5 = รอยืนยันแยกเดือน)
 var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, budForm:null, budOpen:{}, view:null, imp:null, pMonth:null };  // pMonth: แก้โดย Hermes 5 ต.ค. 69 — เดือนที่เลือกในแท็บรอยืนยัน (แยกเดือน)
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
@@ -982,14 +993,15 @@ function htmlSummary(d){
   var bankSpent = Math.max(0, (s.monthSpent || 0) - wSpent);
   var segTotal = bankSpent + wSpent;
   var segHtml = '';
-  if (wSpent > 0){
+  if (wSpent > 0 && tmOn){
     var bp = segTotal > 0 ? (bankSpent / segTotal * 100) : 0;
     segHtml = '<div class="seg"><i style="width:'+bp.toFixed(1)+'%;background:linear-gradient(90deg,#ff8f8f,#ffb0b0)"></i>'
       + '<i style="width:'+(100-bp).toFixed(1)+'%;background:linear-gradient(90deg,#f5b943,#f8d17e)"></i></div>'
       + '<div class="segl"><span><span class="dot" style="background:#ff8f8f"></span>🏦 บัญชี <b>฿'+fmtBaht(bankSpent)+'</b></span><span><span class="dot" style="background:#f5b943"></span>👛 กระเป๋า <b>฿'+fmtBaht(wSpent)+'</b></span></div>';
   }
-  var wtrHtml = wIn > 0 ? '<div class="wtr">↪ ย้ายเข้ากระเป๋า ฿'+fmtBaht(wIn)+' <span>ไม่นับเป็นรายจ่าย</span></div>' : '';
+  var wtrHtml = (wIn > 0 && tmOn) ? '<div class="wtr">↪ ย้ายเข้ากระเป๋า ฿'+fmtBaht(wIn)+' <span>ไม่นับเป็นรายจ่าย</span></div>' : '';
   var kp = accts.kplus || {}, tm = accts.truemoney || {};
+  var tmOn = tmTrackOn();  // แก้โดย Hermes 5 ต.ค. 69: โหมดสรุปกระเป๋า — ปิดติดตามรายการย่อยอยู่ไหม
   var acctHtml = '<div class="sec-t">บัญชีของฉัน</div><div class="accts">'
     + '<div class="acct" data-act="vopen" data-v="acct:kplus" style="cursor:pointer"><span class="chev">›</span><div class="a1">'+(LOGO_URL('kplus') ? logoImg('kplus','lgx') : '🏦')+' K PLUS</div>'
     + '<div class="a2">บัญชีหลัก · KBank</div>'
@@ -997,9 +1009,13 @@ function htmlSummary(d){
     + '<div class="a4">เดือนนี้ −฿'+fmtBaht(kp.out_minor || 0)+' · +฿'+fmtBaht(kp.in_minor || 0)+'</div>'
     + connChip('kplus')+'</div>'
     + '<div class="acct" data-act="vopen" data-v="acct:truemoney" style="cursor:pointer"><span class="chev">›</span><div class="a1">'+(LOGO_URL('truemoney') ? logoImg('truemoney','lgx') : '👛')+' TrueMoney</div>'
-    + '<div class="a2">กระเป๋า</div>'
-    + '<div class="a3">'+((tm.spent_month || tm.spent_is_current) ? '฿'+fmtBaht(tm.spent_minor || 0) : '—')+'</div>'
-    + '<div class="a4">'+(tm.spent_is_current ? 'ใช้เดือนนี้' : (tm.spent_month ? 'ใช้ ('+TH_M[parseInt(tm.spent_month.slice(5,7),10)-1]+')' : 'รอ statement'))+' · เติมเข้า ฿'+fmtBaht(tm.in_minor || 0)+'</div>'
+    + (tmOn
+        ? '<div class="a2">กระเป๋า</div>'
+          + '<div class="a3">'+((tm.spent_month || tm.spent_is_current) ? '฿'+fmtBaht(tm.spent_minor || 0) : '—')+'</div>'
+          + '<div class="a4">'+(tm.spent_is_current ? 'ใช้เดือนนี้' : (tm.spent_month ? 'ใช้ ('+TH_M[parseInt(tm.spent_month.slice(5,7),10)-1]+')' : 'รอ statement'))+' · เติมเข้า ฿'+fmtBaht(tm.in_minor || 0)+'</div>'
+        : '<div class="a2">กระเป๋า · โหมดสรุป</div>'
+          + '<div class="a3">—</div>'
+          + '<div class="a4">ไม่ติดตามรายการย่อย · แตะเปิดได้</div>')
     + connChip('truemoney')+'</div>'
     + '<div class="acct soon" data-act="vopen" data-v="soon" style="cursor:pointer"><span class="chev">›</span><div class="a1">💳 บัตรเครดิต</div><div class="a2">ช่องว่างไว้</div><div class="a3">—</div><div class="a4">เมื่อมีบัตร: ใบแจ้งยอด → อีเมล</div></div>'
     + '</div>';
@@ -1009,13 +1025,16 @@ function htmlSummary(d){
     + '<div class="tree">'
     + '<div class="titem">💸 ใช้จ่ายตรง <span class="note2">scan / โอน</span><span class="r rd">−฿'+fmtBaht(bankSpent)+'</span></div>'
     + (wIn > 0 ? '<div class="titem">↪ ย้ายเข้า <span class="note2">'+(s.walletCount || 0)+' ครั้ง · ไม่นับรายจ่าย</span><span class="r cy">−฿'+fmtBaht(wIn)+'</span></div>' : '')
-    + '<div class="subwrap"><div class="tnode" style="margin:6px 0 2px">'+logoImg('truemoney','lgx')+' กระเป๋า TrueMoney <small>ค้าง ~฿'+fmtBaht(flow.wallet_remain || 0)+'</small></div>'
-    + '<div class="tree">'
-    + ((flow.wallet_spent || 0) > 0
-        ? '<div class="titem">🛒 ใช้จากกระเป๋า<span class="r am">−฿'+fmtBaht(flow.wallet_spent)+'</span></div>'
-        : '<div class="titem">🛒 ใช้จากกระเป๋า <span class="note2">ยังไม่มี statement</span><span class="r m">—</span></div>')
-    + '<div class="titem">⏸ ค้างใช้ต่อ<span class="r m">~฿'+fmtBaht(flow.wallet_remain || 0)+'</span></div>'
-    + '</div></div></div></div>';
+    + (tmOn
+        ? '<div class="subwrap"><div class="tnode" style="margin:6px 0 2px">'+logoImg('truemoney','lgx')+' กระเป๋า TrueMoney <small>ค้าง ~฿'+fmtBaht(flow.wallet_remain || 0)+'</small></div>'
+          + '<div class="tree">'
+          + ((flow.wallet_spent || 0) > 0
+              ? '<div class="titem">🛒 ใช้จากกระเป๋า<span class="r am">−฿'+fmtBaht(flow.wallet_spent)+'</span></div>'
+              : '<div class="titem">🛒 ใช้จากกระเป๋า <span class="note2">ยังไม่มี statement</span><span class="r m">—</span></div>')
+          + '<div class="titem">⏸ ค้างใช้ต่อ<span class="r m">~฿'+fmtBaht(flow.wallet_remain || 0)+'</span></div>'
+          + '</div></div>'
+        : '<div class="subwrap"><div class="tnode" style="margin:6px 0 2px">'+logoImg('truemoney','lgx')+' กระเป๋า TrueMoney <small>โหมดสรุป — ไม่ติดตามรายการย่อย</small></div></div>')
+    + '</div></div>';
   var fx = fixed.slice(0).sort(function(a, b){
     if (a.status === b.status) return a.day - b.day;
     if (a.status === 'pending') return -1;
@@ -1321,7 +1340,7 @@ function htmlSettings(d){
   var isSupa = d.meta.mode === 'supabase';
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.5-supabase</span></div>'  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69) · Hermes 5 ต.ค. 69: v4.2.5 = รอยืนยันแยกเดือน + กดเลือกเดือนได้
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.6-supabase</span></div>'  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69) · Hermes 5 ต.ค. 69: v4.2.5 = รอยืนยันแยกเดือน + กดเลือกเดือนได้
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -1523,6 +1542,7 @@ document.addEventListener('click', function(e){
   if (act === 'more') { if (ref) { S.ext[ref] = !S.ext[ref]; paint(); } return; }
   if (act === 'goitem') { S.tab = 1; if (ref){ S.open[ref] = true; var gi = findItem(ref); if (gi) S.pMonth = (gi.at || '').slice(0, 7); } paint(); el('main').scrollTop = 0; return; }  // แก้โดย Hermes 5 ต.ค. 69: พาไปเดือนของแถวนั้นด้วย (แท็บรอยืนยันแยกเดือน)
   if (act === 'pmon') { var pm = t.getAttribute('data-m'); if (pm && pm !== S.pMonth){ S.pMonth = pm; paint(); el('main').scrollTop = 0; } return; }  // แก้โดย Hermes 5 ต.ค. 69: กดชิปเลือกเดือนในแท็บรอยืนยัน
+  if (act === 'tmTrack') { tmTrackFlip(); return; }  // แก้โดย Hermes 5 ต.ค. 69: ปุ่มเปิด-ปิดติดตามรายการย่อยของกระเป๋า TrueMoney
   if (act === 'pick') { pick(ref, t.getAttribute('data-cat')); return; }
   if (act === 'rename') { openRename(ref); return; }
   if (act === 'renCancel') { S.renaming = null; paint(); return; }
@@ -1657,6 +1677,18 @@ el('btnTheme').addEventListener('click', toggleTheme);
     } catch(e){}
   }
 })();
+
+/* ---------- แก้โดย Hermes 5 ต.ค. 69 (P สั่ง · เธรด "ปุ่มเปิด-ปิดรายการย่อยใน TrueMoney"): โหมดสรุปกระเป๋า — สลับ "ติดตามรายการย่อย" เปิด/ปิด (จำในเครื่องนี้) ---------- */
+function tmTrackOn(){
+  try { return localStorage.getItem('nkf_tm_track') !== '0'; } catch(e){ return true; }
+}
+function tmTrackFlip(){
+  var on = tmTrackOn();
+  try { localStorage.setItem('nkf_tm_track', on ? '0' : '1'); } catch(e){}
+  toast(on ? 'ปิดติดตามรายการย่อย — โหมดสรุปกระเป๋า ✓' : 'เปิดติดตามรายการย่อยแล้ว ✓');
+  paint();
+  reloadSoon();
+}
 
 /* ---------- แก้โดย CC 23 ก.ย. 69 (TASK_p4_pwa_supabase): หน้าล็อกอิน Supabase ---------- */
 function showLogin(){
@@ -2045,24 +2077,46 @@ function viewAcctHtml(d, a){
   var acct = (d.dacct || {})[a] || { total_minor: 0, transfer_minor: 0, cats: [] };
   var metas = { kplus: { name: 'K PLUS', img: 'kplus', sub: 'บัญชีหลัก · KBank' }, truemoney: { name: 'TrueMoney', img: 'truemoney', sub: 'กระเป๋า' } };
   var meta = metas[a] || { name: a, img: '', sub: '' };
+  // แก้โดย Hermes 5 ต.ค. 69 (P สั่ง · เธรด "ปุ่มเปิด-ปิดรายการย่อยใน TrueMoney"): โหมดสรุปกระเป๋า — สวิตช์ติดตามรายการย่อย + ตัดรายการยิบย่อยออกจากหน้านี้
+  var isTm = (a === 'truemoney');
+  var tmOn = tmTrackOn();
+  var off = isTm && !tmOn;
   var ok = false;
   try { var lt0 = (d.meta.logTail || [])[0]; ok = !!(a === 'kplus' && lt0 && lt0.ok === 'OK'); } catch (e) {}
   var arows = rowsOfAcct(a);
-  var conn = '<div class="conncard' + (ok ? '' : ' warm') + '">'
+  var conn = '<div class="conncard' + ((off || ok) ? '' : ' warm') + '">'
     + (LOGO_URL(meta.img) ? '<img src="' + LOGO_URL(meta.img) + '" alt="">' : '')
-    + '<div><div class="c1">' + meta.name + '</div><div class="c2">' + meta.sub + (ok ? ' · เชื่อมผ่านอีเมล'
-        : (arows.length ? ' · นำเข้าเอง · ล่าสุด ' + fmtWhen(arows[0].at) : ' · ยังไม่เชื่อม — เลือกวิธี: เมล (auto) หรือ นำเข้าเอง')) + '</div></div>'
-    + '<span class="cc">' + (ok ? '<span class="con"><span class="sdot"></span>AUTO CONNECTED</span>'
-        : (arows.length ? '<span class="con2"><span class="sdot"></span>นำเข้าเอง</span>' : '<span class="con2"><span class="sdot"></span>รอเชื่อม</span>')) + '</span></div>';
+    + '<div><div class="c1">' + meta.name + '</div><div class="c2">' + meta.sub + (off ? ' · โหมดสรุป — ไม่ติดตามรายการย่อย'
+        : (ok ? ' · เชื่อมผ่านอีเมล'
+        : (arows.length ? ' · นำเข้าเอง · ล่าสุด ' + fmtWhen(arows[0].at) : ' · ยังไม่เชื่อม — เลือกวิธี: เมล (auto) หรือ นำเข้าเอง'))) + '</div></div>'
+    + '<span class="cc">' + (off ? '<span class="con2"><span class="sdot"></span>โหมดสรุป</span>'
+        : (ok ? '<span class="con"><span class="sdot"></span>AUTO CONNECTED</span>'
+        : (arows.length ? '<span class="con2"><span class="sdot"></span>นำเข้าเอง</span>' : '<span class="con2"><span class="sdot"></span>รอเชื่อม</span>'))) + '</span></div>';
+  var swHtml = isTm
+    ? '<div class="trkcard"><div class="ic">👛</div><div class="mid"><div class="nm">ติดตามรายการย่อยของกระเป๋า</div>'
+      + '<div class="sub">' + (tmOn
+          ? 'เปิดอยู่ — รายการของกระเป๋า (รูดการ์ด · settle · อื่น ๆ) เข้าคิวและคิดงบตามปกติ'
+          : 'ปิดอยู่ — โหมดสรุป: ไม่มีรายการยิบย่อยเข้าคิว/ประวัติ/งบ · ข้อมูลเดิมไม่หาย เปิดกลับได้ตลอด') + '</div></div>'
+      + '<button class="tmsw' + (tmOn ? ' on' : '') + '" data-act="tmTrack" aria-label="ติดตามรายการย่อยของกระเป๋า"><i></i></button></div>'
+    : '';
   var items = ringItemsFromCats(acct.cats);
   if (acct.transfer_minor > 0) items.push({ e: '↪', t: 'ย้ายเข้ากระเป๋า', n: acct.transfer_minor });
-  /* (arows คำนวณด้านบนแล้ว) */
   var billRem = 0;
   (d.bills || []).forEach(function(b){ billRem += Math.max(0, (b.bill_expect || 0) - (b.bill_returned || 0)); });
   if (billRem > 0) items.push({ e: '💸', t: 'รอเงินคืน', n: billRem });
   items.sort(function(x, y){ return y.n - x.n; });
   var totalOut = 0;
   items.forEach(function(x){ totalOut += x.n; });
+  var head = '<div class="dt-top"><button class="dt-back" data-act="vclose"><svg><use href="#i-back"/></svg></button><div class="ttl">รายละเอียดบัญชี</div></div>';
+  if (off){
+    var hid = 0;
+    try { hid = (d.meta && d.meta.tmHiddenCount) || 0; } catch (e3) {}
+    return head + conn + swHtml
+      + '<div class="sec-t">statement · ' + meta.name + '</div>'
+      + '<div class="card" style="padding:12px 14px 12px">'
+      + '<div class="trknote" style="margin:0 0 6px">โหมดสรุป — รายการย่อยของกระเป๋าถูกซ่อนจากคิว · ประวัติ · งบ' + (hid ? ' (ซ่อนอยู่ ' + hid + ' รายการ — ข้อมูลครบ ไม่หาย)' : ' (ข้อมูลไม่หาย)') + ' · นำเข้าเพิ่มได้เหมือนเดิม</div>'
+      + '<button class="dt-imp" data-act="vimp">＋ นำเข้า statement เอง</button></div>';
+  }
   var ring;
   if (a === 'truemoney' && !items.length){
     var pendT = arows.filter(function(x2){ return x2.status === 'new'; }).length;
@@ -2072,8 +2126,8 @@ function viewAcctHtml(d, a){
   } else {
     ring = '<div class="card" style="padding:8px 6px 4px">' + ringHtml(items, 'ออกจากบัญชี', '−฿' + fmtBaht(totalOut)) + '</div>';
   }
-  return '<div class="dt-top"><button class="dt-back" data-act="vclose"><svg><use href="#i-back"/></svg></button><div class="ttl">รายละเอียดบัญชี</div></div>'
-    + conn
+  return head
+    + conn + swHtml
     + '<div class="sec-t">ออกจากบัญชีนี้ไปไหน <span style="color:var(--dim);font-weight:400;font-size:10px">เดือนนี้</span></div>' + ring
     + '<div class="sec-t">statement · ' + meta.name + '</div><div class="card srows" style="padding:5px 14px 12px">'
     + detailRows(arows, 4)
@@ -3136,6 +3190,7 @@ function renderImp(){
   var h = '<div class="imp-t">นำเข้า statement</div>'
     + '<div class="imp-s">วางข้อความจาก statement หรือเลือกไฟล์ .txt/.csv/.pdf<br>'
     + 'บัญชีปลายทาง: <b>' + esc(impAcctLabel(imp.acct)) + '</b> · รูปแบบกระเป๋า TrueMoney เข้ากระเป๋าอัตโนมัติ<br>'
+    + ((imp.acct === 'truemoney' && !tmTrackOn()) ? 'กระเป๋าอยู่<b>โหมดสรุป</b> — รายการที่นำเข้าจะถูกซ่อนจากคิว/ประวัติจนเปิดติดตาม<br>' : '')
     + 'PDF: ถอดรหัสในเครื่องคุณเท่านั้น — ไฟล์และรหัสไม่ถูกส่งขึ้นเซิร์ฟเวอร์</div>'
     + '<textarea class="imp-tx" id="impTx" placeholder="ตัวอย่าง&#10;12/09/2569 7-Eleven 45.00&#10;01/09/2026 13:47:26 เงินออก 224.00 im_onlinepayment_…"></textarea>'
     + '<div class="impbtns"><button class="impbtn" data-act="impFile">ไฟล์ .txt/.csv</button>'
