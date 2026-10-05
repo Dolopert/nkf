@@ -1260,13 +1260,16 @@ function categoryGrid(d, it){
     return '<div class="cg'+(isCur?' cur':(isSug?' sug':''))+'" data-act="pick" data-ref="'+esc(it.ref)+'" data-cat="'+slug+'">'
       + '<i>'+e+'</i>'+esc(t)+(isCur?'<span class="st cur">✓</span>':(isSug?'<span class="st">★ แนะนำ</span>':''))+'</div>';
   }
-  var cells = d.main.map(function(slug){
+  // แก้โดย Hermes 5 ต.ค. 69 (P เคาะ "1" เธรด "แทนรายรับด้วยหมวดค่าใช้จ่ายส่วนตัว"): 'รายรับ' ไม่ปนกับหมวดรายจ่าย —
+  //   'personal' (ค่าใช้จ่ายส่วนตัว) อยู่ในชุดหลักแทนแล้ว · 'income' โผล่เฉพาะแถว "เงินเข้า" (และไม่โผล่ในหน้า อื่นๆ ของรายจ่าย)
+  var mains = (it.direction === 'in') ? (['income'].concat(d.main.filter(function(s2){ return s2 !== 'income'; }))) : d.main;
+  var cells = mains.map(function(slug){
     var m = catMeta(slug);
     return cell(m.slug, m.e, m.t);
   }).join('');
   var more = '<div class="cg more" data-act="more" data-ref="'+esc(it.ref)+'"><i>'+(S.ext[it.ref] ? '–' : '➕')+'</i>'+(S.ext[it.ref] ? 'ย่อ' : 'อื่นๆ')+'</div>';
   if (S.ext[it.ref]){
-    var rest = d.cats.filter(function(c){ return d.main.indexOf(c[0]) === -1; }).map(function(c){
+    var rest = d.cats.filter(function(c){ return mains.indexOf(c[0]) === -1 && c[0] !== 'income'; }).map(function(c){
       return cell(c[0], c[1], c[2]);
     }).join('');
     return '<div class="catgrid">' + rest + more + '</div>';
@@ -3003,8 +3006,8 @@ function incSave(){
 /* ---------- demo (ข้อมูลสมมติล้วน — ห้ามใส่ข้อมูลจริง: ไฟล์นี้ถูก publish ที่ GitHub Pages) ---------- */
 var DEMO = {
   ok:true,
-  cats:[['food','🍽️','อาหาร'],['transport','🚕','เดินทาง'],['house','🏠','บ้าน'],['subscriptions','🔁','สมาชิก'],['fuel','⛽','น้ำมัน'],['topup','💳','เติมเงิน'],['income','💰','รายรับ'],['entertainment','🎬','บันเทิง'],['shopping','🛍️','ช้อปปิ้ง'],['health','🏥','สุขภาพ'],['education','📚','การศึกษา'],['beauty','💇','ดูแลตัวเอง'],['travel','✈️','ท่องเที่ยว'],['gifts','🎁','ของขวัญ/ช่วยเหลือ'],['investment','📈','ลงทุน'],['sports','⚽','กีฬา']],
-  main:['food','transport','house','subscriptions','fuel','topup','income','entertainment'],
+  cats:[['food','🍽️','อาหาร'],['transport','🚕','เดินทาง'],['house','🏠','บ้าน'],['subscriptions','🔁','สมาชิก'],['fuel','⛽','น้ำมัน'],['topup','💳','เติมเงิน'],['income','💰','รายรับ'],['personal','🙋','ค่าใช้จ่ายส่วนตัว'],['entertainment','🎬','บันเทิง'],['shopping','🛍️','ช้อปปิ้ง'],['health','🏥','สุขภาพ'],['education','📚','การศึกษา'],['beauty','💇','ดูแลตัวเอง'],['travel','✈️','ท่องเที่ยว'],['gifts','🎁','ของขวัญ/ช่วยเหลือ'],['investment','📈','ลงทุน'],['sports','⚽','กีฬา']],
+  main:['food','transport','house','subscriptions','fuel','topup','personal','entertainment'],
   pending:[
     {at:'2026-09-17T22:10:42',ref:'D1',kind:'qr_merchant',direction:'out',amount_minor:7500,counterparty:'ร้านกาแฟตัวอย่าง',status:'new',category:'',saved_at:'',display_name:'',suggested:'food',bill_expect:0,bill_returned:0,bill_status:''},
     {at:'2026-09-18T00:02:38',ref:'D2',kind:'qr_merchant',direction:'out',amount_minor:25000,counterparty:'ร้านสินค้าตัวอย่าง',status:'new',category:'',saved_at:'',display_name:'',suggested:'shopping',bill_expect:25000,bill_returned:10000,bill_status:'open'},

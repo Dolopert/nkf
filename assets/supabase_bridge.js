@@ -25,6 +25,7 @@
     ['fuel', '⛽', 'น้ำมัน'],
     ['topup', '💳', 'เติมเงิน'],
     ['income', '💰', 'รายรับ'],
+    ['personal', '🙋', 'ค่าใช้จ่ายส่วนตัว'],
     ['entertainment', '🎬', 'บันเทิง'],
     ['shopping', '🛍️', 'ช้อปปิ้ง'],
     ['health', '🏥', 'สุขภาพ'],
@@ -35,7 +36,7 @@
     ['investment', '📈', 'ลงทุน'],
     ['sports', '⚽', 'กีฬา']
   ];
-  var WEB_MAIN = ['food', 'transport', 'house', 'subscriptions', 'fuel', 'topup', 'income', 'entertainment'];
+  var WEB_MAIN = ['food', 'transport', 'house', 'subscriptions', 'fuel', 'topup', 'personal', 'entertainment'];
 
   // เก็บ "ชื่อที่พี่ตั้ง" ไว้ในคอลัมน์ merchants.name เดียวกับคีย์จับคู่ (ตาราง merchants ไม่มีคอลัมน์แยก
   // เพราะ migrations ของ P1/P3 ห้ามแตะ) — รูปแบบ "<key><SEP><display>" · ไม่มี SEP = ยังไม่เคยตั้งชื่อ
