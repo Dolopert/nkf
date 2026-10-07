@@ -665,14 +665,17 @@
       sb.from('merchants').select('id,name,category,hits'),
       sb.from('budgets').select('*'),
       sb.from('recurring').select('*'),
-      sb.from('recurring_ack').select('*')
+      sb.from('recurring_ack').select('*'),
+      sb.from('pipeline_health').select('*')   // 6) heartbeat ท่อข้อมูล (Hermes 7 ต.ค. 69) — ล้มได้ ห้ามทำ getData พัง
     ]).then(function (results) {
-      for (var i = 0; i < results.length; i++) if (results[i].error) throw results[i].error;
+      for (var i = 0; i < 5; i++) if (results[i].error) throw results[i].error;  // 5 ตัวแรกห้ามพัง · pipeline_health ปล่อยผ่านได้
       var txRows = results[0].data || [];
       var merchantRows = results[1].data || [];
       var budgetRows = results[2].data || [];
       var recurringRows = results[3].data || [];
       var ackRows = results[4].data || [];
+      // heartbeat: 'feed' = DB บอท→ชีต · 'sync' = ชีต→Supabase — แอปใช้โชว์สถานะเชื่อม (ตารางหาย/ล้ม = ถือว่าไม่มี)
+      var healthRows = (results[5] && !results[5].error) ? (results[5].data || []) : [];
 
       var merchMap = buildMerchantMap(merchantRows);
       var STATUS_IN = { confirmed: 'saved', new: 'new', skipped: 'skipped' };
@@ -794,6 +797,32 @@
         wallet_spent: walletSpent, wallet_remain: Math.max(0, walletIn - walletSpent)
       };
 
+      // แก้โดย Hermes 7 ต.ค. 69 (P ถาม "ทำไมไม่ขึ้นไฟเขียว"): สถานะเชื่อมจาก heartbeat จริงใน Supabase
+      //   feed รันทุก ~10 นาที · sync ทุก ~20 นาที — หน้าต่างเผื่อ ~4 รอบ · เครื่องปิด/ค้าง = เกิน → เทา
+      var FEED_FRESH_MS = 45 * 60 * 1000, SYNC_FRESH_MS = 75 * 60 * 1000;
+      var hbRaw = { feed: '', sync: '' };
+      for (var hri = 0; hri < healthRows.length; hri++) {
+        var hrow = healthRows[hri];
+        if ((hrow.key === 'feed' || hrow.key === 'sync') && hrow.last_run_at) hbRaw[hrow.key] = hrow.last_run_at;
+      }
+      function fresh_(iso, winMs) {
+        if (!iso) return false;
+        var t = new Date(iso).getTime();
+        if (!isFinite(t)) return false;
+        var age = Date.now() - t;
+        return age <= winMs && age >= -winMs;   // อนาคตไกลผิดปกติ (นาฬิกาเพี้ยน) = ไม่นับ
+      }
+      var hbMs = [];
+      if (hbRaw.feed) hbMs.push(new Date(hbRaw.feed).getTime());
+      if (hbRaw.sync) hbMs.push(new Date(hbRaw.sync).getTime());
+      hbMs = hbMs.filter(function (t) { return isFinite(t); });
+      var health = {
+        online: fresh_(hbRaw.feed, FEED_FRESH_MS) && fresh_(hbRaw.sync, SYNC_FRESH_MS),
+        feedAt: toThaiLocal(hbRaw.feed),
+        syncAt: toThaiLocal(hbRaw.sync),
+        lastAt: hbMs.length ? toThaiLocal(new Date(Math.min.apply(null, hbMs)).toISOString()) : ''
+      };
+
       return {
         ok: true,
         cats: WEB_CATS,
@@ -818,7 +847,8 @@
         meta: {
           total: rows.length, savedCount: history.length, skippedCount: skippedCount,
           sheetUrl: '', logTail: [], genAt: nowLocal, triggerMinutes: 0,
-          memCount: merchantRows.length, llmOn: false, mode: 'supabase', tmHiddenCount: tmHiddenN
+          memCount: merchantRows.length, llmOn: false, mode: 'supabase', tmHiddenCount: tmHiddenN,
+          health: health   // Hermes 7 ต.ค. 69: heartbeat ท่อ (feed/sync) — แอปใช้โชว์ AUTO CONNECTED / รอสแกน
         }
       };
     }).catch(function (e) {

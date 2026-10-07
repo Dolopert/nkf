@@ -1945,13 +1945,17 @@ function recalcSummary(){
 /* ---------- v3.1: หน้ารายละเอียด (เดือน/บัญชี) + ring แบบไอคอนบนวง ---------- */
 var RING_PAL = ['#f5b943', '#65DCFF', '#7ee2a8', '#ff8f8f', '#b48cff', '#3f3f4b'];
 function connChip(a){
-  var ok = false;
-  try { var lt = (S.data.meta.logTail || [])[0]; ok = !!(lt && lt.ok === 'OK'); } catch (e) {}
-  if (a === 'kplus' && ok) return '<div class="con"><span class="sdot"></span>AUTO CONNECTED</div>';
-  if (a === 'kplus') return '<div class="con2"><span class="sdot"></span>รอสแกนรอบถัดไป</div>';
-  var hasTm = false;
-  try { hasTm = (S.data.history || []).concat(S.data.pending || []).some(function(x){ return (x.acct || 'kplus') === 'truemoney'; }); } catch (e2) {}
-  if (hasTm) return '<div class="con2"><span class="sdot"></span>นำเข้าเอง</div>';
+  // แก้โดย Hermes 7 ต.ค. 69 (P ถาม 7 ต.ค. · "ทำไมไม่ขึ้นไฟเขียว connected"):
+  //   เดิมเทียบ logTail จากชีต — โหมด Supabase ส่ง [] → ไม่มีทางเขียว (ป้ายค้าง ไม่ใช่ท่อพัง)
+  //   ใหม่: อ่าน heartbeat ท่อจริง (meta.health จาก bridge — feed/sync รันล่าสุดเมื่อไร)
+  var hb = (S.data && S.data.meta && S.data.meta.health) || {};
+  if (a === 'kplus'){
+    if (hb.online) return '<div class="con"><span class="sdot"></span>AUTO CONNECTED</div>';
+    return '<div class="con2"><span class="sdot"></span>รอสแกนรอบถัดไป' + (hb.lastAt ? ' · ล่าสุด ' + fmtWhen(hb.lastAt) : '') + '</div>';
+  }
+  var tmAt = '';
+  try { var tmr = rowsOfAcct('truemoney'); tmAt = tmr.length ? tmr[0].at : ''; } catch (e2) {}
+  if (tmAt) return '<div class="con2"><span class="sdot"></span>นำเข้าเอง · ล่าสุด ' + fmtDay(tmAt) + '</div>';
   return '<div class="con2"><span class="sdot"></span>รอเชื่อม · นำเข้าเอง</div>';
 }
 function detailMonths(){ return (S.data && S.data.mdet) || []; }
@@ -2084,17 +2088,21 @@ function viewAcctHtml(d, a){
   var isTm = (a === 'truemoney');
   var tmOn = tmTrackOn();
   var off = isTm && !tmOn;
-  var ok = false;
-  try { var lt0 = (d.meta.logTail || [])[0]; ok = !!(a === 'kplus' && lt0 && lt0.ok === 'OK'); } catch (e) {}
+  // แก้โดย Hermes 7 ต.ค. 69: เขียว = heartbeat ท่อจริง (เหมือนการ์ดหน้าแรก) — เดิมอ่าน logTail ที่ว่างเสมอในโหมด Supabase
+  var hbD = (d.meta && d.meta.health) || {};
+  var ok = (a === 'kplus') && !!hbD.online;
   var arows = rowsOfAcct(a);
+  var offSub = ' · ยังไม่เชื่อม — เลือกวิธี: เมล (auto) หรือ นำเข้าเอง';
+  var kSub = hbD.lastAt ? ' · สแกนล่าสุด ' + fmtWhen(hbD.lastAt) : offSub;
+  var tmSub = arows.length ? ' · นำเข้าเอง · ล่าสุด ' + fmtWhen(arows[0].at) : offSub;
   var conn = '<div class="conncard' + ((off || ok) ? '' : ' warm') + '">'
     + (LOGO_URL(meta.img) ? '<img src="' + LOGO_URL(meta.img) + '" alt="">' : '')
     + '<div><div class="c1">' + meta.name + '</div><div class="c2">' + meta.sub + (off ? ' · โหมดสรุป — ไม่ติดตามรายการย่อย'
-        : (ok ? ' · เชื่อมผ่านอีเมล'
-        : (arows.length ? ' · นำเข้าเอง · ล่าสุด ' + fmtWhen(arows[0].at) : ' · ยังไม่เชื่อม — เลือกวิธี: เมล (auto) หรือ นำเข้าเอง'))) + '</div></div>'
+        : (ok ? ' · เชื่อมผ่านอีเมล' : (isTm ? tmSub : kSub))) + '</div></div>'
     + '<span class="cc">' + (off ? '<span class="con2"><span class="sdot"></span>โหมดสรุป</span>'
         : (ok ? '<span class="con"><span class="sdot"></span>AUTO CONNECTED</span>'
-        : (arows.length ? '<span class="con2"><span class="sdot"></span>นำเข้าเอง</span>' : '<span class="con2"><span class="sdot"></span>รอเชื่อม</span>'))) + '</span></div>';
+        : (isTm ? (arows.length ? '<span class="con2"><span class="sdot"></span>นำเข้าเอง</span>' : '<span class="con2"><span class="sdot"></span>รอเชื่อม</span>')
+                : '<span class="con2"><span class="sdot"></span>รอสแกนรอบถัดไป</span>'))) + '</span></div>';
   var swHtml = isTm
     ? '<div class="trkcard"><div class="ic">👛</div><div class="mid"><div class="nm">ติดตามรายการย่อยของกระเป๋า</div>'
       + '<div class="sub">' + (tmOn
@@ -3092,7 +3100,9 @@ var DEMO = {
   summary:{ monthSpent:501050, monthIncome:2500000, cashflow:1998950, pendingCount:8, pendingSum:65700, today:5000,
     monthOut:681050, walletIn:180000, walletSpent:71050, walletCount:4,
     daily:[{d:'2026-09-10',n:10500},{d:'2026-09-11',n:8200},{d:'2026-09-12',n:1000},{d:'2026-09-13',n:7600},{d:'2026-09-14',n:3000},{d:'2026-09-15',n:6800},{d:'2026-09-16',n:2700},{d:'2026-09-17',n:1500},{d:'2026-09-18',n:5000}] },
-  meta:{ total:24, savedCount:12, skippedCount:0, sheetUrl:'#', logTail:[{time:'2026-09-18 09:20:00',ok:'OK',scanned:20,parsed:0,dup:19,skipped:1,appended:0}], genAt:'2026-09-18T09:35:00', triggerMinutes:10, memCount:24, llmOn:true }
+  meta:{ total:24, savedCount:12, skippedCount:0, sheetUrl:'#', logTail:[{time:'2026-09-18 09:20:00',ok:'OK',scanned:20,parsed:0,dup:19,skipped:1,appended:0}], genAt:'2026-09-18T09:35:00', triggerMinutes:10, memCount:24, llmOn:true,
+    health:{ online:true, feedAt:'2026-09-18T09:20:00', syncAt:'2026-09-18T09:24:00', lastAt:'2026-09-18T09:20:00' }   // Hermes 7 ต.ค. 69: เดโม่ = สถานะเชื่อมสด (ให้เห็นไฟเขียว)
+  }
 };
 
 /* ---------- v3.2: นำเข้า statement เอง ---------- */
