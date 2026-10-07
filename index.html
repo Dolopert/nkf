@@ -184,6 +184,13 @@
   .billbox.open{border-color:var(--amb-bd)}
   .billbox.done{border-color:var(--grn-bd);color:var(--grn3)}
   .billbox.flat{color:var(--dim)}
+  /* ---------- Hermes 8 ต.ค. 69 (วงเงินเข้า · P เคาะ 7 ต.ค. 69): แผงยืนยันเงินเข้าตรวจอัตโนมัติ (แบบม็อก moneyin-tidy) ---------- */
+  .pm-box{margin-top:10px;padding:10px 12px;border:1px solid var(--bd2);border-radius:12px;background:var(--inset);font-size:11.5px;color:var(--mut);line-height:1.65}
+  .pm-box b{color:var(--tx)}
+  .pm-box .big{font-size:15px;font-weight:700;color:var(--grn);margin-bottom:3px}
+  .pm-lbl{font-size:11px;color:var(--mut);font-weight:600;margin:10px 2px 6px}
+  .ps-inp{width:100%;box-sizing:border-box;background:var(--inset);border:1px solid var(--bd2);border-radius:11px;color:var(--tx);font-size:16px;padding:9px 12px;font-family:inherit;outline:none}
+  .ps-inp:focus{border-color:var(--cy)}
   .brow{display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:7px 2px;border-top:1px solid var(--bd2);align-items:baseline}
   .gr-head + .brow{border-top:none}
   .brow .l{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -553,7 +560,7 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.2.8-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · Hermes 7 ต.ค. 69: v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด (v4.2.7 = ก้อนรายจ่ายประจำในงบรายหมวด §16)
+var APP_BUILD = 'v4.2.9-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
 var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, budForm:null, budOpen:{}, view:null, imp:null, pMonth:null, recLumpOpen:false, catForm:null, shortForm:null };  // catForm/shortForm: Hermes 7 ต.ค. 69 — ฟอร์มหมวดทำเอง/รายการลัด (หน้าแยก v4.2.8)  // pMonth: แก้โดย Hermes 5 ต.ค. 69 — เดือนที่เลือกในแท็บรอยืนยัน (แยกเดือน) · recLumpOpen: Hermes 7 ต.ค. 69 (§16) — กาง "ก้อนรายจ่ายประจำ" ในงบรายหมวด
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
@@ -579,7 +586,8 @@ var TH_M = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ
 var TH_D = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
 var KIND = { qr_merchant:'สแกนจ่ายร้าน', transfer:'โอน', promptpay:'พร้อมเพย์', topup:'เติมเงิน',
              wallet_topup_in:'เติมเข้า', wallet_card:'บัตร', wallet_online:'ออนไลน์', manual_in:'รายรับเข้า', unknown:'อื่นๆ',
-             wallet_online_xb:'ออนไลน์ ตปท.', wallet_settle:'settle กระเป๋า', wallet_in:'เงินเข้ากระเป๋า', wallet_out:'จ่ายจากกระเป๋า', manual_out:'จ่าย (นำเข้า)' };
+             wallet_online_xb:'ออนไลน์ ตปท.', wallet_settle:'settle กระเป๋า', wallet_in:'เงินเข้ากระเป๋า', wallet_out:'จ่ายจากกระเป๋า', manual_out:'จ่าย (นำเข้า)',
+             money_in_check:'ตรวจอัตโนมัติ' };  // Hermes 8 ต.ค. 69 (วงเงินเข้า · P เคาะ 7 ต.ค. 69): ป้ายแถวตรวจเงินเข้า — สั้นสุดตามสั่ง P
 
 /* ---------- format ---------- */
 function fmtBaht(minor){
@@ -1291,6 +1299,9 @@ function pendingRow(d, it){
       inner = '<div class="renbox"><input id="renInput" type="text" maxlength="60" value="'+esc(cur)+'" placeholder="ชื่อร้าน/ผู้รับ">'
         + '<button class="save" data-act="renSave" data-ref="'+esc(it.ref)+'">บันทึก</button>'
         + '<button class="cancel" data-act="renCancel" data-ref="'+esc(it.ref)+'">ยกเลิก</button></div>';
+    } else if (it.kind === 'money_in_check'){
+      // Hermes 8 ต.ค. 69 (วงเงินเข้า): แถว "ตรวจอัตโนมัติ" — แผงยืนยันเงินเข้า (3 บรรทัด + 2 ปุ่ม) ไม่มีกริดหมวด
+      inner = moneyInBlock(it);
     } else {
       var grid = categoryGrid(d, it);
       var bill = billBlock(it);
@@ -1305,7 +1316,7 @@ function pendingRow(d, it){
     + (sugMeta ? '<button class="swact save" data-act="saveGo" data-ref="'+esc(it.ref)+'"><i>✓</i>บันทึก</button>' : '')
     + '<div class="item'+(open?' open':'')+'" data-act="toggle" data-ref="'+esc(it.ref)+'">'
     + '<div class="icw">'+rowIcon(it)+'</div>'
-    + '<div class="mid"><div class="nm">'+esc(shortName(it))+'</div><div class="sub">'+fmtWhen(it.at)+' · '+(it.xf ? 'ย้ายเข้ากระเป๋า' : (KIND[it.kind]||it.kind))+'</div></div>'
+    + '<div class="mid"><div class="nm">'+esc(pendName(it))+'</div><div class="sub">'+fmtWhen(it.at)+' · '+(it.xf ? 'ย้ายเข้ากระเป๋า' : (KIND[it.kind]||it.kind))+'</div></div>'
     + '<div class="rt"><div class="amt'+(it.direction==='in'?' in':(it.xf?' amtxf':''))+'">'+fmtBaht(it.amount_minor)+'฿</div>'
     + ((!open && sugMeta) ? '<div class="sgdot">แนะนำ: '+sugMeta.e+' '+esc(sugMeta.t)+'</div>' : '')
     + '</div>'
@@ -1344,6 +1355,64 @@ function billBlock(it){
   }
   if (st === 'done') return '<div class="billbox done">✓ รอเงินคืนครบแล้ว · ครบ '+fmtBaht(it.bill_expect || 0)+'฿</div>';
   return '<div class="billbox flat">💸 บิลปิดแล้ว — ส่วนที่เหลือเป็นรายจ่ายจริง</div>';
+}
+/* ============ Hermes 8 ต.ค. 69 (วงเงินเข้า · P เคาะ 7 ต.ค. 69 · §18): แถว "ตรวจอัตโนมัติ" ในคิวรอยืนยัน ============
+   ชื่อโชว์ "เงินเข้า" · กาง = แผงยืนยัน (3 บรรทัด + 2 ปุ่ม) ตามม็อก moneyin-tidy · "ใช่" = เป็นรายรับ · "ไม่ใช่" = ใช้ skip เดิม */
+function pendName(it){ return it.kind === 'money_in_check' ? 'เงินเข้า' : shortName(it); }
+function moneyInBlock(it){
+  var m = String(it.note || '').match(/จากยอดคงเหลือ\s+(-?[\d.]+)\s*→\s*(-?[\d.]+)/);   // บรรทัดที่มา — parse จาก note (ไม่เจอ = ไม่โชว์บรรทัดนี้)
+  var bal = m ? '<div class="bt">ยอดคงเหลือ <b>฿'+fmtBaht(Math.round(parseFloat(m[1])*100))+' → ฿'+fmtBaht(Math.round(parseFloat(m[2])*100))+'</b></div>' : '';
+  var label = it.counterparty || 'เงินเข้า';
+  var chip = (it.counterparty && it.counterparty !== 'เงินเข้า') ? '<div class="incbtns" style="margin-top:8px"><button class="miniact cy2" type="button">★ '+esc(it.counterparty)+' (&nbsp;รายการประจำ&nbsp;)</button></div>' : '';
+  return '<div class="pm-box"><div class="big">💰 เงินเข้า +฿'+fmtBaht(it.amount_minor)+'</div>'+bal+'</div>'
+    + '<div class="pm-lbl">ชื่อรายการ (แก้ได้)</div>'
+    + '<input class="ps-inp" id="miName" type="text" maxlength="60" value="'+esc(label)+'">'
+    + chip
+    + '<div class="incbtns" style="margin-top:10px">'
+    + '<button class="save" data-act="moneyInYes" data-ref="'+esc(it.ref)+'">✓ ใช่ — บันทึกเป็นรายรับ</button>'
+    + '<button class="cancel" data-act="skip" data-ref="'+esc(it.ref)+'">✕ ไม่ใช่ — ข้าม</button>'
+    + '</div>'
+    + '<div class="hint" style="margin:8px 2px 2px">กด "ใช่" = เป็นรายรับทันที · ย้อนได้</div>';
+}
+function curMonthKey(){
+  var d = new Date();
+  return d.getFullYear() + '-' + (d.getMonth() < 9 ? '0' : '') + (d.getMonth() + 1);
+}
+function moneyInYes(ref){
+  var it = findItem(ref); if (!it || it.kind !== 'money_in_check') return;
+  var inp = el('miName');
+  var label = inp ? String(inp.value || '').replace(/\s+/g,' ').trim() : '';
+  if (!label){ toast('ใส่ชื่อรายการก่อนนะ', true); return; }
+  var amt = it.amount_minor;
+  var counted = ((it.at || '').slice(0,7) === curMonthKey());   // เดือนนี้เท่านั้นที่ขยับ "รายรับเดือนนี้"
+  it.counterparty = label;
+  it.status = 'saved'; it.category = 'income';
+  S.open[ref] = false; S.ext[ref] = false; if (S.renaming === ref) S.renaming = null;
+  if (counted){
+    S.data.summary.monthIncome = (S.data.summary.monthIncome || 0) + amt;
+    S.data.summary.cashflow = S.data.summary.monthIncome - S.data.summary.monthSpent;
+  }
+  toast('บันทึกรายรับ: ' + label + ' +' + fmtBaht(amt) + '฿', false, '↩ เลิกทำ', function(){
+    it.status = 'new'; it.category = '';
+    S.data.history = (S.data.history || []).filter(function(x){ return x.ref !== ref; });
+    if (!S.data.pending.some(function(x){ return x.ref === ref; })) S.data.pending.push(it);
+    S.data.meta.savedCount = Math.max(0, (S.data.meta.savedCount || 0) - 1);
+    if (counted) S.data.summary.monthIncome = Math.max(0, (S.data.summary.monthIncome || 0) - amt);
+    S.data.summary.cashflow = S.data.summary.monthIncome - S.data.summary.monthSpent;
+    S.pMonth = (it.at || '').slice(0, 7);
+    recalcSummary(); paint();
+    toast('กู้คืนแล้ว — กลับไปรอยืนยัน');
+    if (!IS_DEMO) google.script.run.withSuccessHandler(function(){ reloadSoon(); }).unsaveItem(ref);
+  });
+  recalcSummary(); paint();
+  if (IS_DEMO) return;
+  google.script.run
+    .withSuccessHandler(function(res){
+      if (!res || !res.ok) { toast('บันทึกไม่สำเร็จ' + (res && res.msg ? ' — ' + res.msg : ''), true); reloadSoon(); return; }
+      reloadSoon();
+    })
+    .withFailureHandler(function(){ toast('บันทึกไม่สำเร็จ — เชื่อมต่อไม่ได้', true); reloadSoon(); })
+    .confirmIncome(ref, label);
 }
 function categoryGrid(d, it){
   var sug = it.suggested || '';
@@ -1773,7 +1842,7 @@ function htmlSettings(d){
     + cardMyCats(d)        // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หมวดทำเอง
     + cardMyShortcuts(d)   // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): รายการลัด
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.8-supabase</span></div>'  // แก้โดย Hermes 7 ต.ค. 69: v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.9-supabase</span></div>'  // Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -1790,7 +1859,7 @@ function htmlSettings(d){
 }
 
 function kindEmoji(kind){
-  return ({ qr_merchant:'📱', transfer:'💸', promptpay:'📲', topup:'💳', wallet_topup_in:'⬆️', wallet_card:'💳', wallet_online:'🌐', manual_in:'💰', wallet_online_xb:'🌐', wallet_settle:'👛', wallet_in:'⬆️', wallet_out:'👛', manual_out:'📄' })[kind] || '🧾';
+  return ({ qr_merchant:'📱', transfer:'💸', promptpay:'📲', topup:'💳', wallet_topup_in:'⬆️', wallet_card:'💳', wallet_online:'🌐', manual_in:'💰', wallet_online_xb:'🌐', wallet_settle:'👛', wallet_in:'⬆️', wallet_out:'👛', manual_out:'📄', money_in_check:'💰' })[kind] || '🧾';
 }
 
 /* ---------- swipe (iOS Clock style: ตามนิ้วทันที เด้งนุ่ม ไม่ต้องกดค้าง) ----------
@@ -2097,6 +2166,7 @@ document.addEventListener('click', function(e){
   }
   if (act === 'ackFixed') { ackFixedLocal(t.getAttribute('data-key'), t.getAttribute('data-v'), t.getAttribute('data-inst') || ''); return; }  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): + งวด
   if (act === 'histUnsave') { histUnsave(ref); return; }  // แก้โดย Hermes 4 ต.ค. 69: แถวประวัติ → กลับเป็น "รอยืนยัน"
+  if (act === 'moneyInYes') { moneyInYes(ref); return; }  // Hermes 8 ต.ค. 69 (วงเงินเข้า): "✓ ใช่ — บันทึกเป็นรายรับ"
   if (act === 'skip' || act === 'delGo') {
     var it = findItem(ref);
     var rowItem = sw ? sw.querySelector('.item') : null;
@@ -3510,6 +3580,8 @@ var DEMO = {
     {at:'2026-09-18T00:07:52',ref:'D4',kind:'promptpay',direction:'out',amount_minor:2000,counterparty:'ผู้ใช้ทดสอบ สอง',status:'new',category:'',saved_at:'',display_name:'',suggested:'',bill_expect:0,bill_returned:0,bill_status:''},
     {at:'2026-09-18T03:38:36',ref:'D5',kind:'transfer',direction:'out',amount_minor:100,counterparty:'ผู้ใช้ทดสอบ สาม',status:'new',category:'',saved_at:'',display_name:'',suggested:'',bill_expect:0,bill_returned:0,bill_status:''},
     {at:'2026-09-18T08:48:37',ref:'D6',kind:'transfer',direction:'out',amount_minor:2500,counterparty:'ผู้ใช้ทดสอบ สี่',status:'new',category:'',saved_at:'',display_name:'',suggested:'',bill_expect:0,bill_returned:0,bill_status:''},
+    // แก้โดย Hermes 8 ต.ค. 69 (วงเงินเข้า §18): แถว "ตรวจอัตโนมัติ" — เดโม่ของฟีเจอร์ P เคาะ (ยอด ฿16,000 แบบเคสจริงของพ่อ · ทายชื่อจาก recurring)
+    {at:'2026-10-01T10:17:09',ref:'D9',kind:'money_in_check',direction:'in',amount_minor:1600000,counterparty:'รายรับพ่อ',status:'new',category:'',saved_at:'',display_name:'',suggested:'',bill_expect:0,bill_returned:0,bill_status:'',note:'จากยอดคงเหลือ 219.99 → 16119.99'},
     // แก้โดย Hermes 5 ต.ค. 69: เพิ่ม 2 แถวเดือน ต.ค. ให้เดโม่เห็นการแยกเดือนของรอยืนยัน + กดเลือกเดือนได้ (ข้อมูลสมมติล้วน)
     {at:'2026-10-04T21:11:48',ref:'D7',kind:'qr_merchant',direction:'out',amount_minor:12900,counterparty:'ร้านสเต็กตัวอย่าง (ชื่อบัญชี: นาย ตัวอย่าง)',status:'new',category:'',saved_at:'',display_name:'',suggested:'food',bill_expect:0,bill_returned:0,bill_status:''},
     {at:'2026-10-04T22:30:09',ref:'D8',kind:'transfer',direction:'out',amount_minor:10700,counterparty:'GrabPay Wallet (ตัวอย่าง)',status:'new',category:'',saved_at:'',display_name:'',suggested:'food',bill_expect:0,bill_returned:0,bill_status:''}
@@ -3584,7 +3656,7 @@ var DEMO = {
     kplus:{ total_minor:677000, transfer_minor:180000, cats:[{cat:'food',n:308000},{cat:'shopping',n:54000},{cat:'fuel',n:45000},{cat:'house',n:10000}] },
     truemoney:{ total_minor:0, transfer_minor:0, cats:[] }
   },
-  summary:{ monthSpent:501050, monthIncome:2500000, cashflow:1998950, pendingCount:8, pendingSum:65700, today:5000,
+  summary:{ monthSpent:501050, monthIncome:2500000, cashflow:1998950, pendingCount:9, pendingSum:65700, today:5000,  // Hermes 8 ต.ค. 69 (วงเงินเข้า): +D9 — ยังไม่ยืนยัน = ยังไม่นับเป็นรายรับ (นับตอนกด "ใช่")
     monthOut:681050, walletIn:180000, walletSpent:71050, walletCount:4,
     daily:[{d:'2026-09-10',n:10500},{d:'2026-09-11',n:8200},{d:'2026-09-12',n:1000},{d:'2026-09-13',n:7600},{d:'2026-09-14',n:3000},{d:'2026-09-15',n:6800},{d:'2026-09-16',n:2700},{d:'2026-09-17',n:1500},{d:'2026-09-18',n:5000}] },
   meta:{ total:24, savedCount:12, skippedCount:0, sheetUrl:'#', logTail:[{time:'2026-09-18 09:20:00',ok:'OK',scanned:20,parsed:0,dup:19,skipped:1,appended:0}], genAt:'2026-09-18T09:35:00', triggerMinutes:10, memCount:24, llmOn:true,

@@ -266,7 +266,7 @@
       var mp = it.at.slice(0, 7);
       var m = mm(mp);
       m.count++;
-      if (it.direction === 'in') { m.income += it.amount_minor; continue; }
+      if (it.direction === 'in') { if (!(it.status === 'new' && strv(it.kind) === 'money_in_check')) m.income += it.amount_minor; continue; }  // Hermes 8 ต.ค. 69 (วงเงินเข้า): รอยืนยันยังไม่นับรายรับ
       if (isWalletXfer(it)) continue;
       var net = it.amount_minor;
       m.total += net;
@@ -716,7 +716,8 @@
           suggested: strv(r.suggested),
           bill_expect: 0, bill_returned: 0, bill_status: '',
           balance_minor: numv(r.balance_minor),
-          account: strv(r.account)
+          account: strv(r.account),
+          note: strv(r.note)   // Hermes 8 ต.ค. 69 (วงเงินเข้า): บรรทัดที่มา "จากยอดคงเหลือ A → B" ของแถว money_in_check
         };
       });
 
@@ -753,7 +754,8 @@
           if (!xf && isWalletKind(it)) { var wmk = it.at.slice(0, 7); walletByMonth[wmk] = (walletByMonth[wmk] || 0) + it.amount_minor; }
         }
         if (it.at.slice(0, 7) === monthPrefix) {
-          if (isIn) monthIncome += it.amount_minor;
+          // Hermes 8 ต.ค. 69 (วงเงินเข้า): แถว "ตรวจอัตโนมัติ" ที่ยังไม่ยืนยัน (status 'new') ยังไม่นับเป็นรายรับ — นับเมื่อกด "ใช่" เท่านั้น
+          if (isIn) { if (!(it.status === 'new' && it.kind === 'money_in_check')) monthIncome += it.amount_minor; }
           else {
             monthOut += it.amount_minor;
             if (xf) { walletIn += it.amount_minor; walletCount++; }
@@ -957,6 +959,23 @@
         return { ok: false, msg: 'รูดการ์ดที่ไม่มีรหัสร้าน ยังตั้งชื่อแยกไม่ได้ในโหมดนี้ (ต้องรอ P5)' };
       }
       return upsertMerchant(key, { display: name }).then(function () { return { ok: true }; });
+    }).catch(function (e) { return { ok: false, msg: errText(e) }; });
+  }
+
+  // Hermes 8 ต.ค. 69 (วงเงินเข้า · P เคาะ 7 ต.ค. 69 · §18): ยืนยันแถว "ตรวจอัตโนมัติ" เป็นรายรับ —
+  //   category='income' + status='confirmed' + confirmed_at + ตั้งชื่อ (counterparty) ตามที่แก้ในแผง (ว่าง = ไม่รับ)
+  function confirmIncome(ref, label) {
+    label = strv(label).replace(/\s+/g, ' ').trim().slice(0, 60);
+    if (!ref) return Promise.resolve({ ok: false, msg: 'ไม่พบรายการ' });
+    if (!label) return Promise.resolve({ ok: false, msg: 'ใส่ชื่อรายการด้วย' });
+    return getTxByRef(ref).then(function (tx) {
+      if (!tx) return { ok: false, msg: 'ไม่พบรายการนี้ในตาราง' };
+      if (strv(tx.kind) !== 'money_in_check') return { ok: false, msg: 'รายการนี้ไม่ใช่แถวตรวจเงินเข้า' };
+      return sb.from('transactions').update({ status: 'confirmed', category: 'income', counterparty: label, confirmed_at: nowIso() }).eq('ref', ref)
+        .then(function (r) {
+          if (r.error) throw r.error;
+          return { ok: true };
+        });
     }).catch(function (e) { return { ok: false, msg: errText(e) }; });
   }
 
@@ -1276,6 +1295,7 @@
     undoSkip: undoSkip,
     unsaveItem: unsaveItem,  // แก้โดย Hermes 4 ต.ค. 69: แถวบันทึกแล้ว → กลับเป็นรอยืนยัน (ปุ่ม ↩︎ ในแท็บประวัติ)
     renameMerchant: renameMerchant,
+    confirmIncome: confirmIncome,  // แก้โดย Hermes 8 ต.ค. 69 (วงเงินเข้า): "✓ ใช่ — บันทึกเป็นรายรับ" (แถว money_in_check → income)
     markBill: notMoved,
     addBillReturn: notMoved,
     closeBill: notMoved,
