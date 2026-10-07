@@ -332,6 +332,17 @@
   .budrow .num{font-size:13px;font-weight:700}
   .budrow .num small{color:var(--dim);font-weight:500}
   .budrow .st{font-size:9.5px;margin-top:2px}
+  /* ---------- v4.2.7: "ก้อนรายจ่ายประจำ" + list ย่อย ในการ์ดงบรายหมวด (แก้โดย Hermes 7 ต.ค. 69 · P เคาะ "ใช้แบบนี้" §16) ---------- */
+  .recsub{padding:1px 0 6px 41px}
+  .recsub .sr{display:flex;align-items:baseline;gap:11px;padding:7px 0;border-top:1px dashed var(--bd2)}
+  .recsub .sr:first-child{border-top:none}
+  .recsub .sic{flex:none;width:18px;font-size:10px;color:var(--dim);align-self:center;line-height:1}
+  .recsub .sic img{width:15px;height:15px;border-radius:4px;display:block}
+  .recsub .snm{flex:1;min-width:0;font-weight:600;color:var(--tx);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .recsub .sdt{flex:0 1 auto;min-width:0;max-width:180px;overflow:hidden;text-overflow:ellipsis;color:var(--dim);font-size:9.5px;white-space:nowrap}  /* หดได้ (ellipsis) — กันแถว weekly ข้อความยาวดันยอดหลุดคอลัมน์ (เจอใน E2E) */
+  .recsub .samt{flex:none;width:84px;text-align:right;font-weight:700;color:var(--tx);font-variant-numeric:tabular-nums;font-size:11.5px}
+  .recsub .samt.ok{color:var(--grn)}
+  .recsub .fchev{visibility:hidden}
   /* ---------- v3.1: หน้ารายละเอียด (overlay) ---------- */
   .detail{position:fixed;inset:0;background:var(--bg);z-index:80;overflow-y:auto;display:none;padding:14px 14px 30px;-webkit-overflow-scrolling:touch}
   .detail.on{display:block}
@@ -510,8 +521,8 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.2.6-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · Hermes 5 ต.ค. 69 ค่ำ: v4.2.6 = ปุ่มติดตามรายการย่อยกระเป๋า TrueMoney เปิด-ปิด (v4.2.5 = รอยืนยันแยกเดือน)
-var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, budForm:null, budOpen:{}, view:null, imp:null, pMonth:null };  // pMonth: แก้โดย Hermes 5 ต.ค. 69 — เดือนที่เลือกในแท็บรอยืนยัน (แยกเดือน)
+var APP_BUILD = 'v4.2.7-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · Hermes 7 ต.ค. 69: v4.2.7 = ก้อน "รายจ่ายประจำ" ในงบรายหมวด (§16 · v4.2.6 = สวิตช์ TrueMoney + หมวดส่วนตัว + สถานะเชื่อม heartbeat)
+var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, budForm:null, budOpen:{}, view:null, imp:null, pMonth:null, recLumpOpen:false };  // pMonth: แก้โดย Hermes 5 ต.ค. 69 — เดือนที่เลือกในแท็บรอยืนยัน (แยกเดือน) · recLumpOpen: Hermes 7 ต.ค. 69 (§16) — กาง "ก้อนรายจ่ายประจำ" ในงบรายหมวด
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
 var SW = { OPEN:112, COMMIT:160, MAX:210, EASE:'cubic-bezier(.22,.8,.24,1)' };
@@ -858,6 +869,48 @@ function budgetRow(b, opts){
   }
   return html;
 }
+/* ---------- แก้โดย Hermes 7 ต.ค. 69 (P เคาะ "ใช้แบบนี้" · เธรด 🛒fullauto §16): "ก้อนรายจ่ายประจำ" ในงบรายหมวด ----------
+   แถวหน้าตาเดียวกับแถวงบอื่น (budrow) · tap = กาง/พับรายตัว (.recsub — คอลัมน์ตรงกันทุกช่อง) เฉพาะ Supabase/เดโม่ · หน้าแรกอ่านอย่างเดียว */
+function recOutLump(fixed, budgets){  // ชุด "รายจ่ายประจำ (ออก)" ที่ไม่ซ้อนกับงบ — ใช้ทั้งการ์ดปฏิทินและพรีวิวหน้าแรก (ชุดเดียวกับการ์ด "รายจ่ายประจำ")
+  var bk = {};
+  (budgets || []).forEach(function(b){ bk[String(b.key)] = 1; });
+  return (fixed || []).filter(function(f){ return f.dir !== 'in' && !bk[String(f.key)]; });
+}
+function recLumpRow(list, opts){
+  opts = opts || {};
+  var out = (list || []).filter(function(f){ return f.dir !== 'in'; });
+  if (!out.length) return '';
+  var sum = 0, done = 0;
+  for (var i = 0; i < out.length; i++){ sum += (out[i].amount_minor || 0); if (out[i].status === 'done') done++; }
+  var names = [];
+  for (var j = 0; j < out.length; j++) names.push(out[j].label);
+  var nameTxt = names.length <= 2 ? names.join(' + ') : (names.slice(0, 2).join(' + ') + ' +' + (names.length - 2) + ' รายการ');
+  var tap = !!opts.tap, open = !!opts.open;
+  var html = '<div class="budrow"'+(tap ? ' data-act="recLump"' : '')+'>'
+    + '<div class="ic">💸</div>'
+    + '<div class="mid"><div class="nm">รายจ่ายประจำ</div><div class="cap">'+esc(nameTxt)+'</div></div>'
+    + '<div class="rt"><div class="num">฿'+fmtShort(sum)+'</div>'
+    + '<div class="st '+(done === out.length ? 'ok' : 'wait')+'">จ่ายแล้ว '+done+'/'+out.length+'</div></div>'
+    + (tap ? '<span class="fchev">'+(open ? '▾' : '▸')+'</span>' : '')
+    + '</div>';
+  if (open){
+    html += '<div class="recsub">';
+    for (var k = 0; k < out.length; k++){
+      var f = out[k];
+      var ico = recIconHtml(f.logo, f.category, f.emoji);
+      var stWord = f.status === 'done' ? 'จ่ายแล้ว' : (f.status === 'pending' ? 'รอยืนยัน' : 'รอ');  // สั้นแบบม็อกที่พี่เคาะ (7 ต.ค. 69) — ให้ชื่อไม่ถูกตัด
+      html += '<div class="sr">'
+        + '<span class="sic">'+(/^<img/.test(ico) ? ico : esc(ico))+'</span>'
+        + '<span class="snm">'+esc(f.label)+'</span>'
+        + '<span class="sdt">'+stWord+' · '+esc(recDtLine(f).replace(/^ครบ /, ''))+'</span>'
+        + '<span class="samt'+(f.status === 'done' ? ' ok' : '')+'">฿'+fmtBaht(f.amount_minor)+'</span>'
+        + '<span class="fchev">▸</span>'
+        + '</div>';
+    }
+    html += '</div>';
+  }
+  return html;
+}
 
 /* ============ v4.2.4: งบรายหมวดสร้างเองได้ (แก้โดย Hermes 4 ต.ค. 69 · P สั่งในเธรด 🛒fullauto — รอรับ forecast) ============
    งบ 1 แถว = ชื่อ + หมวด (เลือกหลายหมวดได้) + แบบ (ต่อเดือน/ต่อวัน) + ยอด → เก็บตาราง budgets (key/label/emoji/cats/cap_minor|cap_per_day)
@@ -1057,6 +1110,8 @@ function htmlSummary(d){
     budPrev = '<div class="sec-t">งบรายหมวด</div><div class="card" style="padding:8px 14px">'
       + '<div class="budtot" style="margin:2px 0 4px"><div class="l">ใช้ไป <b>฿'+fmtBaht(btt.spent_minor)+'</b> จาก ฿'+fmtBaht(btt.cap_minor)+'</div><div class="pc" style="font-size:15px">'+bpct+'<small>%</small></div></div>'
       + budList.slice(0, 3).map(function(b){ return budgetRow(b); }).join('')
+      // แก้โดย Hermes 7 ต.ค. 69 (P เคาะ "ใช้แบบนี้" · §16): ก้อน "รายจ่ายประจำ" — หน้าแรกอ่านอย่างเดียว (ไม่มีปุ่ม/ลูกศร)
+      + recLumpRow(recOutLump(fixed, budList), {})
       // แก้โดย Hermes 4 ต.ค. 69 (P สั่ง · เธรด 🛒fullauto): ปุ่ม ＋ เพิ่มงบ (เปิดฟอร์มที่การ์ดงบ แท็บปฏิทิน)
       + '<div style="display:flex;gap:7px;justify-content:flex-end;flex-wrap:wrap;margin-top:6px">'
       + (((IS_SUPA || IS_DEMO) && !S.budForm) ? '<button class="miniact" data-act="budNew">＋ เพิ่มงบ</button>' : '')
@@ -1343,7 +1398,7 @@ function htmlSettings(d){
   var isSupa = d.meta.mode === 'supabase';
   return ''
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.6-supabase</span></div>'  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69) · Hermes 5 ต.ค. 69: v4.2.5 = รอยืนยันแยกเดือน + กดเลือกเดือนได้
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.7-supabase</span></div>'  // แก้โดย Hermes 7 ต.ค. 69: v4.2.7 = ก้อนรายจ่ายประจำในงบรายหมวด (§16)
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -1639,6 +1694,12 @@ document.addEventListener('click', function(e){
     else { S.fxOpen = {}; S.fxOpen[fk] = 1; }   // เปิดทีละแถว — ไม่รกจอ
     paint();
     if (S.fxOpen[fk]) animPop('.fxdrop[data-key="' + fk + '"]');
+    return;
+  }
+  if (act === 'recLump') {  // แก้โดย Hermes 7 ต.ค. 69 (§16 · P เคาะ "ใช้แบบนี้"): แตะ "ก้อนรายจ่ายประจำ" → กาง/พับรายตัว
+    S.recLumpOpen = !S.recLumpOpen;
+    paint();
+    if (S.recLumpOpen) animPop('#budCard .recsub');
     return;
   }
   if (act === 'ackFixed') { ackFixedLocal(t.getAttribute('data-key'), t.getAttribute('data-v'), t.getAttribute('data-inst') || ''); return; }  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): + งวด
@@ -2196,6 +2257,8 @@ function htmlCalendar(d){
     + (budgets.length
         ? budgets.map(function(b){ return budgetRow(b, { tap: (IS_SUPA || IS_DEMO), open: !!S.budOpen[b.key] }); }).join('')
         : (S.budForm ? '' : '<div class="hint" style="margin:4px 2px">— ยังไม่มีงบ — กด ＋ เพิ่มงบ เพื่อตั้งงบรายหมวดแรก</div>'))
+    // แก้โดย Hermes 7 ต.ค. 69 (P เคาะ "ใช้แบบนี้" · §16): ก้อน "รายจ่ายประจำ" ท้ายการ์ด — แตะกางดูรายตัว
+    + recLumpRow(recOutLump(fixed, budgets), { tap: (IS_SUPA || IS_DEMO), open: !!S.recLumpOpen })
     + '</div>';
   var fxList = fixed.filter(function(f){ return !bkeys[f.key]; });
   // แก้โดย Hermes — 4 ต.ค. 69 (พี่เคาะ "แบบ B" เธรด 🛒fullauto): แยกรายรับ/รายจ่ายเป็นคนละการ์ด
