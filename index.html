@@ -435,6 +435,32 @@
   .logininput:focus{border-color:var(--cy)}
   .loginbtn{padding:12px 0;font-size:13.5px;margin-top:4px}
   .loginforgot{display:block;width:100%;background:transparent;border:none;color:var(--dim);font-size:11.5px;font-family:inherit;padding:14px 0 0;cursor:pointer;text-align:center}
+  /* ---------- แก้โดย Hermes 7 ต.ค. 69 (P เคาะ "ลุย" · เธรด 🛒fullauto): แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด (v4.2.8) ---------- */
+  .flab{font-size:11px;color:var(--mut);font-weight:600;margin:12px 2px 6px}
+  .miniact.dash{border-style:dashed;border-color:var(--cy-bd2);color:var(--cy2)}
+  .miniact img.cimg{width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:3px}
+  .cg i img{width:17px;height:17px;border-radius:4px;display:inline-block;vertical-align:-3px}
+  .set-hd{display:flex;justify-content:space-between;align-items:center;margin:2px 0 6px}
+  .setrow{display:flex;align-items:center;gap:10px;padding:9px 1px;border-top:1px solid var(--bd2);cursor:pointer}
+  .set-hd + .setrow{border-top:none}
+  .setrow .setic{width:30px;height:30px;border-radius:9px;background:var(--inset);border:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:15px;flex:none;overflow:hidden}
+  .setrow .setic img{width:100%;height:100%;object-fit:cover}
+  .setrow .setmid{flex:1;min-width:0}
+  .setrow .setmid .nm{font-size:12.5px}
+  .setrow .setmid .sub{font-size:10px;color:var(--dim);margin-top:1px}
+  .setchev{color:var(--dim);font-size:12px;flex:none}
+  .sfin{width:100%;background:var(--inset);border:1px solid var(--bd2);border-radius:11px;color:var(--tx);font-size:16px;padding:9px 12px;font-family:inherit;outline:none}
+  .sfin:focus{border-color:var(--cy)}
+  .emg{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:2px}
+  .emc{position:relative;background:var(--inset);border:1px solid var(--bd2);border-radius:11px;text-align:center;padding:7px 0 6px;font-size:17px;line-height:1;font-family:inherit;color:var(--tx);cursor:pointer}
+  .emc.on{border-color:var(--cy-bd2);background:var(--cy-bg)}
+  .emc .ck{position:absolute;top:2px;right:4px;font-size:8px;color:var(--cy2);font-weight:700}
+  .upbox{display:flex;align-items:center;gap:11px;border:1.5px dashed var(--bd3);border-radius:14px;padding:12px;background:var(--inset);cursor:pointer}
+  .upbox .upth{width:52px;height:52px;border-radius:14px;overflow:hidden;border:1px solid var(--bd2);background:var(--card2);flex:none;display:flex;align-items:center;justify-content:center;font-size:22px}
+  .upbox .upth img{width:100%;height:100%;object-fit:cover}
+  .upbox .upt1{font-size:12px}
+  .upbox .upt2{font-size:10px;color:var(--dim);margin-top:3px;line-height:1.5}
+  .delbtn{width:100%;background:transparent;border:1px solid var(--red-bd2);color:var(--red2);border-radius:12px;padding:11px 0;text-align:center;font-size:12.5px;font-weight:600;margin-top:14px;font-family:inherit;cursor:pointer}
 </style>
 </head>
 <body>
@@ -475,6 +501,7 @@
   <div class="impov" id="impov"><div class="impsh" id="impsh"></div></div>
   <input type="file" id="impFileIn" accept=".txt,.csv,text/plain,text/csv" style="display:none">
   <input type="file" id="impPdfIn" accept=".pdf,application/pdf" style="display:none">
+  <input type="file" id="catImgIn" accept="image/*" style="display:none">  <!-- แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): รูปไอคอนหมวดทำเอง -->
 
   <nav class="tabbar">
     <button class="nv on" data-act="tab" data-i="0"><span class="ic"><svg><use href="#i-sum"/></svg></span>ภาพรวม</button>
@@ -521,8 +548,8 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.2.7-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · Hermes 7 ต.ค. 69: v4.2.7 = ก้อน "รายจ่ายประจำ" ในงบรายหมวด (§16 · v4.2.6 = สวิตช์ TrueMoney + หมวดส่วนตัว + สถานะเชื่อม heartbeat)
-var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, budForm:null, budOpen:{}, view:null, imp:null, pMonth:null, recLumpOpen:false };  // pMonth: แก้โดย Hermes 5 ต.ค. 69 — เดือนที่เลือกในแท็บรอยืนยัน (แยกเดือน) · recLumpOpen: Hermes 7 ต.ค. 69 (§16) — กาง "ก้อนรายจ่ายประจำ" ในงบรายหมวด
+var APP_BUILD = 'v4.2.8-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · Hermes 7 ต.ค. 69: v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด (v4.2.7 = ก้อนรายจ่ายประจำในงบรายหมวด §16)
+var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, budForm:null, budOpen:{}, view:null, imp:null, pMonth:null, recLumpOpen:false, catForm:null, shortForm:null };  // catForm/shortForm: Hermes 7 ต.ค. 69 — ฟอร์มหมวดทำเอง/รายการลัด (หน้าแยก v4.2.8)  // pMonth: แก้โดย Hermes 5 ต.ค. 69 — เดือนที่เลือกในแท็บรอยืนยัน (แยกเดือน) · recLumpOpen: Hermes 7 ต.ค. 69 (§16) — กาง "ก้อนรายจ่ายประจำ" ในงบรายหมวด
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
 var SW = { OPEN:112, COMMIT:160, MAX:210, EASE:'cubic-bezier(.22,.8,.24,1)' };
@@ -572,8 +599,10 @@ function shortName(it){
 }
 function catMeta(slug){
   var c = (S.data && S.data.cats) || [];
-  for (var i=0;i<c.length;i++) if (c[i][0] === slug) return { slug:c[i][0], e:c[i][1], t:c[i][2] };
-  return { slug:slug, e:'❔', t:slug };
+  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หมวดทำเองแบบรูป — แนบ dataURL รูปไว้ด้วย (ว่าง = ใช้ emoji)
+  var im = ((S.data && S.data.catImgs) || {})[slug] || '';
+  for (var i=0;i<c.length;i++) if (c[i][0] === slug) return { slug:c[i][0], e:c[i][1], t:c[i][2], img:im };
+  return { slug:slug, e:'❔', t:slug, img:'' };
 }
 function el(id){ return document.getElementById(id); }
 function esc(s){
@@ -674,6 +703,8 @@ function reloadSoon(){
 /* ---------- render ---------- */
 function paint(){
   recSyncInputs();  // แก้โดย CC — TASK_cc_fix_v42.md (3 ต.ค. 69): เก็บข้อความที่พิมพ์ค้างในฟอร์มรายการประจำก่อนวาดใหม่ทุกครั้ง
+  if (S.catForm) cfSyncInputs();    // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): เก็บข้อความในหน้า หมวด/ลัด ก่อนวาดใหม่
+  if (S.shortForm) sfSyncInputs();
   var d = S.data; if (!d) return;
   if (S.tab === 0) el('pane0').innerHTML = htmlSummary(d);
   if (S.tab === 1) el('pane1').innerHTML = htmlPending(d);
@@ -691,7 +722,11 @@ function paintDetail(){
   if (!S.view){ el2.className = 'detail'; el2.innerHTML = ''; return; }
   try {
     el2.innerHTML = (S.view.t === 'month') ? viewMonthHtml(S.data)
-      : (S.view.t === 'all' ? viewAllHtml() : viewAcctHtml(S.data, S.view.a));
+      : (S.view.t === 'all' ? viewAllHtml()
+      : (S.view.t === 'recAdd' ? recPageHtml()
+      : (S.view.t === 'catNew' || S.view.t === 'catEdit' ? catPageHtml()
+      : (S.view.t === 'shortNew' || S.view.t === 'shortEdit' ? shortPageHtml()
+      : viewAcctHtml(S.data, S.view.a)))));  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หน้าแยก เพิ่มรายการ / หมวดทำเอง / รายการลัด
   } catch (e) {
     el2.innerHTML = '<div class="dt-top"><button class="dt-back" data-act="vclose"><svg><use href="#i-back"/></svg></button><div class="ttl">รายละเอียด</div></div><div class="hint" style="margin:8px 2px">แสดงรายละเอียดไม่ได้</div>';
   }
@@ -736,6 +771,7 @@ function brandOf(it){
 function recIconHtml(logo, cat, emoji){
   if (logo && LOGO_URL(logo)) return '<img src="'+LOGO_URL(logo)+'" alt="">';
   var cm = cat ? catMeta(cat) : null;
+  if (cm && cm.img) return '<img src="'+cm.img+'" alt="">';  // แก้โดย Hermes 7 ต.ค. 69: หมวดทำเองแบบรูป — โชว์รูปก่อน emoji
   if (cm && cm.e !== '❔') return cm.e;
   return emoji || '•';
 }
@@ -1312,8 +1348,9 @@ function categoryGrid(d, it){
   function cell(slug, e, t){
     var isCur = !!(cur && cur === slug);
     var isSug = (!saved && sug === slug);
+    var cimg = catImgOf(slug);  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หมวดทำเองแบบรูป
     return '<div class="cg'+(isCur?' cur':(isSug?' sug':''))+'" data-act="pick" data-ref="'+esc(it.ref)+'" data-cat="'+slug+'">'
-      + '<i>'+e+'</i>'+esc(t)+(isCur?'<span class="st cur">✓</span>':(isSug?'<span class="st">★ แนะนำ</span>':''))+'</div>';
+      + '<i>'+(cimg ? '<img src="'+esc(cimg)+'" alt="">' : e)+'</i>'+esc(t)+(isCur?'<span class="st cur">✓</span>':(isSug?'<span class="st">★ แนะนำ</span>':''))+'</div>';
   }
   // แก้โดย Hermes 5 ต.ค. 69 (P เคาะ "1" เธรด "แทนรายรับด้วยหมวดค่าใช้จ่ายส่วนตัว"): 'รายรับ' ไม่ปนกับหมวดรายจ่าย —
   //   'personal' (ค่าใช้จ่ายส่วนตัว) อยู่ในชุดหลักแทนแล้ว · 'income' โผล่เฉพาะแถว "เงินเข้า" (และไม่โผล่ในหน้า อื่นๆ ของรายจ่าย)
@@ -1390,6 +1427,338 @@ function historyRow(d, it){
     + (inner ? '<div class="exp">'+inner+'</div>' : '')
     + '</div>';
 }
+/* ============ v4.2.8 (แก้โดย Hermes 7 ต.ค. 69 · P เคาะ "ลุย" · เธรด 🛒fullauto): แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด ============
+   1) หน้า "เพิ่มรายการประจำ" แยกเต็มจอ (overlay แบบ detail) — มีแถว "รายการลัด" บนสุด + ฟอร์มครบทุกช่องพร้อมป้ายชื่อ
+   2) หน้า "สร้าง/แก้หมวด" — ชื่อ + ไอคอน (อีโมจิ หรือ รูปที่อัปโหลดเอง ย่อ 96px) — จัดการเพิ่มใน ตั้งค่า › หมวดของฉัน
+   3) หน้า "สร้าง/แก้รายการลัด" — ปุ่มลัดเติมฟอร์ม — จัดการใน ตั้งค่า › รายการลัดของฉัน
+   ข้อมูล: Supabase (cats_custom/shortcuts — migration 0010) · เดโม่ = ในเครื่อง (S.data.myCats/shortcuts/catImgs) */
+var CAT_EMOJI_PICK = ['🐱','🐶','🍜','🍺','🎮','📚','✈️','🎁','💇','🛍️','⛽','💊','🏥','⚽','🎬','🎵','💰','🏠','🚌','🧾','🌿','✨','🔁','💳'];
+var REC_LBL = { name:'ชื่อรายการ', amt:'ยอด (฿)', freq:'ความถี่ / วันที่', dir:'ประเภท', cat:'หมวด (ไม่บังคับ)' };
+function REC_PAGE(){ return !!(S.view && S.view.t === 'recAdd'); }
+function catImgOf(slug){ return ((S.data && S.data.catImgs) || {})[slug] || ''; }
+function myCatsArr(){ return (S.data && S.data.myCats) || []; }
+function shortcutsArr(){ return (S.data && S.data.shortcuts) || []; }
+function findShortcut(id){ var a = shortcutsArr(); for (var i = 0; i < a.length; i++) if (String(a[i].id) === String(id)) return a[i]; return null; }
+function openView(v, prev){
+  S.view = v; S.prev = prev || null;
+  paint();
+  var n = el('detail'); if (n) n.scrollTop = 0;
+}
+/* ---------- หน้าเพิ่มรายการประจำ (แยกเต็มจอ) ---------- */
+function scChipsHtml(){
+  var a = shortcutsArr();
+  var h = '<div class="flab">' + (a.length ? 'รายการลัด — แตะแล้วเติมให้ทั้งฟอร์ม' : 'ยังไม่มีรายการลัด — สร้างไว้กดเร็ว ๆ ได้') + '</div>'
+    + '<div class="incbtns" style="margin-top:0">';
+  for (var i = 0; i < a.length; i++){
+    var s = a[i];
+    var cm = s.category ? catMeta(s.category) : null;
+    var ic = cm && cm.img ? '<img class="cimg" src="' + esc(cm.img) + '" alt="">' : (cm && cm.e !== '❔' ? cm.e : '⚡');
+    h += '<button class="miniact cy2" data-act="scFill" data-id="' + esc(s.id) + '">' + ic + ' ' + esc(s.label) + (s.amount_minor > 0 ? ' · ฿' + recAmtShort(s.amount_minor) : '') + '</button>';
+  }
+  return h + '<button class="miniact dash" data-act="scNew">＋ สร้างลัดใหม่</button></div>'
+    + '<div class="hint" style="margin:7px 2px 0">แตะลัด = เติมให้ทั้งฟอร์ม (ยังต้องกด “เพิ่มรายการ”) · จัดการลัดใน ตั้งค่า › รายการลัดของฉัน</div>';
+}
+function recPageHtml(){
+  return '<div class="dt-top"><button class="dt-back" data-act="recCancel"><svg><use href="#i-back"/></svg></button><div class="ttl">เพิ่มรายการประจำ</div></div>'
+    + scChipsHtml()
+    + htmlRecForm();
+}
+function scFill(id){
+  var s = findShortcut(id); if (!s) return;
+  recFlushCancel(); recSyncInputs();
+  if (!S.recForm) S.recForm = recFormDefault();
+  var f = S.recForm;
+  f.type = '';
+  f.name = s.label || '';
+  f.amt = s.amount_minor > 0 ? fmtShort(s.amount_minor) : '';
+  f.dir = s.direction === 'in' ? 'in' : 'out';
+  f.cat = s.category || ''; f.catTouched = !!s.category; f.catGuess = ''; f.brand = brandKey(s.label);
+  if (s.freq === 'monthly' || s.freq === 'weekly' || s.freq === 'yearly') f.freq = s.freq;
+  f.day = (s.day === null || s.day === undefined) ? '' : String(s.day);
+  f.month = s.month_of_year || (new Date().getMonth() + 1);
+  f.dow = (s.dow === null || s.dow === undefined) ? null : Number(s.dow);
+  f.guesses = []; f.warn = []; f.edit = '';
+  recRepaint();
+  toast('เติมจากลัด “' + s.label + '” แล้ว — เช็คแล้วกด “เพิ่มรายการ”');
+}
+/* ---------- หน้า สร้าง/แก้รายการลัด ---------- */
+function shortFormDefault(){ return { id:null, label:'', amt:'', cat:'', dir:'out', freq:'monthly', day:'', dow:null, month:new Date().getMonth() + 1 }; }
+function shortPageOpen(id, fromRec){
+  if (id){
+    var s = findShortcut(id); if (!s) return;
+    S.shortForm = { id: s.id, label: s.label || '', amt: s.amount_minor > 0 ? fmtShort(s.amount_minor) : '', cat: s.category || '',
+      dir: s.direction === 'in' ? 'in' : 'out', freq: (s.freq === 'weekly' || s.freq === 'yearly' || s.freq === 'monthly') ? s.freq : '',
+      day: (s.day === null || s.day === undefined) ? '' : String(s.day), dow: (s.dow === null || s.dow === undefined) ? null : Number(s.dow), month: s.month_of_year || (new Date().getMonth() + 1) };
+  } else S.shortForm = shortFormDefault();
+  openView({ t: id ? 'shortEdit' : 'shortNew', id: id || null }, fromRec ? { t: 'recAdd' } : null);
+  focusInput('sfLabel');
+}
+function sfSyncInputs(){
+  var f = S.shortForm; if (!f) return;
+  var l = el('sfLabel'), a = el('sfAmt'), d = el('sfDay');
+  if (l) f.label = l.value;
+  if (a) f.amt = a.value;
+  if (d) f.day = d.value;
+}
+function sfSet(field, v){
+  var f = S.shortForm; if (!f) return;
+  sfSyncInputs();
+  if (field === 'cat') f.cat = (String(f.cat) === String(v)) ? '' : v;
+  else if (field === 'dir') f.dir = v === 'in' ? 'in' : 'out';
+  else if (field === 'freq'){ f.freq = (v === 'monthly' || v === 'weekly' || v === 'yearly') ? v : ''; }
+  else if (field === 'dow') f.dow = (f.dow === Number(v)) ? null : Number(v);
+  else if (field === 'month') f.month = Number(v) || f.month;
+  paint();
+}
+function sfChip(field, val, txt, on){
+  return '<button class="miniact' + (on ? ' cy2' : '') + '" data-act="sfSet" data-f="' + field + '" data-v="' + esc(val) + '">' + txt + '</button>';
+}
+function shortIssues(f){
+  var out = [];
+  if (!String(f.label || '').trim()) out.push('ใส่ชื่อลัดก่อน');
+  return out;
+}
+function shortPageHtml(){
+  var f = S.shortForm; if (!f) return '';
+  var editing = (f.id !== null && f.id !== undefined);
+  var cats = (S.data && S.data.cats) || [];
+  var h = '<div class="dt-top"><button class="dt-back" data-act="scCancel"><svg><use href="#i-back"/></svg></button><div class="ttl">' + (editing ? 'แก้รายการลัด' : 'สร้างรายการลัด') + '</div></div>'
+    + '<div class="flab" style="margin-top:2px">ชื่อลัด</div>'
+    + '<input class="sfin" id="sfLabel" type="text" maxlength="60" placeholder="เช่น ยา / ค่าสนาม / ประกัน" value="' + esc(f.label) + '">'
+    + '<div class="flab">ยอด (฿) — ไม่ใส่ก็ได้</div>'
+    + '<input class="sfin" id="sfAmt" style="max-width:170px" type="text" inputmode="decimal" placeholder="0" value="' + esc(f.amt) + '">'
+    + '<div class="flab">หมวด (ไม่บังคับ)</div><div class="incbtns" style="margin-top:0">';
+  for (var i = 0; i < cats.length; i++){
+    var c = cats[i];
+    if (c[0] === 'income' && f.dir !== 'in') continue;
+    var cimg = catImgOf(c[0]);
+    h += '<button class="miniact' + (String(f.cat) === String(c[0]) ? ' cy2' : '') + '" data-act="sfSet" data-f="cat" data-v="' + esc(c[0]) + '">'
+      + (cimg ? '<img class="cimg" src="' + esc(cimg) + '" alt="">' : c[1]) + ' ' + esc(c[2]) + '</button>';
+  }
+  h += '<button class="miniact dash" data-act="catNew" data-from="short">＋ สร้างหมวดใหม่</button></div>';
+  h += '<div class="flab">ความถี่ — ไม่ใส่ก็ได้ (ว่าง = เติมแค่ที่ใส่)</div><div class="incbtns" style="margin-top:0">'
+    + sfChip('freq', 'monthly', 'ทุกเดือน', f.freq === 'monthly') + sfChip('freq', 'weekly', 'ทุกสัปดาห์', f.freq === 'weekly')
+    + sfChip('freq', 'yearly', 'ทุกปี', f.freq === 'yearly') + sfChip('freq', '', 'ไม่ระบุ', f.freq === '') + '</div>';
+  if (f.freq === 'weekly'){
+    h += '<div class="flab">วันในสัปดาห์</div><div class="incbtns" style="margin-top:0">';
+    for (var dw = 0; dw < TH_DOW_S.length; dw++) h += sfChip('dow', String(dw), TH_DOW_S[dw], f.dow === dw);
+    h += '</div>';
+  } else if (f.freq !== ''){
+    h += '<div class="flab">วันที่ของเดือน (1–31) — ไม่ใส่ก็ได้</div>'
+      + '<input class="sfin" id="sfDay" style="max-width:130px" type="number" min="1" max="31" inputmode="numeric" placeholder="—" value="' + esc(f.day) + '">';
+    if (f.freq === 'yearly'){
+      h += '<div class="flab">เดือนที่ครบ</div><div class="incbtns" style="margin-top:0">';
+      for (var mo = 0; mo < TH_M.length; mo++) h += sfChip('month', String(mo + 1), TH_M[mo], Number(f.month) === mo + 1);
+      h += '</div>';
+    }
+  }
+  h += '<div class="flab">ประเภท</div><div class="incbtns" style="margin-top:0">'
+    + sfChip('dir', 'out', 'จ่าย', f.dir === 'out') + sfChip('dir', 'in', 'รับ', f.dir === 'in') + '</div>';
+  var pa = parseBahtMinor(f.amt);
+  var cm2 = f.cat ? catMeta(f.cat) : null;
+  var ic2 = cm2 && cm2.img ? '<img class="cimg" src="' + esc(cm2.img) + '" alt="">' : (cm2 && cm2.e !== '❔' ? cm2.e : '⚡');
+  h += '<div class="flab">ตัวอย่างปุ่มลัด (จะไปอยู่บนสุดของหน้าเพิ่มรายการ)</div>'
+    + '<div class="incbtns" style="margin-top:0"><button class="miniact cy2">' + ic2 + ' ' + esc(String(f.label || '').trim() || 'ชื่อลัด') + (pa > 0 ? ' · ฿' + recAmtShort(pa) : '') + '</button></div>';
+  var iss = shortIssues(f);
+  h += '<div class="incbtns" style="margin-top:14px"><button class="save' + (iss.length ? ' off' : '') + '" data-act="scSave"'
+    + (iss.length ? ' aria-disabled="true" title="' + esc(iss[0]) + '"' : '') + '>บันทึกลัด</button>'
+    + '<button class="cancel" data-act="scCancel">ยกเลิก</button></div>';
+  if (editing) h += '<button class="delbtn" data-act="scDel" data-id="' + esc(f.id) + '">🗑 ลบรายการลัดนี้</button>';
+  return h;
+}
+function scSave(){
+  var f = S.shortForm; if (!f) return;
+  sfSyncInputs();
+  var iss = shortIssues(f);
+  if (iss.length){ toast(iss[0], true); return; }
+  var dayN = /^\d{1,2}$/.test(String(f.day == null ? '' : f.day).trim()) ? parseInt(f.day, 10) : null;
+  if (dayN !== null && (dayN < 1 || dayN > 31)) dayN = null;
+  var payload = { label: String(f.label || '').replace(/\s+/g, ' ').trim(), amount_minor: parseBahtMinor(f.amt) || 0, category: f.cat || '',
+    direction: f.dir === 'in' ? 'in' : 'out', freq: f.freq || '', day: dayN,
+    dow: (f.dow === null || f.dow === undefined) ? null : Number(f.dow),
+    month_of_year: (f.freq === 'yearly' && Number(f.month) >= 1 && Number(f.month) <= 12) ? Number(f.month) : null };
+  var editing = (f.id !== null && f.id !== undefined);
+  var snap = f;
+  var gotoPrev = S.prev;
+  S.shortForm = null;
+  S.view = gotoPrev || null; S.prev = null;
+  paint();
+  if (IS_DEMO){
+    var list = S.data.shortcuts = S.data.shortcuts || [];
+    if (editing){
+      for (var i = 0; i < list.length; i++) if (String(list[i].id) === String(snap.id)){ payload.id = list[i].id; list[i] = payload; }
+    } else {
+      payload.id = 'd' + Date.now().toString(36);
+      list.unshift(payload);
+    }
+    paint();
+    toast(editing ? 'แก้รายการลัดแล้ว ✓' : 'สร้างรายการลัดแล้ว ✓');
+    return;
+  }
+  if (editing) callAction('updateShortcut', [snap.id, payload], 'แก้รายการลัดแล้ว ✓', function(){ S.shortForm = snap; S.view = { t: 'shortEdit', id: snap.id }; paint(); });
+  else callAction('addShortcut', [payload], 'สร้างรายการลัดแล้ว ✓', function(){ S.shortForm = snap; S.view = { t: 'shortNew', id: null }; paint(); });
+}
+function scDel(id){
+  var f = S.shortForm;
+  var s = f && String(f.id) === String(id) ? f : findShortcut(id);
+  if (!s) return;
+  if (!confirm('ลบรายการลัด "' + (s.label || '') + '" ?')) return;
+  var gotoPrev = S.prev;
+  S.shortForm = null;
+  S.view = gotoPrev || null; S.prev = null;
+  paint();
+  if (IS_DEMO){
+    S.data.shortcuts = shortcutsArr().filter(function(x){ return String(x.id) !== String(id); });
+    paint();
+    toast('ลบรายการลัดแล้ว ✓');
+    return;
+  }
+  callAction('delShortcut', [Number(id)], 'ลบรายการลัดแล้ว ✓');
+}
+/* ---------- หน้า สร้าง/แก้หมวดทำเอง ---------- */
+function cfSyncInputs(){
+  var f = S.catForm; if (!f) return;
+  var l = el('cfLabel'); if (l) f.label = l.value;
+}
+function catPageOpen(slug, prev){
+  if (slug){
+    var c = null, mc = myCatsArr();
+    for (var i = 0; i < mc.length; i++) if (mc[i].slug === slug) c = mc[i];
+    if (!c) return;
+    S.catForm = { slug: slug, label: c.t, emoji: (c.img && c.e === '🖼') ? '' : c.e, mode: c.img ? 'image' : 'emoji', iconImage: c.img || '' };
+  } else S.catForm = { slug: null, label: '', emoji: '', mode: 'emoji', iconImage: '' };
+  openView({ t: slug ? 'catEdit' : 'catNew', slug: slug || null }, prev || null);
+  focusInput('cfLabel');
+}
+function catPageHtml(){
+  var f = S.catForm; if (!f) return '';
+  var editing = !!f.slug;
+  var h = '<div class="dt-top"><button class="dt-back" data-act="cfCancel"><svg><use href="#i-back"/></svg></button><div class="ttl">' + (editing ? 'แก้หมวด' : 'สร้างหมวดใหม่') + '</div></div>'
+    + '<div class="flab" style="margin-top:2px">ชื่อหมวด</div>'
+    + '<input class="sfin" id="cfLabel" type="text" maxlength="40" placeholder="เช่น สัตว์เลี้ยง / เกม" value="' + esc(f.label) + '">'
+    + '<div class="flab">ไอคอน — เลือกแบบไหนก็ได้</div>'
+    + '<div class="incbtns" style="margin-top:0"><button class="miniact' + (f.mode === 'emoji' ? ' cy2' : '') + '" data-act="cfMode" data-v="emoji">😊 อีโมจิ</button>'
+    + '<button class="miniact' + (f.mode === 'image' ? ' cy2' : '') + '" data-act="cfMode" data-v="image">🖼 รูปเอง</button></div>';
+  if (f.mode === 'emoji'){
+    h += '<div class="emg">';
+    for (var i = 0; i < CAT_EMOJI_PICK.length; i++){
+      var e = CAT_EMOJI_PICK[i];
+      h += '<button class="emc' + (f.emoji === e ? ' on' : '') + '" data-act="cfPick" data-v="' + esc(e) + '">' + e + (f.emoji === e ? '<span class="ck">✓</span>' : '') + '</button>';
+    }
+    h += '</div>'
+      + '<div class="flab">ตัวอย่าง (จะขึ้นแบบนี้ในหน้าเลือกหมวด)</div>'
+      + '<div class="cg cur" style="width:104px"><i>' + (f.emoji || '·') + '</i>' + esc(String(f.label || '').trim() || 'ชื่อหมวด') + '<span class="st cur">✓</span></div>';
+  } else {
+    h += '<div class="upbox" data-act="cfImg"><div class="upth">' + (f.iconImage ? '<img src="' + esc(f.iconImage) + '" alt="">' : '🖼') + '</div>'
+      + '<div><div class="upt1">' + (f.iconImage ? 'ได้รูปแล้ว — แตะเพื่อเปลี่ยน' : 'แตะเพื่อเลือกรูปจากมือถือ') + '</div>'
+      + '<div class="upt2">โลโก้ร้าน / รูปถ่าย / อะไรก็ได้ — ระบบย่อ+ครอปเป็นสี่เหลี่ยมมนให้เอง</div></div></div>'
+      + (f.iconImage ? '<div class="incbtns" style="margin-top:8px"><button class="miniact" data-act="cfImgClear">เอารูปออก</button></div>' : '')
+      + '<div class="flab">ตัวอย่าง (จะขึ้นแบบนี้ในหน้าเลือกหมวด)</div>'
+      + '<div class="cg cur" style="width:104px"><i>' + (f.iconImage ? '<img src="' + esc(f.iconImage) + '" alt="">' : '·') + '</i>' + esc(String(f.label || '').trim() || 'ชื่อหมวด') + '<span class="st cur">✓</span></div>';
+  }
+  var iss = [];
+  if (!String(f.label || '').trim()) iss.push('ใส่ชื่อหมวดก่อน');
+  if (f.mode === 'emoji' && !f.emoji) iss.push('เลือกอีโมจิ (หรือสลับไปโหมดรูปเอง)');
+  if (f.mode === 'image' && !f.iconImage) iss.push('เลือกรูปก่อน — หรือสลับไปโหมดอีโมจิ');
+  h += '<div class="incbtns" style="margin-top:14px"><button class="save' + (iss.length ? ' off' : '') + '" data-act="cfSave"'
+    + (iss.length ? ' aria-disabled="true" title="' + esc(iss[0]) + '"' : '') + '>' + (editing ? 'บันทึก' : 'บันทึกหมวด') + '</button>'
+    + '<button class="cancel" data-act="cfCancel">ยกเลิก</button></div>';
+  if (editing){
+    h += '<button class="delbtn" data-act="cfDel">🗑 ลบหมวดนี้ (ลบได้เมื่อไม่มีรายการใช้)</button>'
+      + '<div class="hint" style="margin:8px 2px 0">แก้ชื่อ/ไอคอน = รายการเดิมที่ใช้หมวดนี้เปลี่ยนตามทันที</div>';
+  }
+  return h;
+}
+function cfSave(){
+  var f = S.catForm; if (!f) return;
+  cfSyncInputs();
+  var label = String(f.label || '').replace(/\s+/g, ' ').trim();
+  if (!label){ toast('ใส่ชื่อหมวดก่อน', true); return; }
+  if (f.mode === 'emoji' && !f.emoji){ toast('เลือกอีโมจิ (หรือสลับไปโหมดรูปเอง)', true); return; }
+  if (f.mode === 'image' && !f.iconImage){ toast('เลือกรูปก่อน — หรือสลับไปโหมดอีโมจิ', true); return; }
+  var emoji = f.mode === 'emoji' ? f.emoji : (f.emoji || '');
+  var iconImage = f.mode === 'image' ? f.iconImage : '';
+  var editing = !!f.slug;
+  var snap = f;
+  var gotoPrev = S.prev;
+  S.catForm = null;
+  S.view = gotoPrev || null; S.prev = null;
+  paint();
+  if (IS_DEMO){
+    var d = S.data;
+    d.myCats = d.myCats || []; d.catImgs = d.catImgs || {}; d.cats = d.cats || [];
+    if (editing){
+      for (var i = 0; i < d.myCats.length; i++) if (d.myCats[i].slug === snap.slug){ d.myCats[i].t = label; d.myCats[i].e = emoji || '🖼'; d.myCats[i].img = iconImage; }
+      for (var j = 0; j < d.cats.length; j++) if (d.cats[j][0] === snap.slug){ d.cats[j][1] = emoji || '🖼'; d.cats[j][2] = label; }
+      if (iconImage) d.catImgs[snap.slug] = iconImage; else delete d.catImgs[snap.slug];
+    } else {
+      var newSlug = 'u' + Date.now().toString(36);
+      d.cats.push([newSlug, emoji || '🖼', label]);
+      d.myCats.push({ slug: newSlug, e: emoji || '🖼', t: label, img: iconImage });
+      if (iconImage) d.catImgs[newSlug] = iconImage;
+    }
+    paint();
+    toast(editing ? 'แก้หมวดแล้ว ✓' : 'สร้างหมวดแล้ว ✓ — ใช้ได้ทุกที่เลย');
+    return;
+  }
+  var payload = { label: label, emoji: emoji || '', iconImage: iconImage };
+  if (editing) callAction('updateCat', [snap.slug, payload], 'แก้หมวดแล้ว ✓', function(){ S.catForm = snap; S.view = { t: 'catEdit', slug: snap.slug }; paint(); });
+  else callAction('addCat', [payload], 'สร้างหมวดแล้ว ✓ — ใช้ได้ทุกที่เลย', function(){ S.catForm = snap; S.view = { t: 'catNew', slug: null }; paint(); });
+}
+function cfDel(){
+  var f = S.catForm; if (!f || !f.slug) return;
+  if (!confirm('ลบหมวด "' + (f.label || '') + '" ?\nลบได้เฉพาะหมวดที่ยังไม่มีรายการใช้')) return;
+  var slug = f.slug;
+  var gotoPrev = S.prev;
+  S.catForm = null;
+  S.view = gotoPrev || null; S.prev = null;
+  paint();
+  if (IS_DEMO){
+    var d = S.data, used = 0;
+    (d.fixed || []).forEach(function(x){ if (x.category === slug) used++; });
+    (d.pending || []).forEach(function(x){ if (x.category === slug) used++; });
+    (d.history || []).forEach(function(x){ if (x.category === slug) used++; });
+    (d.recall || []).forEach(function(x){ if (x.cat === slug) used++; });
+    (d.budgets || []).forEach(function(b){ if ((b.cats || []).indexOf(slug) >= 0) used++; });
+    if (used){ toast('หมวดนี้ถูกใช้อยู่ ' + used + ' รายการ — ย้ายรายการออกก่อนลบ', true); S.catForm = f; S.view = { t: 'catEdit', slug: slug }; paint(); return; }
+    d.cats = (d.cats || []).filter(function(r){ return r[0] !== slug; });
+    d.myCats = (d.myCats || []).filter(function(r){ return r.slug !== slug; });
+    if (d.catImgs) delete d.catImgs[slug];
+    paint();
+    toast('ลบหมวดแล้ว ✓');
+    return;
+  }
+  callAction('delCat', [slug], 'ลบหมวดแล้ว ✓', function(){ S.catForm = f; S.view = { t: 'catEdit', slug: slug }; paint(); });
+}
+/* ---------- การ์ดในแท็บตั้งค่า ---------- */
+function cardMyCats(d){
+  var mc = (d && d.myCats) || [];
+  var h = '<div class="card"><div class="set-hd"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin:0">หมวดของฉัน</h3>'
+    + '<button class="miniact cy2" data-act="catNew">＋ สร้างหมวดใหม่</button></div>';
+  h += mc.length ? mc.map(function(c){
+      return '<div class="setrow" data-act="catEdit" data-slug="' + esc(c.slug) + '"><span class="setic">' + (c.img ? '<img src="' + esc(c.img) + '" alt="">' : esc(c.e)) + '</span>'
+        + '<div class="setmid"><div class="nm">' + esc(c.t) + '</div><div class="sub">เพิ่มเอง · ใช้กับรายการได้ทุกแบบ</div></div><span class="setchev">›</span></div>';
+    }).join('') : '<div class="hint" style="margin:4px 2px">— ยังไม่มีหมวดที่สร้างเอง — กด ＋ เพื่อสร้างหมวดแรก (อีโมจิหรือรูปเอง)</div>';
+  h += '<div class="hint" style="margin:8px 2px 2px">หมวดชุดหลักของบอท (อาหาร · บ้าน · …) ใช้เดิมเสมอ — เพิ่มของพี่เองได้เรื่อย ๆ</div></div>';
+  return h;
+}
+function cardMyShortcuts(d){
+  var a = (d && d.shortcuts) || [];
+  var h = '<div class="card"><div class="set-hd"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin:0">รายการลัดของฉัน</h3>'
+    + '<button class="miniact cy2" data-act="scNew">＋ เพิ่มลัดใหม่</button></div>';
+  h += a.length ? a.map(function(s){
+      var cm = s.category ? catMeta(s.category) : null;
+      var ic = cm && cm.img ? '<img src="' + esc(cm.img) + '" alt="">' : (cm && cm.e !== '❔' ? esc(cm.e) : '⚡');
+      var sub = (s.amount_minor > 0 ? '฿' + fmtBaht(s.amount_minor) : 'ไม่ระบุยอด');
+      if (s.freq === 'monthly') sub += ' · ทุกเดือน' + (s.day ? ' (วันที่ ' + s.day + ')' : '');
+      else if (s.freq === 'weekly') sub += ' · ทุกสัปดาห์' + (s.dow !== null && s.dow !== undefined ? ' (' + TH_DOW[Number(s.dow)] + ')' : '');
+      else if (s.freq === 'yearly') sub += ' · ทุกปี' + (s.month_of_year ? ' (' + (s.day ? s.day + ' ' : '') + TH_M[s.month_of_year - 1] + ')' : '');
+      return '<div class="setrow" data-act="scEdit" data-id="' + esc(s.id) + '"><span class="setic">' + ic + '</span>'
+        + '<div class="setmid"><div class="nm">' + esc(s.label) + '</div><div class="sub">' + sub + '</div></div><span class="setchev">›</span></div>';
+    }).join('') : '<div class="hint" style="margin:4px 2px">— ยังไม่มีรายการลัด — กด ＋ เพื่อสร้างปุ่มลัดแรก (โผล่บนสุดของหน้าเพิ่มรายการ)</div>';
+  h += '<div class="hint" style="margin:8px 2px 2px">แตะแถว = แก้/ลบ · ลัดช่วยให้กดเติมรายการเร็ว ๆ ตอนเพิ่มรายการประจำ</div></div>';
+  return h;
+}
 function htmlSettings(d){
   var logs = (d.meta.logTail || []).map(function(l){
     return '<div class="logline">'+esc(l.time)+' · '+(l.ok === 'OK' ? '✓' : '✗')+' scan '+l.scanned+' → ใหม่ '+l.parsed+' · ซ้ำ '+l.dup+' · ข้าม '+l.skipped+'</div>';
@@ -1397,8 +1766,10 @@ function htmlSettings(d){
   // แก้โดย CC 23 ก.ย. 69 (TASK_p4_pwa_supabase): โหมด Supabase ไม่มี trigger/log/ชีต — ซ่อนแถวที่ไม่มีข้อมูล + ปุ่มออกจากระบบ
   var isSupa = d.meta.mode === 'supabase';
   return ''
+    + cardMyCats(d)        // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หมวดทำเอง
+    + cardMyShortcuts(d)   // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): รายการลัด
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.7-supabase</span></div>'  // แก้โดย Hermes 7 ต.ค. 69: v4.2.7 = ก้อนรายจ่ายประจำในงบรายหมวด (§16)
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.8-supabase</span></div>'  // แก้โดย Hermes 7 ต.ค. 69: v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -1619,9 +1990,26 @@ document.addEventListener('click', function(e){
   if (act === 'incSave') { incSave(); return; }
   // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69): รายการประจำ เพิ่ม/ลบ
   if (act === 'recNew') { recOpen(); return; }
-  if (act === 'recCancel') { recFlushCancel(); S.recForm = null; paint(); return; }
+  if (act === 'recCancel') { recFlushCancel(); S.recForm = null; if (S.prev) { S.view = S.prev; S.prev = null; } else S.view = null; paint(); return; }  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): ย้อนกลับได้ (เช่น มาจากหน้าสร้างหมวด)
   if (act === 'recSet') { recSet(t.getAttribute('data-f'), t.getAttribute('data-v')); return; }
   if (act === 'recSave') { recSave(); return; }
+  /* ---------- แก้โดย Hermes 7 ต.ค. 69 (v4.2.8 · P เคาะ "ลุย"): หมวดทำเอง + รายการลัด (หน้าแยก) ---------- */
+  if (act === 'scNew') { shortPageOpen(null, REC_PAGE()); return; }
+  if (act === 'scFill') { scFill(t.getAttribute('data-id')); return; }
+  if (act === 'scEdit') { shortPageOpen(t.getAttribute('data-id'), false); return; }
+  if (act === 'sfSet') { sfSet(t.getAttribute('data-f'), t.getAttribute('data-v')); return; }
+  if (act === 'scSave') { scSave(); return; }
+  if (act === 'scCancel') { S.shortForm = null; if (S.prev) { S.view = S.prev; S.prev = null; } else S.view = null; paint(); return; }
+  if (act === 'scDel') { scDel(t.getAttribute('data-id')); return; }
+  if (act === 'catNew') { var cfrom = t.getAttribute('data-from') || ''; catPageOpen(null, cfrom === 'short' ? S.view : (cfrom === 'rec' ? { t: 'recAdd' } : null)); return; }
+  if (act === 'catEdit') { catPageOpen(t.getAttribute('data-slug'), null); return; }
+  if (act === 'cfMode') { cfSyncInputs(); S.catForm.mode = t.getAttribute('data-v') === 'image' ? 'image' : 'emoji'; paint(); return; }
+  if (act === 'cfPick') { cfSyncInputs(); S.catForm.emoji = t.getAttribute('data-v') || ''; S.catForm.mode = 'emoji'; paint(); return; }
+  if (act === 'cfImg') { var cfi = el('catImgIn'); if (cfi) cfi.click(); return; }
+  if (act === 'cfImgClear') { cfSyncInputs(); S.catForm.iconImage = ''; paint(); return; }
+  if (act === 'cfSave') { cfSave(); return; }
+  if (act === 'cfCancel') { S.catForm = null; if (S.prev) { S.view = S.prev; S.prev = null; } else S.view = null; paint(); return; }
+  if (act === 'cfDel') { cfDel(); return; }
   // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): โหมดพิมพ์ — แก้ช่อง/เดาคำ/suggest
   if (act === 'recEdit') { recEdit(t.getAttribute('data-v'), t.getAttribute('data-open') === '1'); return; }
   if (act === 'recGuess') { recGuessPick(parseInt(t.getAttribute('data-i'), 10), t.getAttribute('data-v')); return; }
@@ -2274,7 +2662,7 @@ function htmlCalendar(d){
   var sumOut = outL.length
     ? '<div class="budtot" style="margin:2px 0 6px;align-items:center"><div class="l">รวมออก <b>฿'+fmtBaht(outSum)+'</b> · จ่ายแล้ว '+outDone+'/'+outL.length+'</div>'+addBtn+'</div>'
     : '<div style="display:flex;justify-content:flex-end;margin:2px 0 6px">'+addBtn+'</div>';
-  var outCard = '<div class="sec-t">รายจ่ายประจำ</div><div class="card" id="recCard" style="padding:8px 14px">' + sumOut + htmlRecForm()
+  var outCard = '<div class="sec-t">รายจ่ายประจำ</div><div class="card" id="recCard" style="padding:8px 14px">' + sumOut  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): ฟอร์มย้ายไปหน้าแยก — การ์ดลิสต์ไม่กางฟอร์มในหน้าเดิม
     + (outL.slice(0).sort(byDaySort).map(function(f){ return fixedRow(f); }).join('') || '<div class="hint" style="margin:4px 2px">— ยังไม่มี —</div>') + '</div>';
   var inCard = inL.length
     ? '<div class="sec-t">รายรับประจำ</div><div class="card" style="padding:8px 14px">'
@@ -2649,8 +3037,11 @@ function recHtmlCatChips(f){
     + '<div class="incbtns" style="margin-top:0">'
     + cats.filter(function(c){ return c[0] !== 'income' || f.dir === 'in'; }).map(function(c){
         var g = star && c[0] === f.catGuess;
+        var cimg = catImgOf(c[0]);  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หมวดทำเองแบบรูป
+        if (cimg) return '<button class="miniact' + (String(f.cat) === String(c[0]) ? ' cy2' : '') + (g ? ' sug' : '') + '" data-act="recSet" data-f="cat" data-v="' + esc(c[0]) + '"><img class="cimg" src="' + esc(cimg) + '" alt="">' + esc(c[2]) + (g ? ' ⭐' : '') + '</button>';
         return recChip(f, 'cat', c[0], c[1] + ' ' + esc(c[2]) + (g ? ' ⭐' : ''), g ? ' sug' : '');
-      }).join('') + '</div>';
+      }).join('')
+    + (REC_PAGE() ? '<button class="miniact dash" data-act="catNew" data-from="rec">＋ สร้างหมวดใหม่</button>' : '') + '</div>';  // v4.2.8: ทางไปหน้าสร้างหมวด (เฉพาะหน้าแยก)
 }
 function recSugIcon(it, cls){  // โลโก้แบรนด์ → emoji หมวด → • (กติกาเดียวกับ recIconHtml)
   var ic = recIconHtml(it.brand || brandKey(it.name), it.cat, '');
@@ -2705,7 +3096,7 @@ function recHtmlA(f){  // โซน ⚠ · suggest · การ์ดพรี�
   }
   var pv = recHtmlPreview(f);
   if (pv) h += pv + '<div class="hint" style="margin:7px 2px 0">แบบตัวอย่าง: การ์ดจะขึ้นในลิสต์แบบนี้ — แตะจุดไหน = แก้ช่องนั้น</div>';
-  if (typed || String(f.name || '').trim()){
+  if (!REC_PAGE() && (typed || String(f.name || '').trim())){  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): ในหน้าแยก ช่องเปิดอยู่แล้ว — ไม่ต้องมีชิป ✎
     h += '<div class="incbtns" style="margin-top:8px">'
       + [['name', '✎ แก้ชื่อ'], ['amt', '✎ แก้ยอด'], ['freq', '✎ แก้ความถี่/วัน'], ['dir', '✎ แก้จ่าย/รับ']].map(function(b){
           return '<button class="miniact cy2" data-act="recEdit" data-v="' + b[0] + '">' + b[1] + (f.edit === b[0] ? ' ▾' : '') + '</button>';
@@ -2739,7 +3130,7 @@ function recHtmlB(f){  // โซน เดาให้ตรวจ (เหลื
         }).join('') + '</div>'
       + '<div class="hint" style="margin:7px 2px 0">ชื่อใหม่ (ครั้งแรก) พิมพ์ใส่ได้เลย — ระบบจับแบรนด์/ติดโลโก้ให้เอง ครั้งถัดไปขึ้น suggest</div>';
   }
-  h += '<div class="incbtns"><button class="miniact" data-act="recEdit" data-v="more">'
+  if (!REC_PAGE()) h += '<div class="incbtns"><button class="miniact" data-act="recEdit" data-v="more">'  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หน้าแยกโชว์ครบ — ซ่อนปุ่มกาง
     + (f.edit === 'more' ? '− ซ่อนตัวเลือกเพิ่มเติม' : '＋ ตัวเลือกเพิ่มเติม <span style="color:var(--dim)">· กดชิปเองก็ได้</span>') + '</button></div>';
   var iss = recIssues(f);
   h += '<div class="incbtns"><button class="save' + (iss.length ? ' off' : '') + '" data-act="recSave"'
@@ -2748,7 +3139,9 @@ function recHtmlB(f){  // โซน เดาให้ตรวจ (เหลื
   return h;
 }
 function recPiece(f, key, inner){  // โซนคลาสสิกแยกชิ้น: เปิดทีละช่อง (✎) หรือทั้งหมด (＋ ตัวเลือกเพิ่มเติม)
-  var show = f.edit === 'more' || f.edit === key;
+  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): ในหน้าแยก (recAdd) = โชว์ทุกช่องพร้อมป้ายชื่อ ไม่ต้องกด ✎
+  var show = REC_PAGE() || f.edit === 'more' || f.edit === key;
+  if (REC_PAGE()) inner = '<div class="flab">' + REC_LBL[key] + '</div>' + inner;
   return '<div class="qa-ed" data-pc="' + key + '"' + (show ? '' : ' style="display:none"') + '>' + inner + '</div>';
 }
 function htmlRecForm(){
@@ -2885,11 +3278,8 @@ function recOpenExisting(rid, i){  // แตะ "มีอยู่แล้ว"
 function recOpen(){
   // แก้โดย CC — TASK_cc_fix_v42.md (3 ต.ค. 69): ฟอร์มเปิดค้างอยู่ (สลับแท็บไป) → ใช้ของเดิม ไม่งั้น paint จะดึงข้อความเก่าจาก DOM มาปนฟอร์มใหม่
   if (!S.recForm) S.recForm = recFormDefault();
-  S.tab = 2;  // ฟอร์มอยู่ที่เดียว (แท็บปฏิทิน) — กดจากการ์ดภาพรวมก็พามาที่นี่
-  paint();
-  var c = el('recCard');
-  if (c && c.scrollIntoView){ try { c.scrollIntoView({ block: 'start' }); } catch (_e) {} }
-  animPop('#recCard .incform');
+  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8 · P เคาะ "ลุย"): ฟอร์มย้ายไป "หน้าแยกเต็มจอ" — กดจากภาพรวม/ปฏิทิน = เด้งมาหน้านี้ทับหน้าเดิม ไม่กางในหน้าเดียวกับลิสต์อีก
+  openView({ t: 'recAdd' }, null);
   focusInput('recType');  // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): โฟกัสกล่องพิมพ์
 }
 function recSet(field, v){
@@ -2942,13 +3332,15 @@ function recSave(){
     S.data.recall = (S.data.recall || []).filter(function(r){ return recNorm(r.name) !== recNorm(name); });
     S.data.recall.unshift({ key: recNorm(name), name: name, brand: brandKey(name), cat: payload.category, amount_minor: v, day: day,
       dir: payload.direction, freq: payload.freq, month: payload.month, dow: weekly ? payload.dow : null, src: 'rec', hits: 0, isRec: true, rid: lkey });
+    if (REC_PAGE()) { S.view = null; S.prev = null; }  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): บันทึกเสร็จ → ปิดหน้าแยก กลับไปหน้าเดิม
     paint();
     toast('เพิ่มรายการประจำแล้ว ✓' + (payload.freq === 'yearly' && payload.month !== curM ? ' (จะขึ้นเดือน ' + TH_M[payload.month - 1] + ')' : ''));
     return;
   }
+  if (REC_PAGE()) { S.view = null; S.prev = null; }  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): ปิดหน้าแยกทันที
   paint();
   callAction('addRecurring', [payload], 'เพิ่มรายการประจำแล้ว ✓', function(){  // แก้โดย CC — TASK_cc_fix_v42.md (3 ต.ค. 69)
-    if (!S.recForm) { S.recForm = snap; S.tab = 2; paint(); }
+    if (!S.recForm) { S.recForm = snap; S.view = { t: 'recAdd' }; S.prev = null; paint(); }  // v4.2.8: บันทึกไม่สำเร็จ → เปิดหน้าแยกคืน (ฟอร์มเดิม)
   });
 }
 function recDel(key){
@@ -3079,6 +3471,7 @@ var DEMO = {
   ok:true,
   cats:[['food','🍽️','อาหาร'],['transport','🚕','เดินทาง'],['house','🏠','บ้าน'],['subscriptions','🔁','สมาชิก'],['fuel','⛽','น้ำมัน'],['topup','💳','เติมเงิน'],['income','💰','รายรับ'],['personal','🙋','ค่าใช้จ่ายส่วนตัว'],['entertainment','🎬','บันเทิง'],['shopping','🛍️','ช้อปปิ้ง'],['health','🏥','สุขภาพ'],['education','📚','การศึกษา'],['beauty','💇','ดูแลตัวเอง'],['travel','✈️','ท่องเที่ยว'],['gifts','🎁','ของขวัญ/ช่วยเหลือ'],['investment','📈','ลงทุน'],['sports','⚽','กีฬา']],
   main:['food','transport','house','subscriptions','fuel','topup','personal','entertainment'],
+  myCats:[], catImgs:{}, shortcuts:[],  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หมวดทำเอง + รายการลัด (เดโม่ = ในเครื่อง)
   pending:[
     {at:'2026-09-17T22:10:42',ref:'D1',kind:'qr_merchant',direction:'out',amount_minor:7500,counterparty:'ร้านกาแฟตัวอย่าง',status:'new',category:'',saved_at:'',display_name:'',suggested:'food',bill_expect:0,bill_returned:0,bill_status:''},
     {at:'2026-09-18T00:02:38',ref:'D2',kind:'qr_merchant',direction:'out',amount_minor:25000,counterparty:'ร้านสินค้าตัวอย่าง',status:'new',category:'',saved_at:'',display_name:'',suggested:'shopping',bill_expect:25000,bill_returned:10000,bill_status:'open'},
@@ -3551,6 +3944,37 @@ el('main').addEventListener('scroll', function(){
   });
   var ov = el('impov');
   if (ov) ov.addEventListener('click', function(e){ if (e.target === ov){ ov.classList.remove('on'); S.imp = null; } });
+})();
+/* แก้โดย Hermes 7 ต.ค. 69 (v4.2.8 · P เคาะ "ลุย"): รูปไอคอนหมวดทำเอง — อ่านในเครื่อง → ย่อ/ครอป 96px → dataURL (ไม่ขึ้นเซิร์ฟเวอร์จนกว่าจะกดบันทึกหมวด) */
+(function(){
+  var ci = el('catImgIn');
+  if (!ci) return;
+  ci.addEventListener('change', function(){
+    var file = ci.files && ci.files[0];
+    ci.value = '';
+    if (!file || !S.catForm) return;
+    try {
+      var rd = new FileReader();
+      rd.onload = function(){
+        var im = new Image();
+        im.onload = function(){
+          try {
+            var SZ = 96;
+            var cv = document.createElement('canvas'); cv.width = SZ; cv.height = SZ;
+            var ctx2 = cv.getContext('2d');
+            var s = Math.min(im.width, im.height);
+            ctx2.drawImage(im, (im.width - s) / 2, (im.height - s) / 2, s, s, 0, 0, SZ, SZ);
+            var out = cv.toDataURL('image/jpeg', 0.85);
+            if (out.length > 260000) { toast('รูปใหญ่เกินไป — ลองรูปเล็กลง', true); return; }
+            if (S.catForm){ S.catForm.iconImage = out; S.catForm.mode = 'image'; paint(); }
+          } catch (e2) { toast('ทำรูปไม่สำเร็จ — ลองรูปอื่น', true); }
+        };
+        im.onerror = function(){ toast('อ่านรูปไม่สำเร็จ — ลองรูปอื่น', true); };
+        im.src = rd.result;
+      };
+      rd.readAsDataURL(file);
+    } catch (e3) { toast('เลือกรูปไม่สำเร็จ', true); }
+  });
 })();
 /* v4.1: ไฟล์ PDF statement — อ่านดิบ → ถอดรหัสในเครื่อง (pdf.js) → ส่งขึ้นเฉพาะ "แถว" */
 (function(){

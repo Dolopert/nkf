@@ -666,9 +666,13 @@
       sb.from('budgets').select('*'),
       sb.from('recurring').select('*'),
       sb.from('recurring_ack').select('*'),
-      sb.from('pipeline_health').select('*')   // 6) heartbeat ท่อข้อมูล (Hermes 7 ต.ค. 69) — ล้มได้ ห้ามทำ getData พัง
+      sb.from('pipeline_health').select('*'),  // 6) heartbeat ท่อข้อมูล (Hermes 7 ต.ค. 69) — ล้มได้ ห้ามทำ getData พัง
+      sb.from('cats_custom').select('*').order('created_at', { ascending: true }),  // 7) หมวดทำเอง (Hermes 7 ต.ค. 69 · migration 0010) — ล้มได้ (ยังไม่ apply = ว่าง)
+      sb.from('shortcuts').select('*').order('created_at', { ascending: true })      // 8) รายการลัด (Hermes 7 ต.ค. 69 · migration 0010) — ล้มได้
     ]).then(function (results) {
-      for (var i = 0; i < 5; i++) if (results[i].error) throw results[i].error;  // 5 ตัวแรกห้ามพัง · pipeline_health ปล่อยผ่านได้
+      for (var i = 0; i < 5; i++) if (results[i].error) throw results[i].error;  // 5 ตัวแรกห้ามพัง · 6–8 ปล่อยผ่านได้
+      var myCatRows = (results[6] && !results[6].error) ? (results[6].data || []) : [];
+      var shortcutRows = (results[7] && !results[7].error) ? (results[7].data || []) : [];
       var txRows = results[0].data || [];
       var merchantRows = results[1].data || [];
       var budgetRows = results[2].data || [];
@@ -823,9 +827,31 @@
         lastAt: hbMs.length ? toThaiLocal(new Date(Math.min.apply(null, hbMs)).toISOString()) : ''
       };
 
+      // แก้โดย Hermes 7 ต.ค. 69: หมวดทำเอง + รายการลัด — ต่อท้ายชุดบอท (slug 'u…') พร้อมแผนที่รูปไอคอน (dataURL)
+      var catsMerged = WEB_CATS.slice(0);
+      var catImgs = {};
+      var myCats = [];
+      for (var ci = 0; ci < myCatRows.length; ci++) {
+        var crow = myCatRows[ci];
+        var cslug = strv(crow.slug); if (!cslug) continue;
+        var cimg = strv(crow.icon_image);
+        var cem = strv(crow.emoji) || '🖼';
+        catsMerged.push([cslug, cem, strv(crow.label)]);
+        if (cimg) catImgs[cslug] = cimg;
+        myCats.push({ slug: cslug, e: cem, t: strv(crow.label), img: cimg });
+      }
+      var shortcutList = shortcutRows.map(function (s) {
+        return { id: numv(s.id), label: strv(s.label), amount_minor: numv(s.amount_minor), category: strv(s.category),
+          direction: strv(s.direction) === 'in' ? 'in' : 'out', freq: strv(s.freq), day: (s.day === null || s.day === undefined) ? null : numv(s.day),
+          dow: (s.dow === null || s.dow === undefined) ? null : numv(s.dow), month_of_year: (s.month_of_year === null || s.month_of_year === undefined) ? null : numv(s.month_of_year) };
+      }).sort(function (a, b) { return (b.id || 0) - (a.id || 0); });
+
       return {
         ok: true,
-        cats: WEB_CATS,
+        cats: catsMerged,
+        catImgs: catImgs,
+        myCats: myCats,
+        shortcuts: shortcutList,
         main: WEB_MAIN,
         pending: pending,
         history: history.slice(0, 400),  // แก้โดย Hermes 4 ต.ค. 69: เพิ่มจาก 80 — แท็บประวัติแยกเดือน+แก้ได้ ต้องเห็นย้อนหลังครบ (ตอนนี้ 165 แถว/2 เดือน) · กันเพดานไว้ 400
@@ -861,6 +887,14 @@
     for (var i = 0; i < WEB_CATS.length; i++) if (WEB_CATS[i][0] === cat) return true;
     return false;
   }
+  // แก้โดย Hermes 7 ต.ค. 69: หมวดทำเอง (cats_custom) ก็นับว่าใช้ได้ — คืน Promise<boolean> · ชุดบอทตอบเร็วเหมือนเดิม
+  function validCategoryAsync(cat) {
+    if (validCategory(cat)) return Promise.resolve(true);
+    var c = strv(cat); if (!c) return Promise.resolve(false);
+    return sb.from('cats_custom').select('slug').eq('slug', c).limit(1).then(function (r) {
+      return !r.error && !!(r.data && r.data.length);
+    }, function () { return false; });
+  }
   function getTxByRef(ref) {
     return sb.from('transactions').select('id,ref,counterparty,kind').eq('ref', ref).limit(1).then(function (r) {
       if (r.error) throw r.error;
@@ -869,19 +903,22 @@
   }
 
   function saveCategory(ref, category) {
-    if (!validCategory(category)) return Promise.resolve({ ok: false, msg: 'หมวดไม่ถูกต้อง' });
-    if (!ref) return Promise.resolve({ ok: false, msg: 'ไม่พบรายการ' });
-    return getTxByRef(ref).then(function (tx) {
-      if (!tx) return { ok: false, msg: 'ไม่พบรายการนี้ในตาราง' };
-      return sb.from('transactions').update({ status: 'confirmed', category: category, confirmed_at: nowIso() }).eq('ref', ref)
-        .then(function (r) {
-          if (r.error) throw r.error;
-          var key = merchantKeyFor(tx.counterparty, tx.kind);
-          if (key && key !== 'card:unknown') {
-            return upsertMerchant(key, { category: category, bumpHits: true }).then(function () { return { ok: true }; });
-          }
-          return { ok: true };
-        });
+    // แก้โดย Hermes 7 ต.ค. 69: บันทึกด้วยหมวดทำเอง (cats_custom) ได้ — เช็คหมวดแบบ async ก่อน
+    return validCategoryAsync(category).then(function (okCat) {
+      if (!okCat) return { ok: false, msg: 'หมวดไม่ถูกต้อง' };
+      if (!ref) return { ok: false, msg: 'ไม่พบรายการ' };
+      return getTxByRef(ref).then(function (tx) {
+        if (!tx) return { ok: false, msg: 'ไม่พบรายการนี้ในตาราง' };
+        return sb.from('transactions').update({ status: 'confirmed', category: category, confirmed_at: nowIso() }).eq('ref', ref)
+          .then(function (r) {
+            if (r.error) throw r.error;
+            var key = merchantKeyFor(tx.counterparty, tx.kind);
+            if (key && key !== 'card:unknown') {
+              return upsertMerchant(key, { category: category, bumpHits: true }).then(function () { return { ok: true }; });
+            }
+            return { ok: true };
+          });
+      });
     }).catch(function (e) { return { ok: false, msg: errText(e) }; });
   }
 
@@ -1056,18 +1093,22 @@
       if (blank(p.month) || !isIntIn(month, 1, 12)) return Promise.resolve({ ok: false, msg: 'รายการรายปีต้องเลือกเดือน' });
     }
     var category = strv(p.category).trim();
-    if (category && !validCategory(category)) return Promise.resolve({ ok: false, msg: 'หมวดไม่ถูกต้อง' });
-    var row = {
-      user_id: CURRENT_UID, name: name, amount_minor: amt, day_of_month: day, kind: null, active: true,
-      direction: direction, freq: freq, month_of_year: month, category: category || null
-    };
-    if (freq === 'weekly') { row.day_of_month = null; row.day_of_week = dow; }  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): monthly/yearly payload เดิมเป๊ะ
-    return sb.from('recurring').insert(row).select('id').then(function (r) {
-      if (r.error) throw r.error;
-      var d = r.data;
-      var id = (d && d[0] && d[0].id !== undefined) ? d[0].id : null;
-      rememberRecurringName(name, category);  // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69)
-      return { ok: true, id: id };
+    // แก้โดย Hermes 7 ต.ค. 69: หมวดทำเอง (cats_custom) ก็ใช้ได้ — เช็ค async แล้วค่อยสร้างแถว
+    var catOk = category ? validCategoryAsync(category) : Promise.resolve(true);
+    return catOk.then(function (okCat) {
+      if (!okCat) return { ok: false, msg: 'หมวดไม่ถูกต้อง' };
+      var row = {
+        user_id: CURRENT_UID, name: name, amount_minor: amt, day_of_month: day, kind: null, active: true,
+        direction: direction, freq: freq, month_of_year: month, category: category || null
+      };
+      if (freq === 'weekly') { row.day_of_month = null; row.day_of_week = dow; }  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): monthly/yearly payload เดิมเป๊ะ
+      return sb.from('recurring').insert(row).select('id').then(function (r) {
+        if (r.error) throw r.error;
+        var d = r.data;
+        var id = (d && d[0] && d[0].id !== undefined) ? d[0].id : null;
+        rememberRecurringName(name, category);  // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69)
+        return { ok: true, id: id };
+      });
     }).catch(function (e) { return { ok: false, msg: errText(e) }; });
   }
   // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): "จำชื่อใหม่" — หลังเพิ่มรายการประจำสำเร็จ upsert ชื่อเข้า merchants memory
@@ -1108,6 +1149,126 @@
     computeBudgets: computeBudgets  // แก้โดย CC — TASK_cc_fix_v42x.md (3 ต.ค. 69): ให้เทสต์ยอดงบรายวันด้วยวันอ้างอิงตายตัว
   };
 
+  // ---------- แก้โดย Hermes 7 ต.ค. 69 (เธรด 🛒fullauto "ลุย"): หมวดทำเอง + รายการลัด ----------
+  function newCatSlug_() {
+    return 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  }
+  function catFields_(p) {
+    var label = strv(p.label).replace(/\s+/g, ' ').trim();
+    if (!label || label.length > 40) return { err: 'ใส่ชื่อหมวด (ไม่เกิน 40 ตัวอักษร)' };
+    var emoji = strv(p.emoji).trim();
+    if (emoji.length > 8) emoji = emoji.slice(0, 8);
+    var img = strv(p.iconImage);
+    if (img && !/^data:image\//.test(img)) return { err: 'รูปไม่ถูกต้อง (ต้องเป็นไฟล์ภาพ)' };
+    if (img.length > 260000) return { err: 'รูปใหญ่เกินไป — เลือกรูปเล็กลง' };
+    return { label: label, emoji: emoji, img: img };
+  }
+  function addCat(payload) {
+    if (!CURRENT_UID) return Promise.resolve({ ok: false, msg: 'ยังไม่ได้ล็อกอิน — เข้าสู่ระบบก่อน' });
+    var cf = catFields_(payload || {});
+    if (cf.err) return Promise.resolve({ ok: false, msg: cf.err });
+    var slug = newCatSlug_();
+    return sb.from('cats_custom').insert({ user_id: CURRENT_UID, slug: slug, emoji: cf.emoji, label: cf.label, icon_image: cf.img })
+      .then(function (r) {
+        if (r.error) throw r.error;
+        return { ok: true, slug: slug };
+      }).catch(function (e) { return { ok: false, msg: errText(e) }; });
+  }
+  function updateCat(slug, patch) {
+    if (!CURRENT_UID) return Promise.resolve({ ok: false, msg: 'ยังไม่ได้ล็อกอิน — เข้าสู่ระบบก่อน' });
+    var s = strv(slug);
+    if (!s) return Promise.resolve({ ok: false, msg: 'ไม่พบหมวด' });
+    var cf = catFields_(patch || {});
+    if (cf.err) return Promise.resolve({ ok: false, msg: cf.err });
+    return sb.from('cats_custom').update({ emoji: cf.emoji, label: cf.label, icon_image: cf.img }).eq('slug', s).select('id')
+      .then(function (r) {
+        if (r.error) throw r.error;
+        if (!r.data || !r.data.length) return { ok: false, msg: 'ไม่พบหมวดนี้ (อาจถูกลบไปแล้ว)' };
+        return { ok: true };
+      }).catch(function (e) { return { ok: false, msg: errText(e) }; });
+  }
+  function delCat(slug) {
+    if (!CURRENT_UID) return Promise.resolve({ ok: false, msg: 'ยังไม่ได้ล็อกอิน — เข้าสู่ระบบก่อน' });
+    var s = strv(slug);
+    if (!s) return Promise.resolve({ ok: false, msg: 'ไม่พบหมวด' });
+    // กันลบหมวดที่ยังถูกใช้ — นับจากทุกที่ที่อ้าง category (รายการ · รายการประจำ · ร้าน · งบ)
+    return Promise.all([
+      sb.from('transactions').select('id').eq('category', s),
+      sb.from('recurring').select('id').eq('category', s),
+      sb.from('merchants').select('id').eq('category', s),
+      sb.from('budgets').select('id,cats')
+    ]).then(function (rs) {
+      var used = 0;
+      for (var i = 0; i < 3; i++) { if (rs[i].error) throw rs[i].error; used += (rs[i].data || []).length; }
+      var bd = (rs[3] && !rs[3].error) ? (rs[3].data || []) : [];
+      for (var j = 0; j < bd.length; j++) { if ((bd[j].cats || []).indexOf(s) >= 0) used++; }
+      if (used > 0) return { ok: false, used: used, msg: 'หมวดนี้ถูกใช้อยู่ ' + used + ' รายการ — ย้ายรายการออกก่อนลบ' };
+      return sb.from('cats_custom').delete().eq('slug', s).select('id').then(function (r) {
+        if (r.error) throw r.error;
+        if (!r.data || !r.data.length) return { ok: false, msg: 'ไม่พบหมวดนี้ (อาจถูกลบไปแล้ว)' };
+        return { ok: true };
+      });
+    }).catch(function (e) { return { ok: false, msg: errText(e) }; });
+  }
+  function shortFields_(p) {
+    var label = strv(p.label).replace(/\s+/g, ' ').trim();
+    if (!label || label.length > 60) return { err: 'ใส่ชื่อลัด (ไม่เกิน 60 ตัวอักษร)' };
+    var amt = Math.round(numv(p.amount_minor));
+    if (!(amt >= 0)) amt = 0;
+    var dir = strv(p.direction) === 'in' ? 'in' : 'out';
+    var freq = strv(p.freq);
+    if (freq !== 'monthly' && freq !== 'weekly' && freq !== 'yearly') freq = '';
+    var day = null, dow = null, month = null;
+    if (p.day !== null && p.day !== undefined && String(p.day).trim() !== '' && isIntIn(Number(p.day), 1, 31)) day = Number(p.day);
+    if (p.dow !== null && p.dow !== undefined && String(p.dow).trim() !== '' && isIntIn(Number(p.dow), 0, 6)) dow = Number(p.dow);
+    if (p.month !== null && p.month !== undefined && String(p.month).trim() !== '' && isIntIn(Number(p.month), 1, 12)) month = Number(p.month);
+    if (freq !== 'weekly') dow = null;
+    if (freq !== 'yearly') month = null;
+    return { label: label, amt: amt, dir: dir, freq: freq, day: day, dow: dow, month: month, cat: strv(p.category).trim() };
+  }
+  function addShortcut(payload) {
+    if (!CURRENT_UID) return Promise.resolve({ ok: false, msg: 'ยังไม่ได้ล็อกอิน — เข้าสู่ระบบก่อน' });
+    var sf = shortFields_(payload || {});
+    if (sf.err) return Promise.resolve({ ok: false, msg: sf.err });
+    var ck = sf.cat ? validCategoryAsync(sf.cat) : Promise.resolve(true);
+    return ck.then(function (okCat) {
+      if (!okCat) return { ok: false, msg: 'หมวดไม่ถูกต้อง' };
+      return sb.from('shortcuts').insert({ user_id: CURRENT_UID, label: sf.label, amount_minor: sf.amt, category: sf.cat, direction: sf.dir, freq: sf.freq, day: sf.day, dow: sf.dow, month_of_year: sf.month })
+        .select('id').then(function (r) {
+          if (r.error) throw r.error;
+          var d = r.data;
+          return { ok: true, id: (d && d[0] && d[0].id !== undefined) ? d[0].id : null };
+        });
+    }).catch(function (e) { return { ok: false, msg: errText(e) }; });
+  }
+  function updateShortcut(id, payload) {
+    if (!CURRENT_UID) return Promise.resolve({ ok: false, msg: 'ยังไม่ได้ล็อกอิน — เข้าสู่ระบบก่อน' });
+    var sid = Number(id);
+    if (!isIntIn(sid, 1, Number.MAX_SAFE_INTEGER)) return Promise.resolve({ ok: false, msg: 'ไม่พบรายการลัด' });
+    var sf = shortFields_(payload || {});
+    if (sf.err) return Promise.resolve({ ok: false, msg: sf.err });
+    var ck = sf.cat ? validCategoryAsync(sf.cat) : Promise.resolve(true);
+    return ck.then(function (okCat) {
+      if (!okCat) return { ok: false, msg: 'หมวดไม่ถูกต้อง' };
+      return sb.from('shortcuts').update({ label: sf.label, amount_minor: sf.amt, category: sf.cat, direction: sf.dir, freq: sf.freq, day: sf.day, dow: sf.dow, month_of_year: sf.month }).eq('id', sid).select('id')
+        .then(function (r) {
+          if (r.error) throw r.error;
+          if (!r.data || !r.data.length) return { ok: false, msg: 'ไม่พบรายการลัดนี้' };
+          return { ok: true };
+        });
+    }).catch(function (e) { return { ok: false, msg: errText(e) }; });
+  }
+  function delShortcut(id) {
+    if (!CURRENT_UID) return Promise.resolve({ ok: false, msg: 'ยังไม่ได้ล็อกอิน — เข้าสู่ระบบก่อน' });
+    var sid = Number(id);
+    if (!isIntIn(sid, 1, Number.MAX_SAFE_INTEGER)) return Promise.resolve({ ok: false, msg: 'ไม่พบรายการลัด' });
+    return sb.from('shortcuts').delete().eq('id', sid).select('id').then(function (r) {
+      if (r.error) throw r.error;
+      if (!r.data || !r.data.length) return { ok: false, msg: 'ไม่พบรายการลัดนี้ (อาจถูกลบไปแล้ว)' };
+      return { ok: true };
+    }).catch(function (e) { return { ok: false, msg: errText(e) }; });
+  }
+
   var ACTIONS = {
     getData: getData,
     saveCategory: saveCategory,
@@ -1123,6 +1284,12 @@
     ackFixed: ackFixed,
     setBudget: setBudget,
     deleteBudget: deleteBudget,  // แก้โดย Hermes 4 ต.ค. 69: ลบงบรายหมวด (การ์ดปฏิทิน → กางแถว → 🗑)
+    addCat: addCat,            // แก้โดย Hermes 7 ต.ค. 69: หมวดทำเอง (ตั้งค่า › หมวดของฉัน + จากหน้าเพิ่มรายการ)
+    updateCat: updateCat,      // แก้โดย Hermes 7 ต.ค. 69
+    delCat: delCat,            // แก้โดย Hermes 7 ต.ค. 69 (กันลบถ้ายังถูกใช้)
+    addShortcut: addShortcut,  // แก้โดย Hermes 7 ต.ค. 69: รายการลัดของฉัน
+    updateShortcut: updateShortcut,  // แก้โดย Hermes 7 ต.ค. 69
+    delShortcut: delShortcut,  // แก้โดย Hermes 7 ต.ค. 69
     addRecurring: addRecurring,        // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69)
     removeRecurring: removeRecurring,  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69)
     importStatement: function (account, rows, meta) {
