@@ -190,6 +190,10 @@
   .brow .r{color:var(--amb2);flex:none;font-variant-numeric:tabular-nums;font-weight:600}
   .brow .ok{color:var(--grn3);font-weight:600}
   .incbtns{display:flex;gap:7px;margin-top:7px;flex-wrap:wrap}
+  /* แก้โดย Hermes 7 ต.ค. 69 (v4.2.8+ · P เคาะแบบ ก): "รายการของฉัน" = แถวเดียวเลื่อนแนวนอน */
+  .recscroll{display:flex;gap:7px;overflow-x:auto;padding:1px 2px 5px;-webkit-overflow-scrolling:touch;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 84%,transparent);mask-image:linear-gradient(90deg,#000 84%,transparent)}
+  .recscroll::-webkit-scrollbar{display:none}
+  .recscroll .miniact{flex:none}
   .incbtns .save{background:var(--cy);border:1px solid var(--cy);color:#062026;font-weight:700;border-radius:11px;padding:8px 14px;font-size:12px;font-family:inherit;cursor:pointer}
   .incbtns .cancel{background:transparent;border:1px solid var(--bd);color:var(--mut);border-radius:11px;padding:8px 12px;font-size:12px;font-family:inherit;cursor:pointer}
   .incform{margin-top:9px}
@@ -289,7 +293,8 @@
   .rt2 .rtr{display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-bottom:3px}
   .bdg{font-size:8.5px;font-weight:600;color:var(--grn);border:1px solid rgba(126,226,168,.45);border-radius:99px;padding:1px 7px;white-space:nowrap;flex:none}
   .bdg.new{color:var(--cy2);border-color:var(--cy-bd)}
-  .frowitem.preview{display:block;border:1px dashed var(--cy-bd);border-radius:12px;padding:10px 11px;background:var(--cy-bg);margin-top:8px;cursor:default}
+  /* แก้โดย Hermes 7 ต.ค. 69 (v4.2.8+ · P เคาะแบบ ก): การ์ดตัวอย่างเด่นขึ้น (เส้นทึบ + เงาบาง) */
+  .frowitem.preview{display:block;border:1.5px solid var(--cy-bd2);border-radius:12px;padding:10px 11px;background:var(--cy-bg);margin-top:8px;cursor:default;box-shadow:0 6px 18px rgba(101,220,255,.08)}
   .frowitem.preview .pvr{display:flex;align-items:center;gap:9px}
   .frowitem.preview [data-act]{cursor:pointer}
   .miniact.sug{border-color:var(--amb-bd2);background:var(--amb-bg2);color:var(--amb2)}
@@ -1447,7 +1452,7 @@ function openView(v, prev){
 /* ---------- หน้าเพิ่มรายการประจำ (แยกเต็มจอ) ---------- */
 function scChipsHtml(){
   var a = shortcutsArr();
-  var h = '<div class="flab">' + (a.length ? 'รายการลัด — แตะแล้วเติมให้ทั้งฟอร์ม' : 'ยังไม่มีรายการลัด — สร้างไว้กดเร็ว ๆ ได้') + '</div>'
+  var h = '<div class="flab">' + (a.length ? 'รายการลัด — แตะ = เติมให้ทั้งฟอร์ม · จัดการใน ตั้งค่า' : 'ยังไม่มีรายการลัด — สร้างไว้กดเร็ว ๆ ได้') + '</div>'
     + '<div class="incbtns" style="margin-top:0">';
   for (var i = 0; i < a.length; i++){
     var s = a[i];
@@ -1455,8 +1460,7 @@ function scChipsHtml(){
     var ic = cm && cm.img ? '<img class="cimg" src="' + esc(cm.img) + '" alt="">' : (cm && cm.e !== '❔' ? cm.e : '⚡');
     h += '<button class="miniact cy2" data-act="scFill" data-id="' + esc(s.id) + '">' + ic + ' ' + esc(s.label) + (s.amount_minor > 0 ? ' · ฿' + recAmtShort(s.amount_minor) : '') + '</button>';
   }
-  return h + '<button class="miniact dash" data-act="scNew">＋ สร้างลัดใหม่</button></div>'
-    + '<div class="hint" style="margin:7px 2px 0">แตะลัด = เติมให้ทั้งฟอร์ม (ยังต้องกด “เพิ่มรายการ”) · จัดการลัดใน ตั้งค่า › รายการลัดของฉัน</div>';
+  return h + '<button class="miniact dash" data-act="scNew">＋ สร้างลัดใหม่</button></div>';  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8+ · P เคาะแบบ ก): ตัด hint ซ้ำ — รวมใจความไว้ในป้ายแล้ว
 }
 function recPageHtml(){
   return '<div class="dt-top"><button class="dt-back" data-act="recCancel"><svg><use href="#i-back"/></svg></button><div class="ttl">เพิ่มรายการประจำ</div></div>'
@@ -2015,6 +2019,7 @@ document.addEventListener('click', function(e){
   if (act === 'recGuess') { recGuessPick(parseInt(t.getAttribute('data-i'), 10), t.getAttribute('data-v')); return; }
   if (act === 'recGuessAll') { recGuessAll(); return; }
   if (act === 'recCatOk') { recCatOk(); return; }
+  if (act === 'recCatExt') { recCatExt(); return; }  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8+ · P เคาะแบบ ก): ➕ อื่นๆ กาง/ย่อชิปหมวด
   if (act === 'recSelf') { focusInput('recType'); return; }
   if (act === 'recFill') { recFill(parseInt(t.getAttribute('data-i'), 10)); return; }
   if (act === 'recOpenEx') { recOpenExisting(t.getAttribute('data-key'), parseInt(t.getAttribute('data-i'), 10)); return; }
@@ -2681,7 +2686,7 @@ function recFormDefault(){
   // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): เพิ่ม state โหมดพิมพ์ (ฟิลด์เดิม name/amt/day/dir/cat/freq/month คงชื่อเดิม — recSave อ่านตัวเดิม)
   // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): + dow (รายสัปดาห์ 0=อา … 6=ส · null = ยังไม่เลือก)
   return { name:'', amt:'', day:'', dir:'out', cat:'', freq:'monthly', month: new Date().getMonth() + 1, dow: null,
-    type:'', guesses:[], warn:[], catGuess:'', catTouched:false, edit:'', recallOpen:false, brand:'' };
+    type:'', guesses:[], warn:[], catGuess:'', catTouched:false, edit:'', recallOpen:false, brand:'', catExt:false };  // catExt = กางชิปหมวด "➕ อื่นๆ" (P เคาะแบบ ก · 7 ต.ค. 69)
 }
 function recSyncInputs(){  // เก็บค่าที่พิมพ์ไว้ก่อน paint ใหม่ (กดชิปแล้วข้อความไม่หาย)
   var f = S.recForm; if (!f) return;
@@ -3030,17 +3035,45 @@ function recHtmlFreqChips(f){
 function recHtmlDirChips(f){
   return '<div class="incbtns" style="margin-top:0">' + recChip(f, 'dir', 'out', 'จ่าย') + recChip(f, 'dir', 'in', 'รับ') + '</div>';
 }
+function recHtmlRecall(f){  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8+ · P เคาะแบบ ก): "รายการของฉัน" — ย้ายมาใต้กล่องพิมพ์ + แถวเดียวเลื่อนแนวนอน
+  var rc = recRecall(), picks = [];
+  for (var i = 0; i < rc.length && picks.length < 5; i++) if (rc[i] && rc[i].name && rc[i].amount_minor > 0) picks.push(i);
+  if (!picks.length) return '';
+  return '<div class="flab" style="margin:10px 2px 5px">รายการของฉัน — แตะ = เติมทั้งประโยค</div>'
+    + '<div class="recscroll">'
+    + picks.map(function(ix){
+        var it = rc[ix], nm = String(it.name);
+        if (nm.length > 18) nm = nm.slice(0, 17) + '…';
+        return '<button class="miniact cy2" data-act="recFill" data-i="' + ix + '">' + recSugIcon(it, 'lgi') + esc(nm) + ' · ' + recAmtShort(it.amount_minor) + '</button>';
+      }).join('') + '</div>';
+}
 function recHtmlCatChips(f){
   var cats = (S.data && S.data.cats) || [];
+  var mains = (S.data && S.data.main) || [];
+  if (!mains.length) mains = cats.filter(function(c){ return c[0] !== 'income'; }).slice(0, 8).map(function(c){ return c[0]; });
   var star = f.catGuess && !f.catTouched && f.cat === f.catGuess;
-  return '<div class="hint" style="margin:6px 1px 3px">หมวด (ไม่บังคับ · แตะซ้ำเพื่อยกเลิก'+(star ? ' · ⭐ = ระบบเดาให้' : '')+')</div>'
-    + '<div class="incbtns" style="margin-top:0">'
-    + cats.filter(function(c){ return c[0] !== 'income' || f.dir === 'in'; }).map(function(c){
-        var g = star && c[0] === f.catGuess;
-        var cimg = catImgOf(c[0]);  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หมวดทำเองแบบรูป
-        if (cimg) return '<button class="miniact' + (String(f.cat) === String(c[0]) ? ' cy2' : '') + (g ? ' sug' : '') + '" data-act="recSet" data-f="cat" data-v="' + esc(c[0]) + '"><img class="cimg" src="' + esc(cimg) + '" alt="">' + esc(c[2]) + (g ? ' ⭐' : '') + '</button>';
-        return recChip(f, 'cat', c[0], c[1] + ' ' + esc(c[2]) + (g ? ' ⭐' : ''), g ? ' sug' : '');
-      }).join('')
+  function cell(c){  // 1 ชิปหมวด (ปกติ/รูปเอง · cy2 = เลือกอยู่ · sug = เดาให้)
+    var g = star && c[0] === f.catGuess;
+    var cimg = catImgOf(c[0]);  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หมวดทำเองแบบรูป
+    if (cimg) return '<button class="miniact' + (String(f.cat) === String(c[0]) ? ' cy2' : '') + (g ? ' sug' : '') + '" data-act="recSet" data-f="cat" data-v="' + esc(c[0]) + '"><img class="cimg" src="' + esc(cimg) + '" alt="">' + esc(c[2]) + (g ? ' ⭐' : '') + '</button>';
+    return recChip(f, 'cat', c[0], c[1] + ' ' + esc(c[2]) + (g ? ' ⭐' : ''), g ? ' sug' : '');
+  }
+  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8+ · P เคาะแบบ ก "สลิม"): ย่อชิปหมวด — โชว์ 8 หลัก + หมวดทำเอง + ที่เลือกอยู่ · ที่เหลือซ่อนหลัง "➕ อื่นๆ" (แตะกาง/ย่อ)
+  var pool = cats.filter(function(c){ return c[0] !== 'income' || f.dir === 'in'; });
+  var isMain = {}, isCustom = {};
+  mains.forEach(function(s){ isMain[s] = 1; });
+  myCatsArr().forEach(function(c){ isCustom[c.slug] = 1; });
+  var keep = pool, tail = '';
+  if (!f.catExt){
+    var hidden = 0;
+    keep = pool.filter(function(c){ var on = isMain[c[0]] || isCustom[c[0]] || c[0] === f.cat || (f.dir === 'in' && c[0] === 'income'); if (!on) hidden++; return on; });
+    tail = hidden ? '<button class="miniact" data-act="recCatExt">➕ อื่นๆ</button>' : '';
+  } else {
+    tail = '<button class="miniact" data-act="recCatExt">− ย่อ</button>';
+  }
+  var lbl = REC_PAGE() ? '' : '<div class="hint" style="margin:6px 1px 3px">หมวด (ไม่บังคับ · แตะซ้ำเพื่อยกเลิก'+(star ? ' · ⭐ = ระบบเดาให้' : '')+')</div>';
+  return lbl
+    + '<div class="incbtns" style="margin-top:0">' + keep.map(cell).join('') + tail
     + (REC_PAGE() ? '<button class="miniact dash" data-act="catNew" data-from="rec">＋ สร้างหมวดใหม่</button>' : '') + '</div>';  // v4.2.8: ทางไปหน้าสร้างหมวด (เฉพาะหน้าแยก)
 }
 function recSugIcon(it, cls){  // โลโก้แบรนด์ → emoji หมวด → • (กติกาเดียวกับ recIconHtml)
@@ -3095,7 +3128,8 @@ function recHtmlA(f){  // โซน ⚠ · suggest · การ์ดพรี�
     }).join('') + (anyRec ? '<div class="hint" style="margin:5px 1px 0">แตะ "มีอยู่แล้ว" = เปิดรายการเดิม (ไม่เพิ่มซ้ำ) · แตะ "รายการใหม่" = เติมให้ทั้งประโยค</div>' : '') + '</div>';
   }
   var pv = recHtmlPreview(f);
-  if (pv) h += pv + '<div class="hint" style="margin:7px 2px 0">แบบตัวอย่าง: การ์ดจะขึ้นในลิสต์แบบนี้ — แตะจุดไหน = แก้ช่องนั้น</div>';
+  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8+ · P เคาะแบบ ก): ป้าย "ตัวอย่างรายการที่จะเพิ่ม" + ตัด hint ซ้ำ
+  if (pv) h += '<div class="flab" style="margin:10px 2px 5px;color:var(--cy2)">ตัวอย่างรายการที่จะเพิ่ม</div>' + pv + '<div class="hint" style="margin:7px 2px 0">แตะจุดไหน = แก้ช่องนั้น</div>';
   if (!REC_PAGE() && (typed || String(f.name || '').trim())){  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): ในหน้าแยก ช่องเปิดอยู่แล้ว — ไม่ต้องมีชิป ✎
     h += '<div class="incbtns" style="margin-top:8px">'
       + [['name', '✎ แก้ชื่อ'], ['amt', '✎ แก้ยอด'], ['freq', '✎ แก้ความถี่/วัน'], ['dir', '✎ แก้จ่าย/รับ']].map(function(b){
@@ -3119,17 +3153,7 @@ function recHtmlB(f){  // โซน เดาให้ตรวจ (เหลื
       + (catG ? '<button class="miniact sug" data-act="recCatOk">หมวด · ' + cm.e + ' ' + esc(cm.t) + ' ✓</button><button class="miniact" data-act="recEdit" data-open="1" data-v="cat">เปลี่ยนหมวด ▸</button>' : '')
       + '</div><div class="incbtns" style="margin-top:6px"><button class="miniact sug" data-act="recGuessAll">✓ ใช้ตามนี้</button><button class="miniact" data-act="recSelf">✏️ แก้เอง</button></div></div>';
   }
-  var rc = recRecall(), picks = [];
-  for (var i = 0; i < rc.length && picks.length < 5; i++) if (rc[i] && rc[i].name && rc[i].amount_minor > 0) picks.push(i);
-  if (picks.length){
-    h += '<div class="hint" style="margin:9px 2px 3px">รายการของฉัน — แตะ = เติมทั้งประโยค:</div><div class="incbtns" style="margin-top:0">'
-      + picks.map(function(ix){
-          var it = rc[ix], nm = String(it.name);
-          if (nm.length > 18) nm = nm.slice(0, 17) + '…';
-          return '<button class="miniact cy2" data-act="recFill" data-i="' + ix + '">' + recSugIcon(it, 'lgi') + esc(nm) + ' · ' + recAmtShort(it.amount_minor) + '</button>';
-        }).join('') + '</div>'
-      + '<div class="hint" style="margin:7px 2px 0">ชื่อใหม่ (ครั้งแรก) พิมพ์ใส่ได้เลย — ระบบจับแบรนด์/ติดโลโก้ให้เอง ครั้งถัดไปขึ้น suggest</div>';
-  }
+  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8+ · P เคาะแบบ ก): ย้าย "รายการของฉัน" ขึ้นโซนใต้กล่องพิมพ์ (recZR) แล้ว — ที่นี่เหลือโซนกดบันทึก
   if (!REC_PAGE()) h += '<div class="incbtns"><button class="miniact" data-act="recEdit" data-v="more">'  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หน้าแยกโชว์ครบ — ซ่อนปุ่มกาง
     + (f.edit === 'more' ? '− ซ่อนตัวเลือกเพิ่มเติม' : '＋ ตัวเลือกเพิ่มเติม <span style="color:var(--dim)">· กดชิปเองก็ได้</span>') + '</button></div>';
   var iss = recIssues(f);
@@ -3149,7 +3173,8 @@ function htmlRecForm(){
   // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): ฟอร์ม v2 — กล่องพิมพ์เดียว + โซนเติมสด · ช่อง/ชิปคลาสสิกเดิมยังอยู่ครบ (ซ่อนจนกว่าจะแตะแก้)
   return '<div class="incform" style="margin:2px 0 10px;padding-bottom:10px;border-bottom:1px dashed var(--bd2)">'
     + '<input id="recType" class="qa-type" type="text" maxlength="100" autocomplete="off" enterkeyhint="done" placeholder="พิมพ์สั้น ๆ เช่น · ค่าเทอม 25,000 ทุกปี 25 ต.ค." value="' + esc(f.type) + '">'
-    + '<div class="hint" style="margin:6px 2px 2px">พิมพ์แล้วช่องจะถูกเติมให้เองทันที — เช็คครบแล้วค่อยกด “เพิ่มรายการ”</div>'
+    + '<div class="hint" style="margin:6px 2px 2px">พิมพ์แล้วช่องจะถูกเติมให้เอง — เช็คให้ครบแล้วกด “เพิ่มรายการ”</div>'
+    + '<div id="recZR">' + recHtmlRecall(f) + '</div>'  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8+ · P เคาะแบบ ก): รายการของฉันขึ้นมาใต้กล่องพิมพ์
     + '<div id="recZA">' + recHtmlA(f) + '</div>'
     + recPiece(f, 'name', '<input id="recName" type="text" maxlength="60" placeholder="ชื่อรายการ เช่น ชำระทุนประกัน / ชำระค่าเทอม" value="' + esc(f.name) + '">')
     + recPiece(f, 'amt', '<input id="recAmt" type="text" inputmode="decimal" placeholder="ยอด ฿" value="' + esc(f.amt) + '">')
@@ -3171,7 +3196,7 @@ function recPushInputs(f, force){  // ค่าในฟอร์ม → ช่�
 }
 function recRefresh(){
   var f = S.recForm; if (!f) return;
-  var z = [['recZA', recHtmlA], ['recZB', recHtmlB], ['recZF', recHtmlFreqChips], ['recZD', recHtmlDirChips], ['recZK', recHtmlCatChips]];
+  var z = [['recZR', recHtmlRecall], ['recZA', recHtmlA], ['recZB', recHtmlB], ['recZF', recHtmlFreqChips], ['recZD', recHtmlDirChips], ['recZK', recHtmlCatChips]];
   for (var i = 0; i < z.length; i++){ var n = el(z[i][0]); if (n) n.innerHTML = z[i][1](f); }
   var dw = el('recDayW'); if (dw) dw.style.display = f.freq === 'weekly' ? 'none' : '';  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): พิมพ์จนเป็น weekly → ซ่อนช่องวันที่สด
   recPushInputs(f, false);
@@ -3246,6 +3271,12 @@ function recCatOk(){
   recFlush(); recSyncInputs();
   f.catTouched = true; f.catGuess = '';
   recRepaint();
+}
+function recCatExt(){  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8+ · P เคาะแบบ ก): "➕ อื่นๆ" — กาง/ย่อชุดหมวดรอง (วาดใหม่เฉพาะโซน ไม่แตะช่องพิมพ์)
+  var f = S.recForm; if (!f) return;
+  recFlush(); recSyncInputs();
+  f.catExt = !f.catExt;
+  recRefresh();
 }
 function recFill(i){  // แตะ suggest/ชิป "รายการของฉัน" → ประกอบประโยค แล้ว parse ทางเดียวกับพิมพ์จริง
   var f = S.recForm, it = recRecall()[i]; if (!f || !it) return;
