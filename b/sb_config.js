@@ -1,0 +1,1 @@
+window.NKF_SB = {"url": "https://sdxnvqrlqnyiycnxqyeo.supabase.co", "anon": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkeG52cXJscW55aXljbnhxeWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNTEwNDQsImV4cCI6MjEwNTYyNzA0NH0.zuLrXg4xMrrrbEB5VM_q_4c22nnLZV3iNgpsg-pEZbk"};
