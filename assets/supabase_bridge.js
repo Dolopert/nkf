@@ -6,6 +6,7 @@
  * แทนที่จะยิง JSONP ไป Apps Script — ท่อนำเข้า statement ย้ายมาโหมดใหม่แล้ว (P5: RPC ingest_statement)
  * · เหลือ notifyText/debugFallback ที่ยังเป็นโหมดเดิม (ใช้กับลิงก์ส่วนตัวเดิม)
  * markBill/addBillReturn/closeBill/unmarkBill ย้ายมาแล้ว (CC 9 ต.ค. 69 · TASK_cc_bill_return_app · ตาราง bill_marks/bill_returns — migration 0011)
+ * + splitMoneyIn "แยกเอง" (CC 9 ต.ค. 69 · TASK_cc_bill_return_app2 — แถวเงินเข้า 1 แถว → คืนหลายบิล + รายรับบางส่วน + ข้าม)
  *
  * โหลดหลัง assets/vendor/supabase-js.js และก่อน App.html inline <script> (build_static.py ฉีดลำดับนี้ให้)
  * ต้องมี window.NKF_SB = { url, anon } มาก่อน (มาจาก build_static.py อ่าน .env) — ไม่มี = ไม่ทำอะไรเลย (ตกไปโหมดเดโม่)
@@ -1031,6 +1032,8 @@
     if (/bill_return_exceeds/.test(m)) return 'รับคืนเกินยอดที่เหลือของบิล';
     if (/bill_not_open/.test(m)) return 'บิลนี้ไม่ได้เปิดอยู่ (คืนครบ/ปิดแล้ว)';
     if (/bill_not_found/.test(m)) return 'รายการนี้ยังไม่ได้ตีตรารอคืน';
+    if (/moneyin_split_exceeds/.test(m)) return 'เงินคืนรวมเกินยอดเงินเข้าแถวนี้';  // CC 9 ต.ค. 69 (TASK_cc_bill_return_app2): guard ชั้น DB ของ 0011
+    if (/moneyin_not_found/.test(m)) return 'ไม่พบแถวเงินเข้านี้';
     if (/foreign key/i.test(m)) return 'มีเงินคืนเข้าแล้ว — ยกเลิกตีตราไม่ได้ (ปิดบิลแทน)';
     return errText(e);
   }
@@ -1139,6 +1142,89 @@
       });
     }).catch(function (e) { return { ok: false, msg: billErr(e) }; });
   }
+
+  // แก้โดย CC 9 ต.ค. 69 (TASK_cc_bill_return_app2 ข้อ B): "แยกเอง" — แถวเงินเข้า 1 แถว (money_in_check) → คืนหลายบิล + รายรับบางส่วน + ข้าม
+  //   plan = { bills: [{ref, amount_minor}], income_minor, skip_minor, label }
+  //   กติกา: ทุกส่วนเป็นจำนวนเต็มสตางค์ ≥ 0 · Σ (บิล + รายรับ + ข้าม) = amount ของแถวเงินเข้าเสมอ · ส่วนบิล ≤ remaining (บิล open)
+  //   บันทึก: ส่วนบิล → bill_returns (source='moneyin', source_ref = ref แถวเงินเข้า · 1 แถวต่อบิล — unique (user, source_ref, bill_ref))
+  //           ส่วนรายรับ → transactions แถวใหม่ ref = <ref เงินเข้า>-IN (manual_in · income · confirmed — แนวเดียวกับ confirmIncome แต่ยอดเท่าที่จัดสรร)
+  //           ส่วนข้าม → ไม่บันทึก · สุดท้ายแถวเงินเข้า → skipped
+  //   ทำซ้ำได้ (เน็ตหลุดกลางทาง): ส่วนที่บันทึกแล้วยอดตรง = ข้าม ไม่บันทึกซ้ำ · ยอดไม่ตรง = ปฏิเสธ
+  var SPLIT_IN_SUFFIX = '-IN';
+  function splitMoneyIn(inRef, plan) {
+    inRef = strv(inRef);
+    plan = plan || {};
+    if (!inRef) return Promise.resolve({ ok: false, msg: 'ไม่พบรายการ' });
+    var label = strv(plan.label).replace(/\s+/g, ' ').trim().slice(0, 60);
+    var inc = Number(plan.income_minor || 0), skip = Number(plan.skip_minor || 0);
+    if (!isIntIn(inc, 0, BILL_MAX_MINOR) || !isIntIn(skip, 0, BILL_MAX_MINOR)) return Promise.resolve({ ok: false, msg: 'ยอดไม่ถูกต้อง' });
+    if (inc > 0 && !label) return Promise.resolve({ ok: false, msg: 'ใส่ชื่อรายการด้วย' });
+    var parts = {}, order = [];
+    var rawBills = Array.isArray(plan.bills) ? plan.bills : [];
+    for (var i = 0; i < rawBills.length; i++) {
+      var br = strv(rawBills[i] && rawBills[i].ref), bv = Number(rawBills[i] && rawBills[i].amount_minor);
+      if (!br || !isIntIn(bv, 1, BILL_MAX_MINOR)) return Promise.resolve({ ok: false, msg: 'ยอดคืนบิลต้องมากกว่า 0' });
+      if (!(br in parts)) { parts[br] = 0; order.push(br); }
+      parts[br] += bv;   // บิลเดียวกันซ้ำ = รวมเป็นก้อนเดียว (DB เก็บ 1 แถวต่อบิลต่อแถวเงินเข้า)
+    }
+    var billSum = order.reduce(function (a, r) { return a + parts[r]; }, 0);
+    return Promise.all([
+      sb.from('transactions').select('ref,kind,direction,amount_minor,at,status,account').eq('ref', inRef).limit(1),
+      sb.from('bill_returns').select('bill_ref,amount_minor').eq('source_ref', inRef),
+      sb.from('transactions').select('ref,amount_minor').eq('ref', inRef + SPLIT_IN_SUFFIX).limit(1)
+    ]).then(function (rs) {
+      for (var e = 0; e < 3; e++) if (rs[e].error) throw rs[e].error;
+      var src = (rs[0].data && rs[0].data[0]) || null;
+      if (!src) return { ok: false, msg: 'ไม่พบแถวเงินเข้านี้' };
+      if (strv(src.kind) !== 'money_in_check' || strv(src.direction) !== 'in') return { ok: false, msg: 'รายการนี้ไม่ใช่แถวตรวจเงินเข้า' };
+      var amount = numv(src.amount_minor);
+      if (billSum + inc + skip !== amount) {
+        return { ok: false, msg: 'ยอดแยกรวม ' + bahtTxt(billSum + inc + skip) + '฿ ต้องเท่ากับเงินเข้า ' + bahtTxt(amount) + '฿' };
+      }
+      var done = {};
+      (rs[1].data || []).forEach(function (x) { done[strv(x.bill_ref)] = numv(x.amount_minor); });
+      var incRow = (rs[2].data && rs[2].data[0]) || null;
+      for (var dk in done) {   // ส่วนที่เคยบันทึกไว้ (รอบก่อนหลุด) ต้องตรงกับแผนนี้
+        if (parts[dk] !== done[dk]) return { ok: false, msg: 'แถวเงินเข้านี้ถูกแยกไปแล้วด้วยยอดอื่น' };
+      }
+      if (incRow && numv(incRow.amount_minor) !== inc) return { ok: false, msg: 'แถวเงินเข้านี้ถูกแยกไปแล้วด้วยยอดอื่น' };
+      var resumed = Object.keys(done).length > 0 || !!incRow;
+      if (strv(src.status) !== 'new' && !resumed) return { ok: false, msg: 'แถวเงินเข้านี้ถูกจัดการไปแล้ว' };
+      var todo = order.filter(function (r) { return !(r in done); });
+      return Promise.all(todo.map(function (r) { return billState(r); })).then(function (sts) {
+        for (var j = 0; j < todo.length; j++) {
+          var st = sts[j], nm = st.bill ? shortTitle(st.bill.title) : '';
+          if (!st.bill) return { ok: false, msg: 'รายการนี้ยังไม่ได้ตีตรารอคืน' };
+          if (strv(st.bill.status) !== 'open') return { ok: false, msg: 'บิล ' + nm + ' ไม่ได้เปิดอยู่ (คืนครบ/ปิดแล้ว)' };
+          var rem = numv(st.bill.expect_minor) - st.returned;
+          if (parts[todo[j]] > rem) return { ok: false, msg: 'คืนบิล ' + nm + ' เกินยอดที่เหลือ (' + bahtTxt(Math.max(0, rem)) + '฿)' };
+        }
+        var rows = todo.map(function (r) {
+          return { user_id: CURRENT_UID, bill_ref: r, amount_minor: parts[r], at: src.at, source: 'moneyin', source_ref: inRef };
+        });
+        var p = rows.length ? sb.from('bill_returns').insert(rows).then(function (ins) { if (ins.error) throw ins.error; }) : Promise.resolve();
+        return p.then(function () {
+          // บิลที่คืนครบจากรอบนี้ → done
+          return Promise.all(todo.map(function (r, k) {
+            var st = sts[k];
+            if (st.returned + parts[r] < numv(st.bill.expect_minor)) return null;
+            return sb.from('bill_marks').update({ status: 'done', closed_at: nowIso() }).eq('ref', r).then(function (u) { if (u.error) throw u.error; });
+          }));
+        }).then(function () {
+          if (!(inc > 0) || incRow) return null;
+          return sb.from('transactions').insert({
+            user_id: CURRENT_UID, at: src.at, ref: inRef + SPLIT_IN_SUFFIX, kind: 'manual_in', direction: 'in',
+            amount_minor: inc, fee_minor: 0, account: strv(src.account) || 'Manual', counterparty: label, category: 'income',
+            source: 'manual', status: 'confirmed', confirmed_at: nowIso(), note: 'แยกจากเงินเข้า ' + bahtTxt(amount) + '฿'
+          }).then(function (r2) { if (r2.error) throw r2.error; });
+        }).then(function () { return resolveMoneyIn(inRef); })
+          .then(function () {
+            return { ok: true, amount_minor: amount, returned_minor: billSum, income_minor: inc, skip_minor: skip, bills: order.length };
+          });
+      });
+    }).catch(function (e) { return { ok: false, msg: billErr(e) }; });
+  }
+  function shortTitle(t) { t = strv(t); return t.length > 24 ? t.slice(0, 24) + '…' : t; }
 
   // ปิดบิล: open/done → closed (ที่ยังไม่คืนกลายเป็นรายจ่ายจริง: สุทธิ = amount − returned) · ปิดแล้วกดซ้ำ = ok
   function closeBill(ref) {
@@ -1488,6 +1574,7 @@
     addBillReturn: addBillReturn,  // แก้โดย CC 9 ต.ค. 69 (+ อาร์กิวเมนต์ที่ 3 = ref แถวเงินเข้า · ไม่ส่ง = กรอกเอง แบบเดิม)
     closeBill: closeBill,          // แก้โดย CC 9 ต.ค. 69
     unmarkBill: unmarkBill,        // แก้โดย CC 9 ต.ค. 69
+    splitMoneyIn: splitMoneyIn,    // แก้โดย CC 9 ต.ค. 69 (TASK_cc_bill_return_app2 ข้อ B): แยกเอง — เงินเข้า 1 แถว → คืนหลายบิล + รายรับ + ข้าม
     appendIncome: appendIncome,
     ackFixed: ackFixed,
     setBudget: setBudget,

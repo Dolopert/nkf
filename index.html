@@ -184,6 +184,11 @@
   .billbox.open{border-color:var(--amb-bd)}
   .billbox.done{border-color:var(--grn-bd);color:var(--grn3)}
   .billbox.flat{color:var(--dim)}
+  /* CC 9 ต.ค. 69 (TASK_cc_bill_return_app2 ข้อ B): แถวจัดสรร "แยกเอง" ในแผงเงินเข้า */
+  .msprow{display:flex;gap:8px;align-items:center;margin-top:7px}
+  .msprow .l{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mut)}
+  .msprow input{width:104px;flex:none;box-sizing:border-box;background:var(--card,var(--inset));border:1px solid var(--bd2);border-radius:10px;color:var(--tx);font-size:16px;padding:6px 9px;font-family:inherit;outline:none;text-align:right}
+  .msprow input:focus{border-color:var(--cy)}
   /* ---------- Hermes 8 ต.ค. 69 (วงเงินเข้า · P เคาะ 7 ต.ค. 69): แผงยืนยันเงินเข้าตรวจอัตโนมัติ (แบบม็อก moneyin-tidy) ---------- */
   .pm-box{margin-top:10px;padding:10px 12px;border:1px solid var(--bd2);border-radius:12px;background:var(--inset);font-size:11.5px;color:var(--mut);line-height:1.65}
   .pm-box b{color:var(--tx)}
@@ -560,7 +565,7 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.2.10-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · CC 9 ต.ค. 69: v4.2.10 = บิลรอคืนบน Supabase (TASK_cc_bill_return_app) · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
+var APP_BUILD = 'v4.2.11-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · CC 9 ต.ค. 69: v4.2.11 = บิลรอคืน รอบ 2 (ปุ่มบิลในหน้ารายการ + แยกเอง + ส่วนของเรา · TASK_cc_bill_return_app2) · v4.2.10 = บิลรอคืนบน Supabase (TASK_cc_bill_return_app) · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
 var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, budForm:null, budOpen:{}, view:null, imp:null, pMonth:null, recLumpOpen:false, catForm:null, shortForm:null };  // catForm/shortForm: Hermes 7 ต.ค. 69 — ฟอร์มหมวดทำเอง/รายการลัด (หน้าแยก v4.2.8)  // pMonth: แก้โดย Hermes 5 ต.ค. 69 — เดือนที่เลือกในแท็บรอยืนยัน (แยกเดือน) · recLumpOpen: Hermes 7 ต.ค. 69 (§16) — กาง "ก้อนรายจ่ายประจำ" ในงบรายหมวด
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
@@ -1334,13 +1339,15 @@ function billBlock(it){
       return '<div class="billbox"><div class="bt">💸 รอเงินคืนเท่าไร? (ไม่เกิน '+fmtBaht(it.amount_minor)+'฿)</div>'
         + '<div class="renbox"><input id="billAmt" type="text" inputmode="decimal" value="'+esc(pre)+'">'
         + '<button class="save" data-act="billSave" data-ref="'+esc(ref)+'">เปิดบิล</button>'
-        + '<button class="cancel" data-act="billCancel" data-ref="'+esc(ref)+'">ยกเลิก</button></div></div>';
+        + '<button class="cancel" data-act="billCancel" data-ref="'+esc(ref)+'">ยกเลิก</button></div>'
+        + '<div class="bt" id="billOwn" data-amt="'+it.amount_minor+'" style="margin-top:6px">'+billOwnTxt(it.amount_minor, parseBahtMinor(pre))+'</div></div>';
     }
     return '<div class="billbox"><button class="miniact" data-act="billNew" data-ref="'+esc(ref)+'">💸 จ่ายก่อน — รอเงินคืน</button></div>';
   }
   if (st === 'open'){
     var rem = Math.max(0, (it.bill_expect || 0) - (it.bill_returned || 0));
-    var head = '<div class="bt">💸 รอเงินคืน · ได้คืนแล้ว '+fmtBaht(it.bill_returned || 0)+' / '+fmtBaht(it.bill_expect || 0)+'฿ · <b>เหลือ '+fmtBaht(rem)+'฿</b></div>';
+    var head = '<div class="bt">💸 รอเงินคืน · ได้คืนแล้ว '+fmtBaht(it.bill_returned || 0)+' / '+fmtBaht(it.bill_expect || 0)+'฿ · <b>เหลือ '+fmtBaht(rem)+'฿</b></div>'
+      + billOwnLine(it);
     if (S.billRet[ref]){
       return '<div class="billbox open">'+head
         + '<div class="renbox"><input id="retAmt" type="text" inputmode="decimal" placeholder="ยอดที่ได้คืน (ไม่เกิน '+fmtBaht(rem)+')">'
@@ -1353,9 +1360,25 @@ function billBlock(it){
       + ((it.bill_returned || 0) === 0 ? '<button class="miniact" data-act="billUnmark" data-ref="'+esc(ref)+'">ลบเครื่องหมาย</button>' : '')
       + '</div></div>';
   }
-  if (st === 'done') return '<div class="billbox done">✓ รอเงินคืนครบแล้ว · ครบ '+fmtBaht(it.bill_expect || 0)+'฿</div>';
+  if (st === 'done') return '<div class="billbox done">✓ รอเงินคืนครบแล้ว · ครบ '+fmtBaht(it.bill_expect || 0)+'฿'+billOwnLine(it)+'</div>';
   return '<div class="billbox flat">💸 บิลปิดแล้ว — ส่วนที่เหลือเป็นรายจ่ายจริง</div>';
 }
+/* แก้โดย CC 9 ต.ค. 69 (TASK_cc_bill_return_app2 ข้อ C · P เน้น "ห้ามเป็นหลุม"): ส่วนของเรา = ยอดบิล − ยอดรอคืน — ไม่ใช่ยอดรอคืน ต้องเห็นทุกจุด
+   กล่องตั้งบิล = บรรทัดสด (อัปเดตตามที่พิมพ์ · ยอดเต็ม = hint นุ่ม ไม่บล็อก) · กล่องโหมดเปิด/ครบ = บรรทัดคงที่ */
+function billOwnTxt(amount, expect){
+  if (!(expect > 0)) return 'ส่วนของเรา = —';
+  if (expect > amount) return 'ยอดรอคืนต้องไม่เกินยอดจ่าย';
+  if (expect === amount) return 'ยอดเต็ม = จ่ายแทนล้วน (ไม่มีส่วนของเรา)';
+  return 'ส่วนของเรา = <b>'+fmtBaht(amount - expect)+'฿</b> (ไม่ต้องรอคืน)';
+}
+function billOwnLine(it){
+  return '<div class="bt">ส่วนของเรา <b>'+fmtBaht(Math.max(0, (it.amount_minor || 0) - (it.bill_expect || 0)))+'฿</b> (ไม่ต้องรอคืน)</div>';
+}
+document.addEventListener('input', function(e){
+  var t = e.target;
+  if (t && t.id === 'billAmt'){ var o = el('billOwn'); if (o) o.innerHTML = billOwnTxt(Number(o.getAttribute('data-amt')) || 0, parseBahtMinor(t.value)); return; }
+  if (t && t.getAttribute && t.getAttribute('data-msp')) mspInput(t);
+});
 /* ============ Hermes 8 ต.ค. 69 (วงเงินเข้า · P เคาะ 7 ต.ค. 69 · §18): แถว "ตรวจอัตโนมัติ" ในคิวรอยืนยัน ============
    ชื่อโชว์ "เงินเข้า" · กาง = แผงยืนยัน (3 บรรทัด + 2 ปุ่ม) ตามม็อก moneyin-tidy · "ใช่" = เป็นรายรับ · "ไม่ใช่" = ใช้ skip เดิม */
 function pendName(it){ return it.kind === 'money_in_check' ? 'เงินเข้า' : shortName(it); }
@@ -1382,10 +1405,12 @@ function moneyInBills(it){
 }
 function moneyInBillBlock(it){
   var bl = moneyInBills(it);
-  if (!bl.length) return '';
   var ref = it.ref;
+  if (S.miSplit && S.miSplit[ref] && mspBills().length) return mspBlock(it);   // CC 9 ต.ค. 69 (TASK_cc_bill_return_app2 ข้อ B): หน้าจัดสรร "แยกเอง"
+  var splitBtn = mspBills().length ? '<button class="miniact" data-act="mspNew" data-ref="'+esc(ref)+'">✏️ แยกเอง</button>' : '';
+  if (!bl.length) return splitBtn ? '<div class="incbtns" style="margin-top:8px">'+splitBtn+'</div>' : '';
   if (!(S.miBill && S.miBill[ref])){
-    return '<div class="incbtns" style="margin-top:8px"><button class="miniact" data-act="miBillNew" data-ref="'+esc(ref)+'">💸 เป็นเงินคืนจากบิล</button></div>';
+    return '<div class="incbtns" style="margin-top:8px"><button class="miniact" data-act="miBillNew" data-ref="'+esc(ref)+'">💸 เป็นเงินคืนจากบิล</button>'+splitBtn+'</div>';
   }
   return '<div class="billbox open"><div class="bt">💸 เงินคืนจากบิลไหน? · รับทั้งก้อน <b>'+fmtBaht(it.amount_minor)+'฿</b></div>'
     + '<div class="incbtns">'
@@ -1419,6 +1444,152 @@ function moneyInToBill(ref, billRef){
   toast('เงินคืน: ' + shortName({ counterparty: b.name }) + ' +' + fmtBaht(amt) + '฿' + (rem === 0 ? ' — ครบแล้ว ✓' : ' · เหลือ ' + fmtBaht(rem) + '฿'));
   if (IS_DEMO) return;
   callAction('addBillReturn', [billRef, amt, ref], '');
+}
+/* ============ แก้โดย CC 9 ต.ค. 69 (TASK_cc_bill_return_app2 ข้อ B · P เคาะ "ทำต่อเลย"): "แยกเอง" — เงินเข้าก้อนเดียว (เงินคืน + รายรับปนกัน)
+   → แบ่งเป็น คืนบิล A / คืนบิล B / ส่วนรายรับ / ข้าม · proposal เติมให้ก่อน (แก้ได้ · ไม่ auto-apply — P กดยืนยันเอง)
+   · คิดจาก remaining ของบิลเท่านั้น (ไม่ใช่ยอดบิลรวม) · บันทึกได้เมื่อ เหลือ = 0 และทุกส่วนถูกกฎ → ฝั่ง bridge = splitMoneyIn ============ */
+function mspBills(){
+  return ((S.data && S.data.bills) || []).filter(function(b){ return b.status === 'open' && (b.remaining_minor || 0) > 0; })
+    .slice().sort(function(a, b){ return a.at > b.at ? -1 : (a.at < b.at ? 1 : 0); }).slice(0, 6);   // บิลใหม่สุดก่อน
+}
+/* proposal: (i) ยอด ≤ remaining (บิลใหม่สุดที่รับได้) → ทั้งก้อนเข้าบิลนั้น · (ii) เกิน remaining → เลือกบิลที่ส่วนต่าง "สะอาด" (เต็มร้อย > เต็มบาท)
+   ไม่มีก็บิลใหม่สุด · ส่วนเกิน → รายรับ · (iii) ไม่มีบิล → รายรับทั้งหมด */
+function mspPropose(amount, bills){
+  var out = { bills: {}, inc: 0, skip: 0 };
+  if (!(amount > 0)) return out;
+  var bl = (bills || []).filter(function(b){ return (b.remaining_minor || 0) > 0; });
+  if (!bl.length){ out.inc = amount; return out; }
+  var best = null, bestTier = 9;
+  for (var i = 0; i < bl.length; i++){
+    var rem = bl[i].remaining_minor, diff = amount - rem;
+    var tier = diff <= 0 ? 0 : (diff % 10000 === 0 ? 1 : (diff % 100 === 0 ? 2 : 3));
+    if (tier < bestTier){ best = bl[i]; bestTier = tier; }
+  }
+  var put = Math.min(amount, best.remaining_minor);
+  out.bills[best.ref] = put;
+  out.inc = amount - put;
+  return out;
+}
+function mspTxt(minor){ return minor > 0 ? ((minor % 100 === 0) ? String(minor / 100) : (minor / 100).toFixed(2)) : ''; }
+function mspFill(ref, prop){
+  var f = {};
+  for (var k in prop.bills) f['b:' + k] = mspTxt(prop.bills[k]);
+  f.inc = mspTxt(prop.inc); f.skip = mspTxt(prop.skip);
+  if (!S.miSplit) S.miSplit = {};
+  S.miSplit[ref] = f;
+}
+function mspOpen(ref){
+  var it = findItem(ref); if (!it || it.kind !== 'money_in_check') return;
+  if (S.miBill) delete S.miBill[ref];
+  mspFill(ref, mspPropose(it.amount_minor, mspBills()));
+  paint();
+}
+function mspCalc(it){
+  var f = (S.miSplit && S.miSplit[it.ref]) || {};
+  var bl = mspBills(), sum = 0, err = '', parts = [];
+  function val(k){
+    var s = String(f[k] || '').trim();
+    if (!s) return 0;
+    var v = parseBahtMinor(s);
+    if (!(v > 0) && !err) err = 'ตัวเลขไม่ถูกต้อง';
+    return v;
+  }
+  bl.forEach(function(b){
+    var v = val('b:' + b.ref);
+    if (!(v > 0)) return;
+    if (v > b.remaining_minor && !err) err = 'เกินยอดที่เหลือของบิล ' + shortName({ counterparty: b.name }) + ' (' + fmtBaht(b.remaining_minor) + '฿)';
+    parts.push({ t: 'bill', ref: b.ref, name: b.name, v: v }); sum += v;
+  });
+  var inc = val('inc'), skip = val('skip');
+  if (inc > 0){ parts.push({ t: 'inc', v: inc }); sum += inc; }
+  if (skip > 0){ parts.push({ t: 'skip', v: skip }); sum += skip; }
+  var left = it.amount_minor - sum;
+  if (!err && left < 0) err = 'จัดสรรเกินยอดเงินเข้า ' + fmtBaht(-left) + '฿';
+  if (!err && left > 0) err = 'ยังเหลือต้องจัดสรร';
+  return { parts: parts, sum: sum, left: left, inc: inc, skip: skip, err: err, ok: !err };
+}
+function mspLeftHtml(c){
+  return 'เหลือ <b>' + (c.left < 0 ? '−' : '') + fmtBaht(Math.abs(c.left)) + '฿</b>' + (c.err ? ' · <span style="color:var(--red2)">' + esc(c.err) + '</span>' : ' · พร้อมบันทึก ✓');
+}
+function mspBlock(it){
+  var ref = it.ref, f = S.miSplit[ref], bl = mspBills(), c = mspCalc(it);
+  function row(k, label){
+    return '<div class="msprow"><span class="l">' + label + '</span>'
+      + '<input type="text" inputmode="decimal" placeholder="0" data-msp="' + esc(k) + '" data-ref="' + esc(ref) + '" value="' + esc(f[k] || '') + '"></div>';
+  }
+  return '<div class="billbox open msp"><div class="bt">✏️ แยกเงินเข้า <b>' + fmtBaht(it.amount_minor) + '฿</b> · เสนอให้แล้ว แก้ได้ ไม่บันทึกจนกดยืนยัน</div>'
+    + '<div class="incbtns"><button class="miniact cy2" data-act="mspAllInc" data-ref="' + esc(ref) + '">ทั้งหมดเป็นรายรับ</button>'
+    + bl.map(function(b){
+        return '<button class="miniact cy2" data-act="mspFull" data-ref="' + esc(ref) + '" data-bill="' + esc(b.ref) + '">คืนเต็มบิล ' + esc(shortName({ counterparty: b.name })) + '</button>';
+      }).join('') + '</div>'
+    + bl.map(function(b){ return row('b:' + b.ref, '💸 ' + esc(shortName({ counterparty: b.name })) + ' · เหลือ ' + fmtBaht(b.remaining_minor) + '฿'); }).join('')
+    + row('inc', '💰 รายรับ (ชื่อตามช่องด้านบน)')
+    + row('skip', '⏭ ข้าม (ไม่บันทึก)')
+    + '<div class="bt" style="margin-top:7px" data-msp-left="' + esc(ref) + '">' + mspLeftHtml(c) + '</div>'
+    + '<div class="incbtns"><button class="save' + (c.ok ? '' : ' off') + '" data-act="mspSave" data-ref="' + esc(ref) + '">✓ บันทึกการแยก</button>'
+    + '<button class="cancel" data-act="mspCancel" data-ref="' + esc(ref) + '">ยกเลิก</button></div></div>';
+}
+function mspInput(t){
+  var ref = t.getAttribute('data-ref'), k = t.getAttribute('data-msp');
+  if (!ref || !S.miSplit || !S.miSplit[ref]) return;
+  S.miSplit[ref][k] = t.value;
+  var it = findItem(ref); if (!it) return;
+  var c = mspCalc(it);
+  var lf = document.querySelector('[data-msp-left="' + ref + '"]');
+  if (lf) lf.innerHTML = mspLeftHtml(c);
+  var sv = document.querySelector('[data-act="mspSave"][data-ref="' + ref + '"]');
+  if (sv) sv.className = 'save' + (c.ok ? '' : ' off');
+}
+function mspChip(ref, billRef){   // ชิป: ทั้งหมดเป็นรายรับ / คืนเต็มบิล X (ที่เหลือ → รายรับ)
+  var it = findItem(ref); if (!it || !S.miSplit) return;
+  var prop = { bills: {}, inc: it.amount_minor, skip: 0 };
+  if (billRef){
+    var b = null; mspBills().forEach(function(x){ if (x.ref === billRef) b = x; });
+    if (!b) return;
+    prop.bills[b.ref] = Math.min(it.amount_minor, b.remaining_minor);
+    prop.inc = it.amount_minor - prop.bills[b.ref];
+  }
+  mspFill(ref, prop);
+  paint();
+}
+function mspSave(ref){
+  var it = findItem(ref); if (!it || it.kind !== 'money_in_check' || !S.miSplit || !S.miSplit[ref]) return;
+  var c = mspCalc(it);
+  if (!c.ok){ toast(c.err, true); return; }
+  var inp = el('miName');
+  var label = inp ? String(inp.value || '').replace(/\s+/g, ' ').trim() : '';
+  if (c.inc > 0 && !label){ toast('ใส่ชื่อรายการก่อนนะ', true); return; }
+  var billsOut = [];
+  c.parts.forEach(function(p){
+    if (p.t !== 'bill') return;
+    billsOut.push({ ref: p.ref, amount_minor: p.v });
+    var bit = findItem(p.ref), b = null;
+    (S.data.bills || []).forEach(function(x){ if (x.ref === p.ref) b = x; });
+    if (bit){
+      bit.bill_returned = (bit.bill_returned || 0) + p.v;
+      if (bit.bill_returned >= bit.bill_expect) bit.bill_status = 'done';
+      billUpsertLocal(p.ref);
+    } else if (b){
+      b.returned_minor = (b.returned_minor || 0) + p.v;
+      b.remaining_minor = Math.max(0, b.expect_minor - b.returned_minor);
+      if (b.remaining_minor === 0) b.status = 'done';
+    }
+  });
+  if (c.inc > 0){   // ส่วนรายรับ = แถวรายรับใหม่ยอดเท่าที่จัดสรร (แนวเดียวกับ confirmIncome) — แถวเงินเข้าเดิม → skipped
+    S.data.history.unshift({ at: it.at, ref: ref + '-IN', kind: 'manual_in', direction: 'in', amount_minor: c.inc, counterparty: label,
+      status: 'saved', category: 'income', saved_at: '', display_name: '', bill_expect: 0, bill_returned: 0, bill_status: '' });
+    S.data.meta.savedCount = (S.data.meta.savedCount || 0) + 1;
+    if ((it.at || '').slice(0, 7) === curMonthKey()) S.data.summary.monthIncome = (S.data.summary.monthIncome || 0) + c.inc;
+    S.data.summary.cashflow = (S.data.summary.monthIncome || 0) - (S.data.summary.monthSpent || 0);
+  }
+  delete S.miSplit[ref];
+  it.status = 'skipped';
+  S.open[ref] = false; S.ext[ref] = false;
+  recalcSummary(); paint();
+  var back = billsOut.reduce(function(a, x){ return a + x.amount_minor; }, 0);
+  toast('แบ่งแล้ว: เงินคืน ' + billsOut.length + ' บิล ' + fmtBaht(back) + '฿' + (c.inc > 0 ? ' · รายรับ ' + fmtBaht(c.inc) + '฿' : '') + (c.skip > 0 ? ' · ข้าม ' + fmtBaht(c.skip) + '฿' : ''));
+  if (IS_DEMO) return;
+  callAction('splitMoneyIn', [ref, { bills: billsOut, income_minor: c.inc, skip_minor: c.skip, label: label }], '');
 }
 function curMonthKey(){
   var d = new Date();
@@ -1532,6 +1703,7 @@ function historyRow(d, it){
     } else {
       // เหมือนสเปกในม็อกเฟรม 5: แก้หมวด (กริด) · เปลี่ยนชื่อร้าน · กลับเป็น "รอยืนยัน" (Supabase/เดโม่)
       inner = categoryGrid(d, it)
+        + billBlock(it)   // แก้โดย CC 9 ต.ค. 69 (TASK_cc_bill_return_app2 ข้อ A): โซนบิลชุดเดียวกับแถวคิว — ตีตรา/รับคืน/ปิด/ยกเลิก ย้อนหลังได้
         + '<div class="rowacts">'
         + '<button class="miniact" data-act="rename" data-ref="'+esc(it.ref)+'">✎ เปลี่ยนชื่อร้าน</button>'
         + ((IS_SUPA || IS_DEMO) ? '<button class="miniact" data-act="histUnsave" data-ref="'+esc(it.ref)+'">↩︎ กลับเป็น "รอยืนยัน"</button>' : '')
@@ -1888,7 +2060,7 @@ function htmlSettings(d){
     + cardMyCats(d)        // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หมวดทำเอง
     + cardMyShortcuts(d)   // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): รายการลัด
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.10-supabase</span></div>'  // CC 9 ต.ค. 69: v4.2.10 = บิลรอคืนบน Supabase · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.11-supabase</span></div>'  // CC 9 ต.ค. 69: v4.2.11 = บิลรอคืน รอบ 2 · v4.2.10 = บิลรอคืนบน Supabase · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -2068,12 +2240,13 @@ document.addEventListener('click', function(e){
   if (act === 'logout') { if (window.NKF_AUTH) window.NKF_AUTH.signOut(function(){}); return; } // แก้โดย CC 23 ก.ย. 69 (TASK_p4_pwa_supabase)
   if (act === 'toggle') {
     if (!ref) return;
+    if (e.target.closest('.msp')) return;  // CC 9 ต.ค. 69 (TASK_cc_bill_return_app2): แตะพื้นที่ในหน้าจัดสรร "แยกเอง" ไม่พับแถว (กันยอดที่พิมพ์หาย)
     // แถวที่ปัดเปิดอยู่ → แตะ = เก็บปุ่มกลับ (ไม่กางหมวด)
     if (sw && (sw.classList.contains('revL') || sw.classList.contains('revR'))){
       sw.classList.remove('revL', 'revR'); setX(sw, 0, true); return;
     }
     S.open[ref] = !S.open[ref];
-    if (!S.open[ref]){ S.renaming = null; delete S.billEdit[ref]; delete S.billRet[ref]; }
+    if (!S.open[ref]){ S.renaming = null; delete S.billEdit[ref]; delete S.billRet[ref]; if (S.miSplit) delete S.miSplit[ref]; }
     paint();
     if (S.open[ref]){ // กางแล้วเลื่อนให้เห็นทั้งกล่อง — กันแผงย้อยตกขอบล่าง
       var _sel = '.swrow[data-ref="' + ref + '"], .hitem[data-ref="' + ref + '"]';  // แก้โดย Hermes 4 ต.ค. 69: แถวประวัติ (.hitem) กางแล้วเลื่อนให้เห็นด้วย
@@ -2096,10 +2269,10 @@ document.addEventListener('click', function(e){
   if (act === 'renCancel') { S.renaming = null; paint(); return; }
   if (act === 'renSave') { saveRename(ref); return; }
   if (act === 'saveGo') { doSave(ref); return; }
-  if (act === 'billNew') { S.billEdit[ref] = true; paint(); animPop('.swrow[data-ref="' + ref + '"] .billbox'); focusInput('billAmt'); return; }
+  if (act === 'billNew') { S.billEdit[ref] = true; paint(); animPop('.swrow[data-ref="' + ref + '"] .billbox, .hitem[data-ref="' + ref + '"] .billbox'); focusInput('billAmt'); return; }
   if (act === 'billCancel') { delete S.billEdit[ref]; paint(); return; }
   if (act === 'billSave') { billSave(ref); return; }
-  if (act === 'retNew') { S.billRet[ref] = true; paint(); animPop('.swrow[data-ref="' + ref + '"] .billbox'); focusInput('retAmt'); return; }
+  if (act === 'retNew') { S.billRet[ref] = true; paint(); animPop('.swrow[data-ref="' + ref + '"] .billbox, .hitem[data-ref="' + ref + '"] .billbox'); focusInput('retAmt'); return; }
   if (act === 'retCancel') { delete S.billRet[ref]; paint(); return; }
   if (act === 'retSave') { retSave(ref); return; }
   if (act === 'billClose') { billClose(ref); return; }
@@ -2216,6 +2389,11 @@ document.addEventListener('click', function(e){
   if (act === 'miBillNew') { if (!S.miBill) S.miBill = {}; S.miBill[ref] = true; paint(); return; }  // CC 9 ต.ค. 69 (TASK_cc_bill_return_app ข้อ 5)
   if (act === 'miBillCancel') { if (S.miBill) delete S.miBill[ref]; paint(); return; }
   if (act === 'miBillPick') { moneyInToBill(ref, t.getAttribute('data-bill')); return; }
+  if (act === 'mspNew') { mspOpen(ref); return; }  // CC 9 ต.ค. 69 (TASK_cc_bill_return_app2 ข้อ B): แยกเอง
+  if (act === 'mspCancel') { if (S.miSplit) delete S.miSplit[ref]; paint(); return; }
+  if (act === 'mspAllInc') { mspChip(ref, ''); return; }
+  if (act === 'mspFull') { mspChip(ref, t.getAttribute('data-bill')); return; }
+  if (act === 'mspSave') { mspSave(ref); return; }
   if (act === 'skip' || act === 'delGo') {
     var it = findItem(ref);
     var rowItem = sw ? sw.querySelector('.item') : null;
