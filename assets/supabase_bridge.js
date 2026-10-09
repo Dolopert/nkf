@@ -5,7 +5,7 @@
  * แต่ครั้งนี้แอ็กชันส่วนใหญ่ (ดูตาราง TASK_p4_pwa_supabase.md ข้อ B) วิ่งไป Supabase (anon key + RLS)
  * แทนที่จะยิง JSONP ไป Apps Script — ท่อนำเข้า statement ย้ายมาโหมดใหม่แล้ว (P5: RPC ingest_statement)
  * · เหลือ notifyText/debugFallback ที่ยังเป็นโหมดเดิม (ใช้กับลิงก์ส่วนตัวเดิม)
- * และ markBill/addBillReturn/closeBill/unmarkBill ที่ยังไม่มีตารางใน Supabase v1 (คืน ok:false เสมอ)
+ * markBill/addBillReturn/closeBill/unmarkBill ย้ายมาแล้ว (CC 9 ต.ค. 69 · TASK_cc_bill_return_app · ตาราง bill_marks/bill_returns — migration 0011)
  *
  * โหลดหลัง assets/vendor/supabase-js.js และก่อน App.html inline <script> (build_static.py ฉีดลำดับนี้ให้)
  * ต้องมี window.NKF_SB = { url, anon } มาก่อน (มาจาก build_static.py อ่าน .env) — ไม่มี = ไม่ทำอะไรเลย (ตกไปโหมดเดโม่)
@@ -191,7 +191,6 @@
       document.head.appendChild(s);
     });
   }
-  function notMoved() { return Promise.resolve({ ok: false, msg: 'ยังไม่ย้ายมาโหมดใหม่นี้ — ใช้ผ่านโหมดเดิมไปก่อน' }); }
 
   // ---------- มิเรอร์ isWalletXfer_/isWalletKind_ ใน Web.gs ----------
   function isWalletXfer(it) {
@@ -204,6 +203,16 @@
     var k = it.kind;
     return (k === 'wallet_card' || k === 'wallet_online' || k === 'wallet_online_xb' || k === 'wallet_settle');
   }
+
+  // แก้โดย CC 9 ต.ค. 69 (TASK_cc_bill_return_app): บิลรอคืน — ส่วนที่หักจากยอดใช้จ่าย (กติกา TASK_bill_return ข้อ 3)
+  //   open/done → expect · closed → returned · ยอดใช้จ่ายของบิล = amount − ส่วนนี้ (หักที่บิลเดิม เดือน/หมวด/วันของบิล)
+  //   เงินคืนไม่เคยเป็นแถวใน transactions → ไม่แตะรายรับทุกจุดโดยโครงสร้าง
+  function billAdj(it) {
+    if (it.bill_status === 'open' || it.bill_status === 'done') return it.bill_expect || 0;
+    if (it.bill_status === 'closed') return it.bill_returned || 0;
+    return 0;
+  }
+  function spendOf(it) { return it.amount_minor - billAdj(it); }
 
   // แก้โดย Hermes 5 ต.ค. 69 (P สั่ง · เธรด "ปุ่มเปิด-ปิดรายการย่อยใน TrueMoney"): โหมดสรุปกระเป๋า —
   // ธง 'nkf_tm_track' = '0' → ตัดรายการกระเป๋า (kind wallet_* / account truemoney) ออกจากทุกยอด/ลิสต์ · ข้อมูลยังอยู่ครบ เปิดกลับเห็นเหมือนเดิม
@@ -240,7 +249,7 @@
         if (isWalletXfer(it)) continue;
         if (cats.indexOf(it.category) === -1) continue;
         if (excludeRefs[it.ref]) continue;  // แก้โดย CC — TASK_v42_recurring.md (3 ต.ค. 69)
-        spent += it.amount_minor;
+        spent += spendOf(it);  // แก้โดย CC 9 ต.ค. 69: สุทธิหลังหักบิลรอคืน
       }
       var pct = cap > 0 ? Math.round(spent / cap * 100) : 0;
       out.push({
@@ -268,7 +277,7 @@
       m.count++;
       if (it.direction === 'in') { if (!(it.status === 'new' && strv(it.kind) === 'money_in_check')) m.income += it.amount_minor; continue; }  // Hermes 8 ต.ค. 69 (วงเงินเข้า): รอยืนยันยังไม่นับรายรับ
       if (isWalletXfer(it)) continue;
-      var net = it.amount_minor;
+      var net = spendOf(it);  // แก้โดย CC 9 ต.ค. 69: สุทธิหลังหักบิลรอคืน (ยอด/หมวด/วัน/ร้าน ของเดือนบิล)
       m.total += net;
       if (it.category) m.cats[it.category] = (m.cats[it.category] || 0) + net;
       var dk = it.at.slice(0, 10);
@@ -317,8 +326,8 @@
       var a = it2.acct || 'kplus';
       if (!dacct[a]) continue;
       if (isWalletXfer(it2)) { dacct[a].transfer += it2.amount_minor; continue; }
-      dacct[a].total += it2.amount_minor;
-      if (it2.category) dacct[a].cats[it2.category] = (dacct[a].cats[it2.category] || 0) + it2.amount_minor;
+      dacct[a].total += spendOf(it2);  // แก้โดย CC 9 ต.ค. 69: สุทธิหลังหักบิลรอคืน
+      if (it2.category) dacct[a].cats[it2.category] = (dacct[a].cats[it2.category] || 0) + spendOf(it2);
     }
     return {
       months: outM,
@@ -668,7 +677,9 @@
       sb.from('recurring_ack').select('*'),
       sb.from('pipeline_health').select('*'),  // 6) heartbeat ท่อข้อมูล (Hermes 7 ต.ค. 69) — ล้มได้ ห้ามทำ getData พัง
       sb.from('cats_custom').select('*').order('created_at', { ascending: true }),  // 7) หมวดทำเอง (Hermes 7 ต.ค. 69 · migration 0010) — ล้มได้ (ยังไม่ apply = ว่าง)
-      sb.from('shortcuts').select('*').order('created_at', { ascending: true })      // 8) รายการลัด (Hermes 7 ต.ค. 69 · migration 0010) — ล้มได้
+      sb.from('shortcuts').select('*').order('created_at', { ascending: true }),     // 8) รายการลัด (Hermes 7 ต.ค. 69 · migration 0010) — ล้มได้
+      sb.from('bill_marks').select('*'),                       // 9) บิลรอคืน (CC 9 ต.ค. 69 · migration 0011) — ล้มได้ (ยังไม่ apply = ไม่มีบิล)
+      sb.from('bill_returns').select('bill_ref,amount_minor')  // 10) เงินคืนของบิล (CC 9 ต.ค. 69 · migration 0011) — ล้มได้
     ]).then(function (results) {
       for (var i = 0; i < 5; i++) if (results[i].error) throw results[i].error;  // 5 ตัวแรกห้ามพัง · 6–8 ปล่อยผ่านได้
       var myCatRows = (results[6] && !results[6].error) ? (results[6].data || []) : [];
@@ -680,6 +691,22 @@
       var ackRows = results[4].data || [];
       // heartbeat: 'feed' = DB บอท→ชีต · 'sync' = ชีต→Supabase — แอปใช้โชว์สถานะเชื่อม (ตารางหาย/ล้ม = ถือว่าไม่มี)
       var healthRows = (results[5] && !results[5].error) ? (results[5].data || []) : [];
+      // แก้โดย CC 9 ต.ค. 69 (TASK_cc_bill_return_app): บิลรอคืนต่อ ref — returned = ผลรวม bill_returns
+      //   open ที่คืนครบแล้ว (เขียนสถานะ done ไม่ทันรอบก่อน) → ถือเป็น done
+      var billRows = (results[8] && !results[8].error) ? (results[8].data || []) : [];
+      var billRetRows = (results[9] && !results[9].error) ? (results[9].data || []) : [];
+      var billMap = {};
+      for (var bi = 0; bi < billRows.length; bi++) {
+        var brow = billRows[bi];
+        billMap[strv(brow.ref)] = { expect: numv(brow.expect_minor), returned: 0, status: strv(brow.status) };
+      }
+      for (var bj = 0; bj < billRetRows.length; bj++) {
+        var bm0 = billMap[strv(billRetRows[bj].bill_ref)];
+        if (bm0) bm0.returned += numv(billRetRows[bj].amount_minor);
+      }
+      for (var bk in billMap) {
+        if (billMap[bk].status === 'open' && billMap[bk].returned >= billMap[bk].expect) billMap[bk].status = 'done';
+      }
 
       var merchMap = buildMerchantMap(merchantRows);
       var STATUS_IN = { confirmed: 'saved', new: 'new', skipped: 'skipped' };
@@ -702,6 +729,7 @@
       var rows = txRows.map(function (r) {
         var key = merchantKeyFor(r.counterparty, r.kind);
         var mm = merchMap[key];
+        var bm = (strv(r.direction) === 'out') ? billMap[strv(r.ref)] : null;  // CC 9 ต.ค. 69: บิลรอคืนของแถวนี้ (ถ้ามี)
         return {
           at: toThaiLocal(r.at),
           ref: strv(r.ref),
@@ -714,7 +742,7 @@
           saved_at: toThaiLocal(r.confirmed_at),
           display_name: (mm && mm.display) ? mm.display : '',
           suggested: strv(r.suggested),
-          bill_expect: 0, bill_returned: 0, bill_status: '',
+          bill_expect: bm ? bm.expect : 0, bill_returned: bm ? bm.returned : 0, bill_status: bm ? bm.status : '',
           balance_minor: numv(r.balance_minor),
           account: strv(r.account),
           note: strv(r.note)   // Hermes 8 ต.ค. 69 (วงเงินเข้า): บรรทัดที่มา "จากยอดคงเหลือ A → B" ของแถว money_in_check
@@ -748,20 +776,29 @@
         it.xf = xf;
         it.acct = (isWalletKind(it) || strv(it.account).toLowerCase() === 'truemoney') ? 'truemoney' : 'kplus';
         if (it.balance_minor && (!balAt || it.at >= balAt)) { latestBalance = it.balance_minor; balAt = it.at; }
+        // แก้โดย CC 9 ต.ค. 69 (TASK_cc_bill_return_app): ขาออกนับแบบสุทธิหลังหักบิลรอคืน (sp) — แบบเดียวกับ getData ใน Web.gs
+        var sp = isIn ? 0 : spendOf(it);
+        if (it.bill_status) {
+          bills.push({
+            ref: it.ref, name: it.display_name || it.counterparty, at: it.at, amount_minor: it.amount_minor,
+            expect_minor: it.bill_expect, returned_minor: it.bill_returned,
+            remaining_minor: Math.max(0, it.bill_expect - it.bill_returned), status: it.bill_status
+          });
+        }
         if (!isIn) {
           var day = it.at.slice(0, 10);
-          if (!xf && daily[day] !== undefined) daily[day] += it.amount_minor;
-          if (!xf && isWalletKind(it)) { var wmk = it.at.slice(0, 7); walletByMonth[wmk] = (walletByMonth[wmk] || 0) + it.amount_minor; }
+          if (!xf && daily[day] !== undefined) daily[day] += sp;
+          if (!xf && isWalletKind(it)) { var wmk = it.at.slice(0, 7); walletByMonth[wmk] = (walletByMonth[wmk] || 0) + sp; }
         }
         if (it.at.slice(0, 7) === monthPrefix) {
           // Hermes 8 ต.ค. 69 (วงเงินเข้า): แถว "ตรวจอัตโนมัติ" ที่ยังไม่ยืนยัน (status 'new') ยังไม่นับเป็นรายรับ — นับเมื่อกด "ใช่" เท่านั้น
           if (isIn) { if (!(it.status === 'new' && it.kind === 'money_in_check')) monthIncome += it.amount_minor; }
           else {
-            monthOut += it.amount_minor;
+            monthOut += sp;
             if (xf) { walletIn += it.amount_minor; walletCount++; }
             else {
-              monthSpent += it.amount_minor;
-              if (isWalletKind(it)) walletSpent += it.amount_minor;
+              monthSpent += sp;
+              if (isWalletKind(it)) walletSpent += sp;
             }
           }
         }
@@ -770,6 +807,7 @@
       }
       pending.sort(function (a, b) { return a.at < b.at ? -1 : (a.at > b.at ? 1 : 0); });
       history.sort(function (a, b) { return a.at > b.at ? -1 : (a.at < b.at ? 1 : 0); });
+      bills.sort(function (a, b) { return a.at > b.at ? -1 : (a.at < b.at ? 1 : 0); });  // CC 9 ต.ค. 69: บิลใหม่ขึ้นก่อน
 
       var dailyArr = [];
       for (var k2 = 0; k2 < dayKeys.length; k2++) dailyArr.push({ d: dayKeys[k2], n: daily[dayKeys[k2]] });
@@ -977,6 +1015,156 @@
           return { ok: true };
         });
     }).catch(function (e) { return { ok: false, msg: errText(e) }; });
+  }
+
+  // ---------- บิลรอคืน "จ่ายก่อน — รอคืน" — แก้โดย CC 9 ต.ค. 69 (TASK_cc_bill_return_app · ระยะ 1 · P เคาะ 9 ต.ค. 69) ----------
+  // ตีตรา → รับคืน (ก้อนเดียว/หลายครั้ง) → เห็นเหลือเท่าไร → ปิดบิล · semantics ตาม TASK_bill_return.md (บอท)
+  //   ตาราง bill_marks (1 แถวต่อ ref ของบิล) + bill_returns (เงินคืน) — migration 0011
+  //   เงินคืนไม่ถูกเขียนลง transactions → ไม่แตะรายรับทุกจุด · ยอดใช้จ่ายสุทธิคำนวณใน getData (billAdj/spendOf)
+  var BILL_MAX_MINOR = 1000000000;  // ฿10 ล้าน — กันเลขหลุด
+  function bahtTxt(minor) {
+    var p = (Math.abs(minor) / 100).toFixed(2).split('.');
+    return (minor < 0 ? '-' : '') + p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + p[1];
+  }
+  function billErr(e) {
+    var m = (e && (e.message || e.msg || e.details)) || '';
+    if (/bill_return_exceeds/.test(m)) return 'รับคืนเกินยอดที่เหลือของบิล';
+    if (/bill_not_open/.test(m)) return 'บิลนี้ไม่ได้เปิดอยู่ (คืนครบ/ปิดแล้ว)';
+    if (/bill_not_found/.test(m)) return 'รายการนี้ยังไม่ได้ตีตรารอคืน';
+    if (/foreign key/i.test(m)) return 'มีเงินคืนเข้าแล้ว — ยกเลิกตีตราไม่ได้ (ปิดบิลแทน)';
+    return errText(e);
+  }
+  function billState(ref) {
+    return Promise.all([
+      sb.from('bill_marks').select('*').eq('ref', ref).limit(1),
+      sb.from('bill_returns').select('amount_minor,source_ref').eq('bill_ref', ref)
+    ]).then(function (rs) {
+      if (rs[0].error) throw rs[0].error;
+      if (rs[1].error) throw rs[1].error;
+      var rets = rs[1].data || [];
+      var returned = 0;
+      for (var i = 0; i < rets.length; i++) returned += numv(rets[i].amount_minor);
+      return { bill: (rs[0].data && rs[0].data[0]) || null, returned: returned, rets: rets };
+    });
+  }
+  function billResult(expect, returned, status) {
+    return { ok: true, expect_minor: expect, returned_minor: returned, remaining_minor: Math.max(0, expect - returned), status: status };
+  }
+
+  // ตีตรา/แก้ยอดรอคืน: 0 < expect <= amount · แก้ได้ขณะ open · expect ใหม่ <= ที่คืนแล้ว → done ทันที
+  function markBill(ref, expectMinor) {
+    var v = Number(expectMinor);
+    if (!ref) return Promise.resolve({ ok: false, msg: 'ไม่พบรายการ' });
+    if (!isIntIn(v, 1, BILL_MAX_MINOR)) return Promise.resolve({ ok: false, msg: 'ยอดรอคืนต้องมากกว่า 0' });
+    return sb.from('transactions').select('ref,direction,amount_minor,at,counterparty').eq('ref', ref).limit(1).then(function (r) {
+      if (r.error) throw r.error;
+      var tx = (r.data && r.data[0]) || null;
+      if (!tx) return { ok: false, msg: 'ไม่พบรายการนี้ในตาราง' };
+      if (strv(tx.direction) !== 'out') return { ok: false, msg: 'ตีตรารอคืนได้เฉพาะรายการจ่ายออก' };
+      var amount = numv(tx.amount_minor);
+      if (v > amount) return { ok: false, msg: 'ยอดรอคืนต้องไม่เกินยอดจ่าย (' + bahtTxt(amount) + '฿)' };
+      return billState(ref).then(function (st) {
+        var status = (st.returned >= v) ? 'done' : 'open';
+        if (st.bill) {
+          if (strv(st.bill.status) !== 'open') return { ok: false, msg: 'บิลนี้จบแล้ว — แก้ยอดรอคืนไม่ได้' };
+          var patch = { amount_minor: amount, expect_minor: v, status: status };
+          if (status === 'done') patch.closed_at = nowIso();
+          return sb.from('bill_marks').update(patch).eq('ref', ref).then(function (u) {
+            if (u.error) throw u.error;
+            return billResult(v, st.returned, status);
+          });
+        }
+        return sb.from('bill_marks').insert({
+          user_id: CURRENT_UID, ref: ref, title: strv(tx.counterparty).slice(0, 120), amount_minor: amount,
+          expect_minor: v, month: toThaiLocal(tx.at).slice(0, 7), status: 'open'
+        }).then(function (ins) {
+          if (ins.error) throw ins.error;
+          return billResult(v, 0, 'open');
+        });
+      });
+    }).catch(function (e) { return { ok: false, msg: billErr(e) }; });
+  }
+
+  // แถวเงินเข้าที่เป็นเงินคืนจากบิล → skipped (ออกจากคิว · ไม่นับรายรับ) — ร่องรอยอยู่ที่ bill_returns.source_ref
+  function resolveMoneyIn(inRef) {
+    return sb.from('transactions').update({ status: 'skipped' }).eq('ref', inRef).then(function (r) {
+      if (r.error) throw r.error;
+    });
+  }
+
+  // รับคืน: amount <= เหลือ (expect − returned) · รับได้หลายครั้ง · ครบ → done อัตโนมัติ
+  //   fromRef (ไม่บังคับ) = ref แถวเงินเข้า (money_in_check) — ผูกทั้งก้อน แล้วเคลียร์แถวนั้นออกจากคิว (§18 ทางเข้าเงินคืน)
+  function addBillReturn(ref, amountMinor, fromRef) {
+    var v = Number(amountMinor);
+    fromRef = strv(fromRef);
+    if (!ref) return Promise.resolve({ ok: false, msg: 'ไม่พบรายการ' });
+    if (!isIntIn(v, 1, BILL_MAX_MINOR)) return Promise.resolve({ ok: false, msg: 'ยอดรับคืนต้องมากกว่า 0' });
+    var srcP = !fromRef ? Promise.resolve(null)
+      : sb.from('transactions').select('ref,kind,direction,amount_minor,at,status').eq('ref', fromRef).limit(1).then(function (r) {
+        if (r.error) throw r.error;
+        return (r.data && r.data[0]) || null;
+      });
+    return Promise.all([billState(ref), srcP]).then(function (rs) {
+      var st = rs[0], src = rs[1];
+      if (!st.bill) return { ok: false, msg: 'รายการนี้ยังไม่ได้ตีตรารอคืน' };
+      var expect = numv(st.bill.expect_minor);
+      if (fromRef) {
+        if (!src) return { ok: false, msg: 'ไม่พบแถวเงินเข้านี้' };
+        if (strv(src.kind) !== 'money_in_check' || strv(src.direction) !== 'in') return { ok: false, msg: 'รายการนี้ไม่ใช่แถวตรวจเงินเข้า' };
+        if (numv(src.amount_minor) !== v) return { ok: false, msg: 'ยอดไม่ตรงกับแถวเงินเข้า' };
+        for (var i = 0; i < st.rets.length; i++) {
+          if (strv(st.rets[i].source_ref) === fromRef) {  // ผูกไปแล้ว (กดซ้ำ/เน็ตหลุดรอบก่อน) → เคลียร์แถวให้จบ ไม่บันทึกซ้ำ
+            return resolveMoneyIn(fromRef).then(function () {
+              return billResult(expect, st.returned, st.returned >= expect ? 'done' : strv(st.bill.status));
+            });
+          }
+        }
+        if (strv(src.status) !== 'new') return { ok: false, msg: 'แถวเงินเข้านี้ถูกจัดการไปแล้ว' };
+      }
+      if (strv(st.bill.status) !== 'open') return { ok: false, msg: 'บิลนี้ไม่ได้เปิดอยู่ (คืนครบ/ปิดแล้ว)' };
+      var remaining = expect - st.returned;
+      if (v > remaining) return { ok: false, msg: 'รับคืนเกินยอดที่เหลือ (' + bahtTxt(Math.max(0, remaining)) + '฿)' };
+      return sb.from('bill_returns').insert({
+        user_id: CURRENT_UID, bill_ref: ref, amount_minor: v, at: fromRef ? src.at : nowIso(),
+        source: fromRef ? 'moneyin' : 'manual', source_ref: fromRef || null
+      }).then(function (ins) {
+        if (ins.error) throw ins.error;
+        var after = st.returned + v;
+        var status = (after >= expect) ? 'done' : 'open';
+        var p = (status === 'done')
+          ? sb.from('bill_marks').update({ status: 'done', closed_at: nowIso() }).eq('ref', ref).then(function (u) { if (u.error) throw u.error; })
+          : Promise.resolve();
+        return p.then(function () { return fromRef ? resolveMoneyIn(fromRef) : null; })
+          .then(function () { return billResult(expect, after, status); });
+      });
+    }).catch(function (e) { return { ok: false, msg: billErr(e) }; });
+  }
+
+  // ปิดบิล: open/done → closed (ที่ยังไม่คืนกลายเป็นรายจ่ายจริง: สุทธิ = amount − returned) · ปิดแล้วกดซ้ำ = ok
+  function closeBill(ref) {
+    if (!ref) return Promise.resolve({ ok: false, msg: 'ไม่พบรายการ' });
+    return billState(ref).then(function (st) {
+      if (!st.bill) return { ok: false, msg: 'รายการนี้ยังไม่ได้ตีตรารอคืน' };
+      var expect = numv(st.bill.expect_minor);
+      if (strv(st.bill.status) === 'closed') return billResult(expect, st.returned, 'closed');
+      return sb.from('bill_marks').update({ status: 'closed', closed_at: nowIso() }).eq('ref', ref).then(function (u) {
+        if (u.error) throw u.error;
+        return billResult(expect, st.returned, 'closed');
+      });
+    }).catch(function (e) { return { ok: false, msg: billErr(e) }; });
+  }
+
+  // ยกเลิกตีตรา: เฉพาะเมื่อยังไม่มีเงินคืน (มีแล้ว → ให้ปิดบิลแทน) · ไม่มีตีตราอยู่แล้ว = ok
+  function unmarkBill(ref) {
+    if (!ref) return Promise.resolve({ ok: false, msg: 'ไม่พบรายการ' });
+    return billState(ref).then(function (st) {
+      if (!st.bill) return { ok: true };
+      if (st.rets.length > 0) return { ok: false, msg: 'มีเงินคืนเข้าแล้ว — ยกเลิกตีตราไม่ได้ (ปิดบิลแทน)' };
+      return sb.from('bill_marks').delete().eq('ref', ref).then(function (d) {
+        if (d.error) throw d.error;
+        return { ok: true };
+      });
+    }).catch(function (e) { return { ok: false, msg: billErr(e) }; });
   }
 
   function setBudget(key, patch) {
@@ -1296,10 +1484,10 @@
     unsaveItem: unsaveItem,  // แก้โดย Hermes 4 ต.ค. 69: แถวบันทึกแล้ว → กลับเป็นรอยืนยัน (ปุ่ม ↩︎ ในแท็บประวัติ)
     renameMerchant: renameMerchant,
     confirmIncome: confirmIncome,  // แก้โดย Hermes 8 ต.ค. 69 (วงเงินเข้า): "✓ ใช่ — บันทึกเป็นรายรับ" (แถว money_in_check → income)
-    markBill: notMoved,
-    addBillReturn: notMoved,
-    closeBill: notMoved,
-    unmarkBill: notMoved,
+    markBill: markBill,            // แก้โดย CC 9 ต.ค. 69 (TASK_cc_bill_return_app): บิลรอคืน ย้ายมา Supabase แล้ว
+    addBillReturn: addBillReturn,  // แก้โดย CC 9 ต.ค. 69 (+ อาร์กิวเมนต์ที่ 3 = ref แถวเงินเข้า · ไม่ส่ง = กรอกเอง แบบเดิม)
+    closeBill: closeBill,          // แก้โดย CC 9 ต.ค. 69
+    unmarkBill: unmarkBill,        // แก้โดย CC 9 ต.ค. 69
     appendIncome: appendIncome,
     ackFixed: ackFixed,
     setBudget: setBudget,

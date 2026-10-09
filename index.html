@@ -560,7 +560,7 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.2.9-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
+var APP_BUILD = 'v4.2.10-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · CC 9 ต.ค. 69: v4.2.10 = บิลรอคืนบน Supabase (TASK_cc_bill_return_app) · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
 var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, budForm:null, budOpen:{}, view:null, imp:null, pMonth:null, recLumpOpen:false, catForm:null, shortForm:null };  // catForm/shortForm: Hermes 7 ต.ค. 69 — ฟอร์มหมวดทำเอง/รายการลัด (หน้าแยก v4.2.8)  // pMonth: แก้โดย Hermes 5 ต.ค. 69 — เดือนที่เลือกในแท็บรอยืนยัน (แยกเดือน) · recLumpOpen: Hermes 7 ต.ค. 69 (§16) — กาง "ก้อนรายจ่ายประจำ" ในงบรายหมวด
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
@@ -1372,7 +1372,53 @@ function moneyInBlock(it){
     + '<button class="save" data-act="moneyInYes" data-ref="'+esc(it.ref)+'">✓ ใช่ — บันทึกเป็นรายรับ</button>'
     + '<button class="cancel" data-act="skip" data-ref="'+esc(it.ref)+'">✕ ไม่ใช่ — ข้าม</button>'
     + '</div>'
+    + moneyInBillBlock(it)
     + '<div class="hint" style="margin:8px 2px 2px">กด "ใช่" = เป็นรายรับทันที · ย้อนได้</div>';
+}
+/* แก้โดย CC 9 ต.ค. 69 (TASK_cc_bill_return_app ข้อ 5): แถวเงินเข้า = เงินคืนจากบิล → addBillReturn ทั้งก้อน → แถวเงินเข้าหายจากคิว (ไม่นับรายรับ)
+   ระยะ 1: 1 แถวเงินเข้า → 1 บิล ที่ยอดเหลือพอ · แยกหลายบิล = ระยะ 2 */
+function moneyInBills(it){
+  return (S.data && S.data.bills || []).filter(function(b){ return b.status === 'open' && (b.remaining_minor || 0) >= it.amount_minor; }).slice(0, 5);
+}
+function moneyInBillBlock(it){
+  var bl = moneyInBills(it);
+  if (!bl.length) return '';
+  var ref = it.ref;
+  if (!(S.miBill && S.miBill[ref])){
+    return '<div class="incbtns" style="margin-top:8px"><button class="miniact" data-act="miBillNew" data-ref="'+esc(ref)+'">💸 เป็นเงินคืนจากบิล</button></div>';
+  }
+  return '<div class="billbox open"><div class="bt">💸 เงินคืนจากบิลไหน? · รับทั้งก้อน <b>'+fmtBaht(it.amount_minor)+'฿</b></div>'
+    + '<div class="incbtns">'
+    + bl.map(function(b){
+        return '<button class="miniact cy2" data-act="miBillPick" data-ref="'+esc(ref)+'" data-bill="'+esc(b.ref)+'">'+esc(shortName({ counterparty: b.name }))+' · เหลือ '+fmtBaht(b.remaining_minor)+'฿</button>';
+      }).join('')
+    + '<button class="cancel" data-act="miBillCancel" data-ref="'+esc(ref)+'">ยกเลิก</button></div></div>';
+}
+function moneyInToBill(ref, billRef){
+  var it = findItem(ref); if (!it || it.kind !== 'money_in_check') return;
+  var b = null;
+  (S.data.bills || []).forEach(function(x){ if (x.ref === billRef) b = x; });
+  if (!b || b.status !== 'open') return;
+  var amt = it.amount_minor;
+  if (amt > (b.remaining_minor || 0)){ toast('รับคืนเกินยอดที่เหลือ (' + fmtBaht(b.remaining_minor || 0) + '฿)', true); return; }
+  if (S.miBill) delete S.miBill[ref];
+  it.status = 'skipped';
+  S.open[ref] = false; S.ext[ref] = false;
+  var bit = findItem(billRef);
+  if (bit){
+    bit.bill_returned = (bit.bill_returned || 0) + amt;
+    if (bit.bill_returned >= bit.bill_expect) bit.bill_status = 'done';
+    billUpsertLocal(billRef);
+  } else {
+    b.returned_minor = (b.returned_minor || 0) + amt;
+    b.remaining_minor = Math.max(0, b.expect_minor - b.returned_minor);
+    if (b.remaining_minor === 0) b.status = 'done';
+  }
+  var rem = Math.max(0, (b.expect_minor || 0) - (b.returned_minor || 0));
+  recalcSummary(); paint();
+  toast('เงินคืน: ' + shortName({ counterparty: b.name }) + ' +' + fmtBaht(amt) + '฿' + (rem === 0 ? ' — ครบแล้ว ✓' : ' · เหลือ ' + fmtBaht(rem) + '฿'));
+  if (IS_DEMO) return;
+  callAction('addBillReturn', [billRef, amt, ref], '');
 }
 function curMonthKey(){
   var d = new Date();
@@ -1842,7 +1888,7 @@ function htmlSettings(d){
     + cardMyCats(d)        // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หมวดทำเอง
     + cardMyShortcuts(d)   // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): รายการลัด
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.9-supabase</span></div>'  // Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.10-supabase</span></div>'  // CC 9 ต.ค. 69: v4.2.10 = บิลรอคืนบน Supabase · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -2167,6 +2213,9 @@ document.addEventListener('click', function(e){
   if (act === 'ackFixed') { ackFixedLocal(t.getAttribute('data-key'), t.getAttribute('data-v'), t.getAttribute('data-inst') || ''); return; }  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): + งวด
   if (act === 'histUnsave') { histUnsave(ref); return; }  // แก้โดย Hermes 4 ต.ค. 69: แถวประวัติ → กลับเป็น "รอยืนยัน"
   if (act === 'moneyInYes') { moneyInYes(ref); return; }  // Hermes 8 ต.ค. 69 (วงเงินเข้า): "✓ ใช่ — บันทึกเป็นรายรับ"
+  if (act === 'miBillNew') { if (!S.miBill) S.miBill = {}; S.miBill[ref] = true; paint(); return; }  // CC 9 ต.ค. 69 (TASK_cc_bill_return_app ข้อ 5)
+  if (act === 'miBillCancel') { if (S.miBill) delete S.miBill[ref]; paint(); return; }
+  if (act === 'miBillPick') { moneyInToBill(ref, t.getAttribute('data-bill')); return; }
   if (act === 'skip' || act === 'delGo') {
     var it = findItem(ref);
     var rowItem = sw ? sw.querySelector('.item') : null;
@@ -2637,7 +2686,12 @@ function viewAcctHtml(d, a){
   var items = ringItemsFromCats(acct.cats);
   if (acct.transfer_minor > 0) items.push({ e: '↪', t: 'ย้ายเข้ากระเป๋า', n: acct.transfer_minor });
   var billRem = 0;
-  (d.bills || []).forEach(function(b){ billRem += Math.max(0, (b.bill_expect || 0) - (b.bill_returned || 0)); });
+  // แก้โดย CC 9 ต.ค. 69 (TASK_cc_bill_return_app ข้อ 4): อ่านฟิลด์ตาม shape ของ d.bills (remaining_minor) — เดิมอ่าน bill_expect ที่ไม่มี = 0 เสมอ
+  //   นับเฉพาะบิล open ของบัญชีนี้ · เดือนนี้ · แถวบันทึกแล้ว (ชุดเดียวกับ dacct ที่หักสุทธิแล้ว)
+  (d.bills || []).forEach(function(b){
+    var bi = findItem(b.ref);
+    if (b.status === 'open' && bi && bi.status === 'saved' && (bi.acct || 'kplus') === a && (b.at || '').slice(0, 7) === curMonthKey()) billRem += b.remaining_minor || 0;
+  });
   if (billRem > 0) items.push({ e: '💸', t: 'รอเงินคืน', n: billRem });
   items.sort(function(x, y){ return y.n - x.n; });
   var totalOut = 0;
@@ -2756,7 +2810,7 @@ function recFormDefault(){
   // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): เพิ่ม state โหมดพิมพ์ (ฟิลด์เดิม name/amt/day/dir/cat/freq/month คงชื่อเดิม — recSave อ่านตัวเดิม)
   // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): + dow (รายสัปดาห์ 0=อา … 6=ส · null = ยังไม่เลือก)
   return { name:'', amt:'', day:'', dir:'out', cat:'', freq:'monthly', month: new Date().getMonth() + 1, dow: null,
-    type:'', guesses:[], warn:[], catGuess:'', catTouched:false, edit:'', recallOpen:false, brand:'', catExt:false };  // catExt = กางชิปหมวด "➕ อื่นๆ" (P เคาะแบบ ก · 7 ต.ค. 69)
+    type:'', guesses:[], warn:[], catGuess:'', catTouched:false, edit:'', recallOpen:false, brand:'', catExt:false, multi:null, multiSrc:'' };  // catExt = กางชิปหมวด "➕ อื่นๆ" (P เคาะแบบ ก · 7 ต.ค. 69) · multi = โหมด 2 รายการ (Hermes 8 ต.ค. 69)
 }
 function recSyncInputs(){  // เก็บค่าที่พิมพ์ไว้ก่อน paint ใหม่ (กดชิปแล้วข้อความไม่หาย)
   var f = S.recForm; if (!f) return;
@@ -2775,6 +2829,8 @@ var REC_MONTH_FULL = ['มกราคม','กุมภาพันธ์','ม
 // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): ช่องเสริมของ config — field (ค่าเริ่ม 'month') · after (regex บริบทข้างหน้าที่ต้องมี
 // แทนเงื่อนไขขอบคำด้านหน้า — คำวันมักติดกับ "ทุกวัน")
 var REC_WK_AFTER = /(?:ทุก\s*วัน|ทุก\s*อาทิต(?:ย์)?|(?:ทุก|ราย)\s*สัปดาห์\s*(?:วัน)?|ทุก)\s*$/;  // แก้โดย Hermes — 3 ต.ค. 69 (เธรด quick app): + "ทุก" เดี่ยว ให้ "ทุกเสา" เดาเป็น เสาร์ ได้
+// แก้โดย Hermes — 8 ต.ค. 69 (เธรด "คำที่นิยมใช้"): คำช่วงเดือนแบบนิยม (ต้น/กลาง/ปลาย/สิ้นเดือน) — ตามหลังคำนำได้ (ทุก/ของ/ออก/จ่าย/งวด) หรืออักขระที่ไม่ใช่ตัวอักษร
+var REC_DAY_AFTER = /(?:^|ทุก|ของ|ออก|จ่าย|งวด|[^฀-๿a-zA-Z])$/;
 // คำวันที่ parser รู้จักตรงตัว (ไม่ต้องเดา) → dow · คำย่อหัวปฏิทินรับได้ (ต้องไม่ติดตัวอักษรตามหลัง)
 var REC_DOW_WORDS = [['อาทิตย์',0],['จันทร์',1],['อังคาร',2],['พุธ',3],['พฤหัสบดี',4],['พฤหัส',4],['ศุกร์',5],['เสาร์',6],
   ['อา',0],['จ',1],['อ',2],['พ',3],['พฤ',4],['ศ',5],['ส',6]];
@@ -2806,7 +2862,11 @@ var REC_FUZZY = [
   { raw:['จัน'], fixed:'จันทร์', alts:['จันทร์','อาทิตย์','อังคาร'], field:'dow', after: REC_WK_AFTER },
   { raw:['พุท'], fixed:'พุธ', alts:['พุธ','อังคาร','พฤหัส'], field:'dow', after: REC_WK_AFTER },
   { raw:['พฤหัด','พฤหัสฯ'], fixed:'พฤหัส', alts:['พฤหัส','พุธ','ศุกร์'], field:'dow', after: REC_WK_AFTER },
-  { raw:['ศุก','สุก','สุกร์'], fixed:'ศุกร์', alts:['ศุกร์','พฤหัส','เสาร์'], field:'dow', after: REC_WK_AFTER }
+  { raw:['ศุก','สุก','สุกร์'], fixed:'ศุกร์', alts:['ศุกร์','พฤหัส','เสาร์'], field:'dow', after: REC_WK_AFTER },
+  // แก้โดย Hermes — 8 ต.ค. 69 (เธรด "คำที่นิยมใช้"): ช่วงเดือนแบบนิยม → เดาเป็นวันที่ (กล่องเหลืองเดิม · fixed ต้องเป็นข้อความที่ parser อ่านได้ "วันที่ N")
+  { raw:['ต้นเดือน','หัวเดือน'], fixed:'วันที่ 1', alts:['วันที่ 1','วันที่ 5','วันที่ 3'], field:'day', after: REC_DAY_AFTER },
+  { raw:['กลางเดือน'], fixed:'วันที่ 15', alts:['วันที่ 15','วันที่ 14','วันที่ 16'], field:'day', after: REC_DAY_AFTER },
+  { raw:['ปลายเดือน','สิ้นเดือน','ท้ายเดือน'], fixed:'วันที่ 28', alts:['วันที่ 28','วันที่ 25','วันที่ 30','วันที่ 31'], field:'day', after: REC_DAY_AFTER }
 ];
 // คำในชื่อ → หมวดที่ "เดาให้" (ติดธง ⭐ + กล่องเหลืองให้ตรวจ) — config ล้วน · ลำดับสำคัญ (ตัวแรกที่เจอชนะ: น้ำมัน ก่อน ค่าน้ำ)
 var CAT_WORDS = [
@@ -2850,12 +2910,72 @@ function recMonthOf_(tok){
   return 0;
 }
 function recNorm(s){ return String(s || '').toLowerCase().replace(/[^a-z0-9ก-๙]/g, ''); }
+// แก้โดย Hermes — 8 ต.ค. 69 (เธรด "คำที่นิยมใช้"): ตัวช่วยอ่าน "ชุด" ต่อเนื่อง (เดือน/เลข คั่นด้วย และ·กับ·หรือ·,·+·/)
+function recDedupe_(a){ var o = [], s = {}; for (var i = 0; i < a.length; i++){ var k = String(a[i]); if (!s[k]){ s[k] = 1; o.push(a[i]); } } return o; }
+function recListFrom_(w, i, min){  // อ่าน entry ต่อจากตำแหน่ง i (anchored) → {entries:[{m}|{d}], end} หรือ null
+  var TOK = new RegExp('^(?:' + REC_MONTH_RE.source + '|(\\d{1,2})(?!\\d)(?![.,]\\d))');
+  var SEP = /^\s*(?:และ|กับ|หรือ|,|\+|\/)\s*/;
+  var pos = i, entries = [], k = 0;
+  while (k < 5){
+    var m = TOK.exec(w.slice(pos));
+    if (!m) break;
+    var mo = recMonthOf_(m[1] || '');
+    if (mo) entries.push({ m: mo });
+    else {
+      var d = parseInt(m[2], 10);
+      if (d < 1 || d > 31) break;
+      entries.push({ d: d });
+    }
+    pos += m[0].length;
+    var s = SEP.exec(w.slice(pos));
+    if (!s) break;
+    if (!TOK.test(w.slice(pos + s[0].length))) break;
+    pos += s[0].length; k++;
+  }
+  if (entries.length < (min || 2)) return null;
+  return { entries: entries, end: pos };
+}
+function recScanMonthList_(w){  // ชุดเดือนในประโยค (คำเดือนล้วน · หรือตัวเลข ≤12 หลังคำนำ ที่/เดือน) → {i,j,months} แรกที่เจอ หรือ null
+  var START = new RegExp(REC_MONTH_RE.source + '|(\\d{1,2})(?!\\d)(?![.,]\\d)', 'g');
+  var m;
+  while ((m = START.exec(w))){
+    var i = m.index;
+    if (i > 0 && /[\d,]/.test(w.charAt(i - 1))) continue;
+    if (!m[1]){ var d0 = parseInt(m[2], 10); if (d0 < 1 || d0 > 12) continue; }
+    var L = recListFrom_(w, i, 2);
+    if (!L) continue;
+    var wordN = 0, digits = [];
+    L.entries.forEach(function(e){ if (e.m) wordN++; else digits.push(e.d); });
+    if (wordN === 0){
+      var ctx = w.slice(Math.max(0, i - 8), i);
+      if (/วันที่\s*$/.test(ctx) || !/(?:ที่|เดือน)\s*$/.test(ctx)) continue;
+    } else if (!digits.every(function(d){ return d <= 12; })) continue;
+    var seq = L.entries.map(function(e){ return e.m || e.d; });
+    var bi = i;
+    for (var k2 = 0; k2 < 4; k2++){  // ขยายขอบซ้ายให้ครอบคำนำที่ติด ("ที่/เดือน/ของ/ทุก")
+      var ctxb = w.slice(Math.max(0, bi - 8), bi);
+      var mb = /(?:ที่|เดือน|ของ|ทุก)\s*$/.exec(ctxb);
+      if (mb && mb.index + mb[0].length === ctxb.length) bi -= mb[0].length; else break;
+    }
+    return { i: bi, j: L.end, months: recDedupe_(seq) };
+  }
+  return null;
+}
+function recYearTail_(w, j){  // แก้โดย Hermes — 8 ต.ค. 69 (รอบขยายทดสอบ): ปีต่อท้ายวันที่ ("69" / "2569" / "พ.ศ. 69") → คืนความยาวที่ควรตัดเพิ่ม (0 = ไม่ใช่)
+  var m = /^\s*(?:พ\.ศ\.?|ค\.ศ\.?)?\s*(\d{2,4})(?!\d)/.exec(String(w).slice(j));
+  if (!m) return 0;
+  if (m[1].length === 4){ var v4 = parseInt(m[1], 10); return (v4 >= 2400 && v4 <= 2699) || (v4 >= 1900 && v4 <= 2199) ? m[0].length : 0; }
+  return parseInt(m[1], 10) >= 55 ? m[0].length : 0;
+}
 // ประโยค → ช่องฟอร์ม · คืน { name, amt (สตริงบาทตามที่พิมพ์ — parseBahtMinor แปลงตอน save), day, month, dir, freq,
 //   catGuess, guesses:[{raw, fixed, alts, at, field}], warn:[{field, msg, block?}], brand }
 // recall (ไม่บังคับ) = รายการของฉัน ใช้เดาหมวดจากชื่อที่เคยมี · ไม่มีสุ่ม/ไม่อิงเวลา → ผลเดิมทุกครั้ง
 function parseRecText(text, recall){
   var raw = String(text == null ? '' : text).slice(0, 100);
-  var out = { name:'', amt:'', day:null, month:null, dow:null, dir:'out', freq:'monthly', catGuess:'', guesses:[], warn:[], brand:'' };  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): + dow
+  // แก้โดย Hermes — 8 ต.ค. 69 (รอบขยายทดสอบ): เลขไทย ๐–๙ → เลขอาหรับ ("๓๐,๐๐๐" พิมพ์ได้)
+  raw = raw.replace(/[๐-๙]/g, function(c){ return String('๐๑๒๓๔๕๖๗๘๙'.indexOf(c)); });
+  var out = { name:'', amt:'', day:null, month:null, dow:null, dir:'out', freq:'monthly', catGuess:'', guesses:[], warn:[], brand:'', months:[] };  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): + dow · Hermes 8 ต.ค.: + months
+  var monthsHit = null, daysHit = null;  // แก้โดย Hermes — 8 ต.ค. 69: ชุดหลายเดือน/หลายวัน (สำหรับ warn ท้าย)
   if (!raw.replace(/\s+/g, '')) return out;
 
   // 1) เดาคำ (REC_FUZZY) — จดตำแหน่งในข้อความเดิม แล้วแทนด้วยคำที่แก้ในสตริงทำงาน
@@ -2880,21 +3000,24 @@ function parseRecText(text, recall){
   });
   w = ' ' + w + raw.slice(pos) + ' ';
 
+  // แก้โดย Hermes — 8 ต.ค. 69 (ลูป auto รอบแรก · backlog 'unit-one'): "ทุก 1 เดือน/สัปดาห์/ปี" = ความถี่ตรง ๆ (หน่วย 1) — ไม่ใช่ยังไม่รองรับ
+  w = w.replace(/(ทุก|ราย)\s*ๆ?\s*1\s*(เดือน|สัปดาห์|อาทิตย์|ปี)/g, function(m0, p1, u){ return u === 'เดือน' ? 'ทุกเดือน' : (u === 'ปี' ? 'ทุกปี' : 'ทุกสัปดาห์'); });
+
   // 2a) แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): รายสัปดาห์ (รองรับแล้ว) — ต้องทำก่อนข้อ 2 (ไม่งั้น "ทุกวันเสาร์" ตกเป็นรายวัน)
   //   "ทุกวัน<X>" / "ทุกอาทิต<X>" (X = คำวัน/คำย่อ) → weekly + dow · "ทุกสัปดาห์/รายสัปดาห์/ทุกอาทิตย์…" ไม่มีวัน → weekly รอเลือกวัน
   //   (ตามด้วย "วัน<X>" ได้ เช่น ทุกสัปดาห์ วันเสาร์) · "ทุกวัน" เดี่ยว ๆ = รายวัน (ข้อ 2 — ยังไม่รองรับ)
   var weekly = false, mwk;
-  var WK_DAY = new RegExp('(?:ทุก\\s*วัน|ทุก\\s*อาทิต(?:ย์)?)\\s*' + REC_DOW_SRC);
+  var WK_DAY = new RegExp('(?:ทุก\\s*ๆ?\\s*วัน|ทุก\\s*ๆ?\\s*อาทิต(?:ย์)?)\\s*' + REC_DOW_SRC);
   while ((mwk = recFind_(w, WK_DAY))){
     weekly = true;
     if (out.dow == null) out.dow = recDowOf_(mwk.m[1]);
     w = recBlank_(w, mwk.i, mwk.j);
   }
-  var WK_GEN = /(?:ทุก|ราย)\s*สัปดาห์|สัปดาห์ละ(?:ครั้ง)?|ต่อ\s*สัปดาห์|\/\s*สัปดาห์|ทุก\s*อาทิต(?:ย์)?|รายอาทิต(?:ย์)?|อาทิต(?:ย์)?ละ(?:ครั้ง)?/;
+  var WK_GEN = /(?:ของ\s*)?(?:ทุก|ราย)\s*ๆ?\s*สัปดาห์(?!\s*เว้น|\s*ละ\s*\d)|สัปดาห์ละ(?!\s*\d)(?:ครั้ง)?|ต่อ\s*สัปดาห์|\/\s*สัปดาห์|ทุก\s*ๆ?\s*อาทิต(?:ย์)?(?!\s*เว้น|\s*ละ\s*\d)|ราย\s*ๆ?\s*อาทิต(?:ย์)?(?!\s*เว้น)|อาทิต(?:ย์)?ละ(?!\s*\d)(?:ครั้ง)?/;  // แก้โดย Hermes — 8 ต.ค. 69 (รอบขยาย): กัน "ทุกสัปดาห์เว้นสัปดาห์"/"สัปดาห์ละ N ครั้ง" ตกมาช่องทางนี้
   while ((mwk = recFind_(w, WK_GEN))){ weekly = true; w = recBlank_(w, mwk.i, mwk.j); }
   // 2a-2) แก้โดย Hermes — 3 ต.ค. 69 (P แจ้ง เธรด quick app): "ทุก<วัน>" ตรง ๆ ไม่มีคำว่า "วัน" (เช่น "ทุกเสาร์") → weekly + วันนั้น
   //   ต้องอยู่หลัง WK_GEN — "ทุกอาทิตย์" ต้องคงเป็นรายสัปดาห์ทั่วไป (ไม่ถูกอ่านเป็น "อาทิตย์=วันอาทิตย์") · อ่านจาก w หลังเดาคำแล้ว ("ทุกเสา" → "ทุก เสาร์")
-  while ((mwk = recFind_(w, new RegExp('ทุก\\s*' + REC_DOW_BARE_SRC)))){
+  while ((mwk = recFind_(w, new RegExp('ทุก\\s*ๆ?\\s*' + REC_DOW_BARE_SRC)))){
     weekly = true;
     if (out.dow == null) out.dow = recDowOf_(mwk.m[1]);
     w = recBlank_(w, mwk.i, mwk.j);
@@ -2905,17 +3028,51 @@ function parseRecText(text, recall){
   }
   // 2) ความถี่ที่ยังไม่รองรับ (รายวัน) — เตือนชัด ไม่เงียบ ไม่เดา
   // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): เอาคำรายสัปดาห์ออก (ย้ายไปข้อ 2a ที่รองรับแล้ว)
-  var UNSUP = /ทุก\s*วัน(?!\s*ที่)[ก-๙]*|รายวัน|วันละ|ต่อวัน|\/\s*วัน/;
+  var UNSUP = /ทุก\s*ๆ?\s*วัน(?!\s*ที่)[ก-๙]*|ทุก\s*ๆ?\s*\d+\s*วัน|รายวัน|วันละ|ต่อวัน|\/\s*วัน/;
   var unsup = null, mu;
   while ((mu = recFind_(w, UNSUP))){
     if (!unsup) unsup = mu.m[0].replace(/\s+/g, '');
     w = recBlank_(w, mu.i, mu.j);
   }
-  // 3) ความถี่ที่รองรับ
-  var yearly = false, my, mm2;
-  while ((my = recFind_(w, /ทุก\s*ปี|รายปี|\/\s*ปี|ต่อปี|ปีละ(?:ครั้ง)?/))){ yearly = true; w = recBlank_(w, my.i, my.j); }
-  while ((mm2 = recFind_(w, /ทุก\s*เดือน|รายเดือน|\/\s*เดือน|ต่อเดือน|เดือนละ(?:ครั้ง)?/))){ w = recBlank_(w, mm2.i, mm2.j); }
-  out.freq = unsup ? '' : (weekly ? 'weekly' : (yearly ? 'yearly' : 'monthly'));  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): + weekly
+  // แก้โดย Hermes — 8 ต.ค. 69 (เธรด "คำที่นิยมใช้"): ความถี่แบบช่วง/อื่นที่ยังไม่รองรับ (ทุก N เดือน · ไตรมาส · ครึ่งปี · เว้นเดือน · เทอม · N ครั้ง) — เตือนชัด ห้ามเงียบ
+  //   สำคัญ: ต้องตัดโทเคนก่อนอ่านยอด ไม่งั้นเลข "ทุก 3 เดือน" ถูกหยิบไปเป็นยอดได้
+  var UNSUP2 = /(?:ทุก|ราย)\s*ๆ?\s*\d+\s*(?:เดือน|ปี|สัปดาห์|อาทิต(?:ย์)?)|ทุก\s*ๆ?\s*(?:สอง|สาม|สี่|ห้า|หก|เจ็ด|แปด|เก้า|สิบ)\s*(?:เดือน|ปี|สัปดาห์|วัน|อาทิต(?:ย์)?)|(?:ทุก|ราย)\s*ๆ?\s*ไตรมาส|ไตรมาสละ(?:ครั้ง)?|(?:ทุก|ราย)\s*ๆ?\s*ครึ่ง(?:ปี|เดือน)|ครึ่ง(?:ปี|เดือน)ละ(?:ครั้ง)?|ต่อ\s*ครึ่งปี|ทุก\s*ๆ?\s*เทอม|เทอมละ(?:ครั้ง)?|(?:ทุก\s*ๆ?\s*)?(?:เดือน|ปี|สัปดาห์|อาทิต(?:ย์)?)\s*เว้น\s*(?:เดือน|ปี|สัปดาห์|อาทิต(?:ย์)?)?|เว้น\s*(?:\d+\s*)?(?:เดือน|ปี)|(?:เดือน|สัปดาห์|ปี|อาทิต(?:ย์)?|วัน)\s*ละ\s*\d+\s*ครั้ง|\d+\s*ครั้ง\s*(?:\/|ต่อ)?\s*(?:ปี|เดือน|สัปดาห์)|ทุก\s*ๆ?\s*(?:ปี|เดือน|สัปดาห์)\s*\d+\s*ครั้ง/;  // แก้โดย Hermes — 8 ต.ค. 69 (รอบขยายทดสอบ): + ราย N / ทุกสองเดือน / เว้นสัปดาห์ / ทุกปี N ครั้ง / เทอมละ
+  var unsup2 = null, mu2;
+  while ((mu2 = recFind_(w, UNSUP2))){
+    if (!unsup2) unsup2 = mu2.m[0].replace(/\s+/g, ' ').replace(/^\s+|\s+$/g, '');
+    w = recBlank_(w, mu2.i, mu2.j);
+  }
+  // แก้โดย Hermes — 8 ต.ค. 69 (เธรด "คำที่นิยมใช้" · เคสตัวอย่าง P): "ทุกเดือนที่ 3 และ 9" = ระบุเดือนของปี — อ่านก่อนลูป ทุกเดือน/ทุกปี
+  //   (ไม่งั้น "ทุกเดือน" ถูกกินก่อน แล้ว "ที่3และ9" เหลือไปปนชื่อ/ยอดแบบเงียบ ๆ) · ชุดเดือน → monthsHit (เตือนท้าย) · ชุดวันที่ล้วน → วันแรก + daysHit
+  var mpl = recFind_(w, /(?:ของ\s*)?(?:ทุก\s*ๆ?\s*)?(?:เดือน|ปี)\s*ที่\s*/);
+  if (mpl){
+    var Lp = recListFrom_(w, mpl.j, 1);
+    if (Lp){
+      var moL = 0, digL = [];
+      Lp.entries.forEach(function(e){ if (e.m) moL++; else digL.push(e.d); });
+      var digOk12 = digL.every(function(d){ return d <= 12; });
+      var okM = (moL > 0 && digOk12) || (moL === 0 && digL.length > 0 && digOk12);
+      var okD = moL === 0 && digL.length > 0 && !digOk12;
+      if (okM || okD){
+        if (okM){
+          var ms2 = recDedupe_(Lp.entries.map(function(e){ return e.m || e.d; }));
+          out.months = ms2;
+          if (ms2.length > 1) monthsHit = ms2;
+          if (out.month == null) out.month = ms2[0];
+        } else {
+          var ds2 = recDedupe_(digL);
+          if (out.day == null) out.day = ds2[0];
+          if (ds2.length > 1) daysHit = ds2;
+        }
+        w = recBlank_(w, mpl.i, Lp.end);
+      }
+    }
+  }
+  // 3) ความถี่ที่รองรับ · แก้โดย Hermes — 8 ต.ค. 69: + ของ/ทุกๆ ("ของทุกเดือน", "ทุกๆ เดือน") · freqTag = ผู้ใช้ระบุ "ทุกเดือน/รายเดือน" เอง
+  var yearly = false, freqTag = false, my, mm2;
+  while ((my = recFind_(w, /(?:ของ\s*)?ทุก\s*ๆ?\s*ปี|รายปี|\/\s*ปี|ต่อปี|ปีละ(?:ครั้ง)?/))){ yearly = true; w = recBlank_(w, my.i, my.j); }
+  while ((mm2 = recFind_(w, /(?:ของ\s*)?ทุก\s*ๆ?\s*เดือน|รายเดือน|\/\s*เดือน|ต่อเดือน|เดือนละ(?:ครั้ง)?/))){ freqTag = true; w = recBlank_(w, mm2.i, mm2.j); }
+  out.freq = (unsup || unsup2) ? '' : (weekly ? 'weekly' : (yearly ? 'yearly' : 'monthly'));  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): + weekly · Hermes 8 ต.ค.: + unsup2
   if (out.freq !== 'weekly') out.dow = null;
 
   // 4) วัน/เดือน (ก่อนยอด — ตัวเลขที่เป็นวันที่ห้ามถูกหยิบเป็นยอด)
@@ -2929,25 +3086,76 @@ function parseRecText(text, recall){
     else out.warn.push({ field: 'month', msg: 'เดือน ' + mb + ' ไม่มีจริง — เลือกเดือนใหม่', block: true });
     w = recBlank_(w, md.i, md.j);
   }
-  var mw = recFind_(w, /(?:ทุก\s*)?วันที่\s*(\d{1,3})/, null, function(c){ return !/\d/.test(c); });
-  if (mw){
+  // แก้โดย Hermes — 8 ต.ค. 69 (เธรด "คำที่นิยมใช้"): ชุดเดือนในประโยค ("มี.ค. และ ก.ย." / "เดือน 3 กับ 9" / "ที่ 3,9") — เก็บชุด + เตือนทีหลัง (ยังไม่รองรับหลายเดือน)
+  var mscan = recScanMonthList_(w);
+  if (mscan){
+    out.months = mscan.months;
+    monthsHit = mscan.months;
+    if (out.month == null) out.month = mscan.months[0];
+    w = recBlank_(w, mscan.i, mscan.j);
+  }
+  // แก้โดย Hermes — 8 ต.ค. 69 (รอบขยายทดสอบ): ชุดวัน — "วันที่ 1 และ 16" · "วันที่ 1 กับวันที่ 16" · "วันที่ 1,16" · "ที่ 1 และ 16"
+  var mdd0 = recFind_(w, /(?:ทุก\s*ๆ?\s*)?(?:วันที่|ที่)\s*(\d{1,3})(?!\d)/);
+  if (mdd0){
+    var dCtx0 = w.slice(Math.max(0, mdd0.i - 8), mdd0.i);
+    if (/(?:เดือน|วัน)\s*$/.test(dCtx0)) mdd0 = null;  // "วันที่/เดือนที่" = ไม่ใช่ชุดวันตรงนี้
+  }
+  if (mdd0){
+    var dEnd = mdd0.j, dds = [parseInt(mdd0.m[1], 10)], m3rd, kD = 0;
+    while (kD++ < 4){
+      m3rd = /^\s*(?:และ|กับ|หรือ|,|\+|\/)\s*(?:วันที่\s*)?(\d{1,3})(?!\d)/.exec(w.slice(dEnd));
+      if (!m3rd) break;
+      var dv3 = parseInt(m3rd[1], 10);
+      if (!(dv3 >= 1 && dv3 <= 31)) break;
+      dds.push(dv3); dEnd += m3rd[0].length;
+    }
+    if (dds.length > 1){
+      var dd2 = recDedupe_(dds);
+      if (out.day == null) out.day = dd2[0];
+      daysHit = dd2;
+      w = recBlank_(w, mdd0.i, dEnd);
+    }
+  }
+  var mw;
+  while ((mw = recFind_(w, /(?:ทุก\s*ๆ?\s*)?วันที่\s*(\d{1,3})/, null, function(c){ return !/\d/.test(c); }))){
     if (out.day == null) out.day = parseInt(mw.m[1], 10);
     w = recBlank_(w, mw.i, mw.j);
+  }
+  // แก้โดย Hermes — 8 ต.ค. 69 (รอบขยายทดสอบ): "ที่ N" เดี่ยว (ไม่ใช่ วันที่/เดือนที่/ทุก...) = วันที่ เช่น "ค่าไฟ 2,000 ที่ 20" · "ผ่อน 4,000 งวดที่ 28"
+  var mT = recFind_(w, /ที่\s*(\d{1,3})(?!\d)/);
+  if (mT){
+    var ctxT = w.slice(Math.max(0, mT.i - 8), mT.i);
+    if (!/(?:วัน|เดือน|ทุก)\s*$/.test(ctxT)){
+      var dvT = parseInt(mT.m[1], 10);
+      if (dvT >= 1 && dvT <= 31 && out.day == null) out.day = dvT;
+      w = recBlank_(w, mT.i, mT.j);
+    }
   }
   var mdm = recFind_(w, new RegExp('(\\d{1,2})\\s*' + REC_MONTH_RE.source), notNum, recNoL_);
   if (mdm){
     if (out.day == null) out.day = parseInt(mdm.m[1], 10);
     if (out.month == null) out.month = recMonthOf_(mdm.m[2]);
-    w = recBlank_(w, mdm.i, mdm.j);
+    w = recBlank_(w, mdm.i, mdm.j + recYearTail_(w, mdm.j));  // แก้โดย Hermes — 8 ต.ค. 69: ตัดปีต่อท้าย ("15 มี.ค. 69")
   }
+  // แก้โดย Hermes — 8 ต.ค. 69 (รอบขยาย): ปีเต็ม "พ.ศ. 69" / "ค.ศ. 2026" — ตัดทิ้ง (ไม่ใช่ยอด)
+  while ((mo = recFind_(w, /(?:พ\.ศ\.|ค\.ศ\.)\s*\d{2,4}/))) w = recBlank_(w, mo.i, mo.j);
   var mo;
+  // แก้โดย Hermes — 8 ต.ค. 69: "เดือน มี.ค." = ตัวนำคำเดือน — ตัดคำ "เดือน" ก่อนอ่านชื่อเดือน (กัน "เดือน" เหลือในชื่อ)
+  while ((mo = recFind_(w, new RegExp('เดือน\\s*(?=' + REC_MONTH_RE.source + ')'), recNoL_, null))) w = recBlank_(w, mo.i, mo.j);
   while ((mo = recFind_(w, REC_MONTH_RE, recNoL_, recNoL_))){
     if (out.month == null) out.month = recMonthOf_(mo.m[1]);
-    w = recBlank_(w, mo.i, mo.j);
+    w = recBlank_(w, mo.i, mo.j + recYearTail_(w, mo.j));  // แก้โดย Hermes — 8 ต.ค. 69: ตัดปีต่อท้าย
   }
+  // แก้โดย Hermes — 8 ต.ค. 69: "ของเดือน" = ของ-เดือน (ไม่ใช่ชื่อ) — ตัดออกเมื่อเดือนถูกอ่านแล้ว
+  while ((mo = recFind_(w, /ของ\s*เดือน/))) w = recBlank_(w, mo.i, mo.j);
   var mv;
-  while ((mv = recFind_(w, /(?:ทุก\s*)?วันที่/))) w = recBlank_(w, mv.i, mv.j);
+  while ((mv = recFind_(w, /(?:ทุก\s*ๆ?\s*)?วันที่/))) w = recBlank_(w, mv.i, mv.j);
+  // แก้โดย Hermes — 8 ต.ค. 69: ระบุ "เดือน" ชัด (มี.ค./3/15·3) แต่ไม่บอกความถี่ → รายปี (ของเดิมเดือนถูกทิ้งเงียบ) · ทุกเดือน/รายเดือนที่พิมพ์เองยังคงรายเดือน
+  if (!unsup && !unsup2 && !weekly && !yearly && !freqTag && out.month && out.freq === 'monthly') out.freq = 'yearly';
 
+  // แก้โดย Hermes — 8 ต.ค. 69 (รอบขยายทดสอบ): เวลา ("12:30" / "เวลา 12:30 น.") — ตัดก่อนอ่านยอด
+  var mtm;
+  while ((mtm = recFind_(w, /(?:เวลา\s*)?\d{1,2}\s*:\s*\d{2}(?::\d{2})?\s*(?:น\.?)?/))) w = recBlank_(w, mtm.i, mtm.j);
   // 5) ยอด — ตัวเลขที่เหลือ (ไม่ติดตัวอักษรอังกฤษ เช่น 3BB/5G) · มี , หรือ . หรือ บาท/฿ = ชัดกว่า · ไม่งั้นเอาตัวท้ายสุด
   var cands = [], g5 = /(\d{1,3}(?:,\d{3})+|\d+)(\.\d{1,2})?/g, m5;
   while ((m5 = g5.exec(w))){
@@ -2962,20 +3170,26 @@ function parseRecText(text, recall){
   if (!pick && cands.length) pick = cands[cands.length - 1];
   if (pick){ out.amt = pick.s; w = recBlank_(w, pick.i, pick.j); }
   w = w.replace(/฿/g, ' ');
+  w = w.replace(/\.\s*-/g, ' ');  // แก้โดย Hermes — 8 ต.ค. 69 (รอบขยาย): "25,000.-" → ตัด ".-" ทิ้ง
 
   // 6) ทิศทาง — คำสั่งที่แยกเป็นคำเดี่ยว (คำแรกที่เจอชนะ) · ไม่ระบุ = จ่าย
-  var dIn = recFind_(w, /(ได้รับ|รับ|ได้|เงินเข้า)/, function(c){ return !c || /\s/.test(c); }, function(c){ return !c || /\s/.test(c); });
+  var dIn = recFind_(w, /(ได้รับ|รายรับ|โอนเข้า|รับ|ได้|เงินเข้า)/, function(c){ return !c || /\s/.test(c); }, function(c){ return !c || /\s/.test(c); });
   var dGlue = recFind_(w, /เงินเข้า/);
   if (!dIn && dGlue) dIn = dGlue;
-  var dOut = recFind_(w, /(จ่าย|ชำระ|หัก)/, function(c){ return !c || /\s/.test(c); }, function(c){ return !c || /\s/.test(c); });
+  // แก้โดย Hermes — 8 ต.ค. 69 (รอบขยาย): คำเงินเข้าที่ติดคำถัดไปไม่มีช่องว่าง ("รับเงินเดือน", "รายรับพ่อ") → นับเป็นเงินเข้า
+  if (!dIn){
+    var mInG = /^\s*(ได้รับ|รายรับ|รับ|โอนเข้า|ได้)(?=[ก-๙a-zA-Z])/.exec(w);  // Hermes (รอบขยาย): + "ได้เงิน…"
+    if (mInG) dIn = { i: 0 };
+  }
+  var dOut = recFind_(w, /(จ่าย|ชำระ|โอนออก|หักบัญชี|ตัดบัญชี|หัก)/, function(c){ return !c || /\s/.test(c); }, function(c){ return !c || /\s/.test(c); });
   if (dIn && (!dOut || dIn.i < dOut.i)) out.dir = 'in';
   // 7) ตัดคำสั่ง/คำฟุ่มเฟือย (คำเดี่ยว) + "จ่าย/เพิ่ม/บันทึก" ที่ติดหน้าประโยค
-  var FILL = /(ได้รับ|รับ|ได้|เงินเข้า|จ่าย|ชำระ|หัก|เพิ่ม|บันทึก|รายการ|บาท)/, mf;
+  var FILL = /(ได้รับ|รับ|ได้|เงินเข้า|จ่าย|ชำระ|โอนเข้า|โอนออก|หักบัญชี|ตัดบัญชี|หัก|เพิ่ม|บันทึก|รายการ|บาทถ้วน|บาท|ถ้วน|งวด)/, mf;  // แก้โดย Hermes — 8 ต.ค. 69 (รอบขยาย): + โอน/หักบัญชี/ถ้วน
   while ((mf = recFind_(w, FILL, function(c){ return !c || /\s/.test(c); }, function(c){ return !c || /\s/.test(c); }))) w = recBlank_(w, mf.i, mf.j);
-  w = w.replace(/^\s*(จ่าย|เพิ่ม|บันทึก)(?=[ก-๙a-zA-Z])/, ' ');
+  w = w.replace(/^\s*(ได้รับ|รับ|โอนเข้า|จ่าย|ชำระ|หักบัญชี|หัก|โอนออก|ตัดบัญชี|เพิ่ม|บันทึก)(?=[ก-๙a-zA-Z])/, ' ');  // แก้โดย Hermes — 8 ต.ค. 69 (รอบขยาย): คำกริยาติดหน้าประโยค (มี/ไม่มีช่องว่าง)
 
   // 8) ชื่อ = ที่เหลือ
-  var name = w.replace(/[·•,:;|]+/g, ' ').replace(/\s+/g, ' ').replace(/^[\s\-–]+|[\s\-–]+$/g, '').trim();
+  var name = w.replace(/[·•,:;|]+/g, ' ').replace(/(?:^|\s)ๆ(?=\s|$)/g, ' ').replace(/(?:^|\s)ที่(?=\s|$)/g, ' ').replace(/\s+/g, ' ').replace(/^[\s\-–]+|[\s\-–]+$/g, '').trim();
   out.name = name.slice(0, 60).trim();
   out.brand = brandKey(out.name);
 
@@ -2990,7 +3204,15 @@ function parseRecText(text, recall){
   else if (out.day == null) W.push({ field: 'day', msg: 'ใส่วันที่จ่าย (เช่น วันที่ 5)' });
   else if (!(out.day >= 1 && out.day <= 31)) W.push({ field: 'day', msg: 'วันที่ ' + out.day + ' ไม่มีจริง — ต้องเป็น 1–31' });
   if (unsup) W.push({ field: 'freq', msg: '"' + unsup + '" (รายวัน) ยังไม่รองรับ — แตะเลือก ทุกสัปดาห์/ทุกเดือน/ทุกปี', block: true });
+  // แก้โดย Hermes — 8 ต.ค. 69 (เธรด "คำที่นิยมใช้"): ความถี่ช่วง (ทุก N เดือน/ไตรมาส/ครึ่งปี/เทอม) — เตือนชัด ไม่งั้นบันทึกไม่ได้
+  if (unsup2) W.push({ field: 'freq', msg: '"' + unsup2 + '" ยังไม่รองรับ — แตะเลือก ทุกสัปดาห์/ทุกเดือน/ทุกปี', block: true });
+  // แก้โดย Hermes — 8 ต.ค. 69: หลายเดือน/หลายวันในรายการเดียว — ยังไม่รองรับ: เลือกค่าเดียว แล้วเพิ่มที่เหลือเป็นอีกรายการ
+  if (monthsHit && monthsHit.length > 1) W.push({ field: 'month', block: true, msg: 'เจอ ' + monthsHit.length + ' เดือน (' + monthsHit.map(function(mm){ return TH_M[mm - 1]; }).join(' + ') + ') — ใส่ชื่อ+ยอด+วันให้ครบ แล้วแยกเป็นรายการละเดือนให้อัตโนมัติ · หรือเลือกเดือนเดียว' });
+  if (daysHit && daysHit.length > 1) W.push({ field: 'day', block: true, msg: 'เจอ ' + daysHit.length + ' วัน (' + daysHit.join(' + ') + ') — ใส่ชื่อ+ยอดให้ครบ แล้วแยกเป็นรายการละวันให้อัตโนมัติ · หรือเลือกวันเดียว' });
+  // แก้โดย Hermes — 8 ต.ค. 69 (รอบขยาย): เผื่อพิมพ์ 2 รายการในประโยคเดียว — ชื่อมีตัวเลข + และ/กับ กลางชื่อ
+  if (/\d/.test(out.name) && /(?:^|\s)(?:และ|กับ)(?:\s|$)/.test(out.name)) W.push({ field: 'name', msg: 'ชื่อมีคำว่า "และ/กับ" + ตัวเลข — ถ้าพิมพ์ 2 รายการ ให้ครบทั้งคู่ (ชื่อ+ยอด+วัน) หรือเพิ่มทีละรายการ' });
   if (out.freq === 'yearly' && !out.month && !out.warn.length) W.push({ field: 'month', msg: 'รายปี — ระบุเดือนด้วย (เช่น 25 ต.ค.)', block: true });
+  if (daysHit && daysHit.length > 1) out.days = daysHit;  // Hermes 8 ต.ค. 69 (P สั่ง "แดงที่เหลือ"): เก็บชุดวันไว้ให้ฟอร์มแยกเป็นรายการละวัน
   out.warn = W.concat(out.warn);
 
   // 10) เดาหมวด: ชื่อตรงรายการของฉัน → หมวดนั้น · แบรนด์เดียวกัน → หมวดนั้น · คำใน CAT_WORDS · ไม่เจอ = ว่าง
@@ -3016,6 +3238,102 @@ function parseRecText(text, recall){
   out.catGuess = cg;
   return out;
 }
+// แก้โดย Hermes — 8 ต.ค. 69 (P สั่ง "ส่วนของ และ … ทำต่อในงานนี้เลย"): 2 รายการในประโยคเดียว (คั่น " และ ")
+//   คืน [p1, p2] เฉพาะเมื่อ "ทั้งคู่" เป็นรายการครบ (ชื่อ + ยอด + ไม่มี warn ใด ๆ) — ไม่งั้น null (ให้ทางเดิม/ชุดวัน-ชุดเดือนทำงาน)
+function parseRecMulti(text, recall){
+  var parts = String(text || '').split(/\s+และ\s+/);
+  if (parts.length !== 2) return null;
+  var out = [];
+  for (var i = 0; i < 2; i++){
+    var txt = parts[i].replace(/^\s+|\s+$/g, '');
+    if (!txt) return null;
+    var p = parseRecText(txt, recall);
+    if (!p.name || !p.amt) return null;
+    if ((p.warn || []).length) return null;
+    if (p.freq === 'weekly'){ if (p.dow == null) return null; }
+    else if (!(p.day >= 1 && p.day <= 31)) return null;
+    out.push(p);
+  }
+  return out;
+}
+// แก้โดย Hermes — 8 ต.ค. 69 (P สั่ง "แดงที่เหลือแบบไม่กระทบตัวอื่น"): ชุดเดือน/ชุดวันครบ → แยกเป็นรายการละค่า (ไม่แตะ DB — ใช้ addRecurring เดิมทีละรายการ)
+function recMultiBase_(p, allowBlocks){  // สมบูรณ์: ชื่อ+ยอด+ความถี่ใช้ได้ · warn เหลือเฉพาะบล็อกที่อนุญาต (ห้ามมี warn อื่น)
+  if (!p || !p.name || !p.amt) return false;
+  if (p.freq !== 'monthly' && p.freq !== 'yearly' && p.freq !== 'weekly') return false;
+  var ws = p.warn || [];
+  for (var i2 = 0; i2 < ws.length; i2++){ if (!ws[i2].block || allowBlocks.indexOf(ws[i2].field) < 0) return false; }
+  return true;
+}
+function recMultiFromMonths_(p){
+  if (!p || !p.months || p.months.length < 2 || p.months.length > 6) return null;
+  if (p.freq !== 'yearly') return null;
+  if (!recMultiBase_(p, ['month'])) return null;
+  if (!(p.day >= 1 && p.day <= 31)) return null;
+  return p.months.map(function(m){ var q = {}; for (var k in p) q[k] = p[k]; q.month = m; return q; });
+}
+function recMultiFromDays_(p){
+  if (!p || !p.days || p.days.length < 2 || p.days.length > 6) return null;
+  if (p.freq !== 'monthly' && p.freq !== 'yearly') return null;
+  if (!recMultiBase_(p, ['day'])) return null;
+  if (p.freq === 'yearly' && !(p.month >= 1 && p.month <= 12)) return null;
+  return p.days.map(function(x){ var q = {}; for (var k in p) q[k] = p[k]; q.day = x; return q; });
+}
+// ===== แก้โดย Hermes — 8 ต.ค. 69 (P สั่ง "auto workflow"): จำแนก "ประโยคที่เข้ามา" เป็นกลุ่ม + รหัส เพื่อป้อนลูปพัฒนาแบบ auto =====
+//   bucket: blank / unsupported (ต้องออกแบบ-ขยาย DB) / quickwin (รู้วิธีรองรับแล้ว รอลงมือ) / blocked (ข้อมูลไม่ครบให้แยก) / need-info (รอผู้ใช้เติม · ปกติ) / handled-split / handled-guess / handled
+//   codes : ดูรายการใน recClassifyCodes_ — รหัสจะ "หายเอง" เมื่อโค้ดรองรับแล้ว (ตัวนับใน backlog จึงเป็นมิเตอร์ของงานที่เหลือ)
+function recClassifyCodes_(t, p, mm){
+  var codes = [], name = String((p && p.name) || ''), amt = String((p && p.amt) || '');
+  var ws = (p && p.warn) || [];
+  var hasFreqBlock = ws.some(function(w){ return w.field === 'freq' && w.block; });
+  // ① quickwin — รูปแบบที่ "รู้วิธีรองรับแล้ว" รอลงมือ (คิวพัฒนา)
+  if (/(?:หนึ่ง|สอง|สาม|สี่|ห้า|หก|เจ็ด|แปด|เก้า|สิบ|ร้อย|พัน|หมื่น|แสน|ล้าน)/.test(name) || /\d+\s*(?:พัน|หมื่น|แสน|ล้าน)/.test(name)) codes.push('numwords');
+  if (/(?:เวลา\s*\d{1,2}[.:]\d{2}|\d{1,2}\.\d{2}\s*น)/.test(t) && (/(?:^|\s)น\.?$/.test(name) || /เวลา/.test(name) || /^\d{1,2}\.\d{2}$/.test(amt))) codes.push('timedot');
+  var tokC = name.split(/\s+/);
+  if (tokC.some(function(x){ return /^(?:ก่อน|ภายใน|ไม่เกิน|ตั้งแต่|จนถึง)(?:วันที่)?$/.test(x); })) codes.push('connector-day');
+  if (/ครั้งละ|จำนวน|(?:^|\s)ยอด(?=\s)/.test(name)) codes.push('amount-words');
+  if (/จาก\s*\d+/.test(name)) codes.push('from-total');
+  if (/^\s*(?:ผ่าน|จาก|โอน(?![ก-๙]))\s/.test(name)) codes.push('verb-prefix');
+  if (/[\(\)\[\]]/.test(name)) codes.push('brackets-leftover');
+  if (/[\u2600-\u27BF]|[\uD83C][\uDF00-\uDFFF]|[\uD83D][\uDC00-\uDFFF]/.test(name)) codes.push('emoji-name');
+  if (/(?:ทุก|ราย)\s*ๆ?\s*1\s*(?:เดือน|สัปดาห์|อาทิต(?:ย์)?|ปี)/.test(t) && hasFreqBlock) codes.push('unit-one');
+  if (ws.some(function(w){ return /และ\/กับ/.test(String(w.msg || '')); })) codes.push('two-items-incomplete');
+  // ② ยังไม่รองรับ — ต้องออกแบบ/ขยาย DB (คิวใหญ่)
+  ws.forEach(function(w){
+    if (w.field !== 'freq' || !w.block) return;
+    var m = String(w.msg || ''), fam = /รายวัน/.test(m) ? 'daily'
+      : /ไตรมาส/.test(m) ? 'quarterly' : /ครึ่ง/.test(m) ? 'half-freq' : /เทอม/.test(m) ? 'term'
+      : /เว้น/.test(m) ? 'skip-freq' : /ครั้ง/.test(m) ? 'times-per' : 'every-N';
+    if (codes.indexOf('unsup:' + fam) < 0) codes.push('unsup:' + fam);
+  });
+  if (!mm && !hasFreqBlock){
+    var mB = ws.filter(function(w){ return w.field === 'month' && w.block; });
+    if (mB.length) codes.push(/รายปี/.test(String(mB[0].msg || '')) ? 'need-month' : 'multi-incomplete');
+    if (ws.some(function(w){ return w.field === 'day' && w.block; })) codes.push('multi-incomplete');
+  }
+  return codes;
+}
+function recClassify(text, recall){
+  var t = String(text == null ? '' : text);
+  if (!t.replace(/\s+/g, '')) return { b: 'blank', c: [] };
+  var p = parseRecText(t, recall || []);
+  var mm = null;  // แยกได้จริงหรือไม่ ( และ / ชุดเดือน / ชุดวัน )
+  if (t.indexOf(' และ ') >= 0) mm = parseRecMulti(t, recall || []);
+  if (!mm) mm = recMultiFromMonths_(p) || recMultiFromDays_(p);
+  var codes = recClassifyCodes_(t, p, mm);
+  if (mm) codes = codes.filter(function(c){ return c !== 'two-items-incomplete' && c !== 'multi-incomplete'; });  // แยกได้แล้ว = รหัสไม่ต้องเตือน
+  if (codes.indexOf('unit-one') >= 0) codes = codes.filter(function(c){ return c.indexOf('unsup:') !== 0; });  // 'ทุก 1 เดือน' = งานแก้เล็ก ไม่ใช่คิวออกแบบ
+  var hasUnsup = codes.some(function(c){ return c.indexOf('unsup:') === 0; });
+  var quick = codes.filter(function(c){ return c.indexOf('unsup:') < 0 && c !== 'multi-incomplete' && c !== 'need-month'; });
+  var ws = p.warn || [];
+  var bucket = 'handled';
+  if (hasUnsup) bucket = 'unsupported';
+  else if (quick.length) bucket = 'quickwin';
+  else if (codes.indexOf('multi-incomplete') >= 0) bucket = 'blocked';
+  else if (mm) bucket = 'handled-split';
+  else if (ws.length) bucket = 'need-info';
+  else if ((p.guesses || []).length) bucket = 'handled-guess';
+  return { b: bucket, c: codes, n: p.name || '', a: p.amt || '', d: p.day == null ? null : p.day, f: p.freq || '' };
+}
 
 // เติมผล parse ลงฟอร์ม (ทับทั้งชุด) — หมวดที่ผู้ใช้แตะเองแล้ว (catTouched) ห้ามทับ
 function recRecall(){ return (S.data && S.data.recall) || []; }
@@ -3032,14 +3350,33 @@ function recApply(f){
     var g = (p.catGuess && catMeta(p.catGuess).e !== '❔') ? p.catGuess : '';
     f.catGuess = g; f.cat = g;
   }
+  // แก้โดย Hermes — 8 ต.ค. 69: โหมดหลายรายการ — " และ " 2 รายการ · ชุดเดือน/ชุดวันแยกอัตโนมัติเมื่อครบ (ไม่แตะ DB)
+  f.multi = null; f.multiSrc = '';
+  if (String(f.type || '').indexOf(' และ ') >= 0){
+    var mAnd = parseRecMulti(f.type, recRecall());
+    if (mAnd){ f.multi = mAnd; f.multiSrc = 'and'; }
+  }
+  if (!f.multi){
+    var mMon3 = recMultiFromMonths_(p);
+    if (mMon3){ f.multi = mMon3; f.multiSrc = 'month'; }
+    else {
+      var mDay3 = recMultiFromDays_(p);
+      if (mDay3){ f.multi = mDay3; f.multiSrc = 'day'; }
+    }
+  }
 }
 function recDropWarn(f, field){
   f.warn = (f.warn || []).filter(function(w){ return w.field !== field; });
-  if (field === 'month' || field === 'dow') f.guesses = (f.guesses || []).filter(function(g){ return g.field !== field; });  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): + dow
+  if (field === 'month' || field === 'dow' || field === 'day') f.guesses = (f.guesses || []).filter(function(g){ return g.field !== field; });  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): + dow · Hermes 8 ต.ค.: + day
 }
 // เหตุที่ยังบันทึกไม่ได้ (ว่าง = ครบ) — ใช้ทั้ง recSave (toast) และสถานะปุ่ม "เพิ่มรายการ" (ชุดเดียว)
 function recIssues(f){
   var out = [];
+  // แก้โดย Hermes — 8 ต.ค. 69: โหมด 2 รายการ — ครบโดยนิยาม (เช็คซ้ำกันพลาด)
+  if (f.multi && f.multi.length > 1){
+    f.multi.forEach(function(p2, i){ if (!p2.name || !p2.amt) out.push('รายการที่ ' + (i + 1) + ' ไม่ครบ'); });
+    return out;
+  }
   // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): weekly รองรับแล้ว — ต้องมี dow (ไม่ใช้วันที่ 1–31)
   var weekly = f.freq === 'weekly';
   if (f.freq !== 'monthly' && f.freq !== 'yearly' && !weekly) out.push('ความถี่นี้ยังไม่รองรับ — เลือก ทุกสัปดาห์/ทุกเดือน/ทุกปี');  // เหตุหลักขึ้นก่อน
@@ -3172,6 +3509,23 @@ function recHtmlPreview(f){
     + '</div></div>';
 }
 function recHtmlA(f){  // โซน ⚠ · suggest · การ์ดพรีวิว · ชิปแก้ (ฟ้า)
+  // แก้โดย Hermes — 8 ต.ค. 69 (P สั่ง): โหมด 2 รายการ — โชว์การ์ด 2 ใบแทนโซนเดี่ยว
+  if (f.multi && f.multi.length > 1){
+    var nm2 = f.multi.length, hm = '';
+    if (f.multiSrc === 'month'){
+      hm += '<div class="flab" style="margin:10px 2px 5px;color:var(--cy2)">เจอ ' + nm2 + ' เดือนในรายการเดียว (' + f.multi.map(function(p2){ return TH_M[p2.month - 1]; }).join(' + ') + ') — จะแยกเป็น ' + nm2 + ' รายการ</div>';
+    } else if (f.multiSrc === 'day'){
+      hm += '<div class="flab" style="margin:10px 2px 5px;color:var(--cy2)">เจอ ' + nm2 + ' วันในรายการเดียว (' + f.multi.map(function(p2){ return p2.day; }).join(' + ') + ') — จะแยกเป็น ' + nm2 + ' รายการ</div>';
+    } else {
+      hm += '<div class="flab" style="margin:10px 2px 5px;color:var(--cy2)">เจอ ' + nm2 + ' รายการในประโยคเดียว — ' + (nm2 === 2 ? 'จะเพิ่มทั้งคู่' : 'จะเพิ่มทั้งหมด') + '</div>';
+    }
+    f.multi.forEach(function(p2){
+      hm += recHtmlPreview({ name: p2.name, amt: p2.amt, day: p2.day == null ? '' : String(p2.day), freq: p2.freq,
+        month: p2.month, dow: p2.dow, dir: p2.dir, cat: '', brand: p2.brand });
+    });
+    hm += '<div class="hint" style="margin:7px 2px 0">อยากแก้รายการใด — พิมพ์แยกทีละรายการ หรือบันทึกแล้วแก้ทีหลังในลิสต์</div>';
+    return hm;
+  }
   var h = '', typed = String(f.type || '').replace(/\s+/g, '');
   var ws = typed ? (f.warn || []) : [];
   if (ws.length){
@@ -3213,7 +3567,7 @@ function recHtmlB(f){  // โซน เดาให้ตรวจ (เหลื
   var catG = f.catGuess && !f.catTouched && f.cat === f.catGuess;
   var cm = catG ? catMeta(f.cat) : null;
   var n = gs.length + (catG ? 1 : 0);
-  if (n){
+  if (n && !(f.multi && f.multi.length > 1)){  // Hermes 8 ต.ค. 69: โหมด 2 รายการ — ซ่อนกล่องเดาของโหมดเดี่ยว (ยืนยันรายการละใบแทน)
     h += '<div class="qa-fixbox"><div class="fl">⚡ เดาให้ ' + n + ' จุด — ตรวจก่อนกดเพิ่ม (แตะแก้ถ้าไม่ใช่):</div><div class="incbtns" style="margin-top:0">'
       + gs.map(function(g, i){
           var alt = (g.alts || []).filter(function(a){ return a !== g.fixed; });
@@ -3224,17 +3578,17 @@ function recHtmlB(f){  // โซน เดาให้ตรวจ (เหลื
       + '</div><div class="incbtns" style="margin-top:6px"><button class="miniact sug" data-act="recGuessAll">✓ ใช้ตามนี้</button><button class="miniact" data-act="recSelf">✏️ แก้เอง</button></div></div>';
   }
   // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8+ · P เคาะแบบ ก): ย้าย "รายการของฉัน" ขึ้นโซนใต้กล่องพิมพ์ (recZR) แล้ว — ที่นี่เหลือโซนกดบันทึก
-  if (!REC_PAGE()) h += '<div class="incbtns"><button class="miniact" data-act="recEdit" data-v="more">'  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หน้าแยกโชว์ครบ — ซ่อนปุ่มกาง
+  if (!REC_PAGE() && !(f.multi && f.multi.length > 1)) h += '<div class="incbtns"><button class="miniact" data-act="recEdit" data-v="more">'  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หน้าแยกโชว์ครบ — ซ่อนปุ่มกาง
     + (f.edit === 'more' ? '− ซ่อนตัวเลือกเพิ่มเติม' : '＋ ตัวเลือกเพิ่มเติม <span style="color:var(--dim)">· กดชิปเองก็ได้</span>') + '</button></div>';
   var iss = recIssues(f);
   h += '<div class="incbtns"><button class="save' + (iss.length ? ' off' : '') + '" data-act="recSave"'
-    + (iss.length ? ' aria-disabled="true" title="' + esc(iss[0]) + '"' : '') + '>เพิ่มรายการ</button>'
+    + (iss.length ? ' aria-disabled="true" title="' + esc(iss[0]) + '"' : '') + '>' + (f.multi && f.multi.length > 1 ? 'เพิ่มทั้ง ' + f.multi.length + ' รายการ' : 'เพิ่มรายการ') + '</button>'
     + '<button class="cancel" data-act="recCancel">ยกเลิก</button></div>';
   return h;
 }
 function recPiece(f, key, inner){  // โซนคลาสสิกแยกชิ้น: เปิดทีละช่อง (✎) หรือทั้งหมด (＋ ตัวเลือกเพิ่มเติม)
   // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): ในหน้าแยก (recAdd) = โชว์ทุกช่องพร้อมป้ายชื่อ ไม่ต้องกด ✎
-  var show = REC_PAGE() || f.edit === 'more' || f.edit === key;
+  var show = !(f.multi && f.multi.length > 1) && (REC_PAGE() || f.edit === 'more' || f.edit === key);  // Hermes 8 ต.ค. 69: โหมด 2 รายการ — ซ่อนช่องเดี่ยว
   if (REC_PAGE()) inner = '<div class="flab">' + REC_LBL[key] + '</div>' + inner;
   return '<div class="qa-ed" data-pc="' + key + '"' + (show ? '' : ' style="display:none"') + '>' + inner + '</div>';
 }
@@ -3269,6 +3623,15 @@ function recRefresh(){
   var z = [['recZR', recHtmlRecall], ['recZA', recHtmlA], ['recZB', recHtmlB], ['recZF', recHtmlFreqChips], ['recZD', recHtmlDirChips], ['recZK', recHtmlCatChips]];
   for (var i = 0; i < z.length; i++){ var n = el(z[i][0]); if (n) n.innerHTML = z[i][1](f); }
   var dw = el('recDayW'); if (dw) dw.style.display = f.freq === 'weekly' ? 'none' : '';  // แก้โดย CC — TASK_v42x_weekly.md (3 ต.ค. 69): พิมพ์จนเป็น weekly → ซ่อนช่องวันที่สด
+  // แก้โดย Hermes — 8 ต.ค. 69: โหมด 2 รายการ — ซ่อน/คืนช่องเดี่ยวตามการพิมพ์สด
+  var multiOn = !!(f.multi && f.multi.length > 1);
+  if (document.querySelectorAll){
+    var pcs = document.querySelectorAll('#detail .qa-ed');
+    for (var pi = 0; pi < pcs.length; pi++){
+      var pc = pcs[pi].getAttribute('data-pc');
+      pcs[pi].style.display = (multiOn || !(REC_PAGE() || f.edit === 'more' || f.edit === pc)) ? 'none' : '';
+    }
+  }
   recPushInputs(f, false);
 }
 function recRepaint(){ var f = S.recForm; if (f) recPushInputs(f, true); paint(); }  // ค่าเปลี่ยนจากโค้ด → ดันลงช่องก่อน (paint จะอ่านช่องกลับ)
@@ -3402,6 +3765,41 @@ function recSave(){
   // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69): ตรวจผ่าน recIssues ชุดเดียวกับสถานะปุ่ม (ข้อความเดิมของ v4.2 คงไว้)
   var iss = recIssues(f);
   if (iss.length){ toast(iss[0], true); return; }
+  // แก้โดย Hermes — 8 ต.ค. 69 (P สั่ง): โหมด 2 รายการ — บันทึกทั้งคู่ (เรียก addRecurring เดิมทีละรายการ)
+  if (f.multi && f.multi.length > 1){
+    var items = f.multi.slice(0), curM2 = new Date().getMonth() + 1;
+    var snapM = JSON.parse(JSON.stringify(f));
+    S.recForm = null;
+    if (REC_PAGE()) { S.view = null; S.prev = null; }
+    var failM = false;
+    var onFailM = function(){ if (!failM && !S.recForm){ failM = true; S.recForm = snapM; S.view = { t: 'recAdd' }; S.prev = null; paint(); } };
+    items.forEach(function(p2, i2){
+      var g2 = (p2.catGuess && catMeta(p2.catGuess).e !== '❔') ? p2.catGuess : '';
+      var pl = { name: p2.name, amount_minor: parseBahtMinor(p2.amt), day: p2.freq === 'weekly' ? null : p2.day,
+        direction: p2.dir === 'in' ? 'in' : 'out', freq: p2.freq, month: p2.freq === 'yearly' ? p2.month : null, category: g2 };
+      if (p2.freq === 'weekly') pl.dow = p2.dow;
+      if (IS_DEMO){
+        if (p2.freq === 'weekly'){
+          var due2 = weeklyDueDate(p2.dow, todayISO());
+          S.data.fixed = S.data.fixed || [];
+          S.data.fixed.push({ key: 'local-' + Date.now() + '-' + i2, label: p2.name, emoji: '', logo: brandKey(p2.name), amount_minor: pl.amount_minor, day: parseInt(due2.slice(8, 10), 10), dir: pl.direction,
+            status: 'pending', date: '', spent_minor: 0, src: 'auto', freq: 'weekly', month_of_year: null, category: pl.category, dow: p2.dow, due: due2 });
+        } else if (pl.freq !== 'yearly' || pl.month === curM2){
+          S.data.fixed = S.data.fixed || [];
+          S.data.fixed.push({ key: 'local-' + Date.now() + '-' + i2, label: p2.name, emoji: '', logo: brandKey(p2.name), amount_minor: pl.amount_minor, day: pl.day, dir: pl.direction,
+            status: pl.day <= new Date().getDate() ? 'pending' : 'wait', date: '', spent_minor: 0, src: 'auto', freq: pl.freq, month_of_year: pl.month, category: pl.category });
+        }
+        S.data.recall = (S.data.recall || []).filter(function(r){ return recNorm(r.name) !== recNorm(p2.name); });
+        S.data.recall.unshift({ key: recNorm(p2.name), name: p2.name, brand: brandKey(p2.name), cat: pl.category, amount_minor: pl.amount_minor, day: pl.day,
+          dir: pl.direction, freq: pl.freq, month: pl.month, dow: p2.freq === 'weekly' ? p2.dow : null, src: 'rec', hits: 0, isRec: true, rid: 'local' });
+      } else {
+        callAction('addRecurring', [pl], i2 === 0 ? 'เพิ่มรายการประจำแล้ว ✓' : 'เพิ่มรายการที่ 2 แล้ว ✓', onFailM);
+      }
+    });
+    paint();
+    if (IS_DEMO) toast('เพิ่ม ' + items.length + ' รายการแล้ว ✓');
+    return;
+  }
   var name = String(f.name || '').replace(/\s+/g,' ').trim();
   var v = parseBahtMinor(f.amt);
   var day = parseInt(String(f.day).trim(), 10);
