@@ -61,6 +61,18 @@
   // ยอดประมาณการต่อคน (ระหว่างที่ยังติ๊กไม่ครบ) — half-up ของส่วนตัวเอง · ตัวสุดท้ายอาจขยับ ±1 สตางค์ตอนสรุป
   function estimate(subMinor, svcBp, vatBp) { return grossOf(subMinor, svcBp, vatBp); }
 
+  // แยกราคาบรรทัดเดียวเป็น n ส่วน โดยเก็บหน่วยสตางค์ตลอดทาง
+  // เศษต้องไปส่วนท้าย (ไม่ใช่ปัดทุกส่วนแยกกัน) เพื่อให้ผลรวมเท่าราคาเดิมเป๊ะ
+  function splitParts(priceMinor, n) {
+    var price = Math.round(Number(priceMinor) || 0);
+    var count = Math.floor(Number(n) || 0);
+    if (count < 1) return [];
+    var base = Math.floor(price / count), out = [];
+    for (var i = 0; i < count; i++) out.push(base);
+    out[count - 1] += price - base * count;
+    return out;
+  }
+
   /* สรุปบิลแชร์จากรายการ + ติ๊ก
    *   share = { items:[{id,name,price_minor}], ticks:[{item_id, person, is_owner}], svc_bp, vat_bp, total_minor, owner_name }
    * คืน { people:[{name, is_owner, items:[id], sub, est, final|null}], unclaimed:[id], unclaimedSub, complete, alloc,
@@ -163,7 +175,7 @@
   }
 
   var api = {
-    alloc: alloc, estimate: estimate, grossOf: grossOf, summarize: summarize, billCheck: billCheck,
+    alloc: alloc, estimate: estimate, grossOf: grossOf, summarize: summarize, billCheck: billCheck, splitParts: splitParts,
     parseList: parseList, validateItems: validateItems,
     MAX_ITEMS: MAX_ITEMS, MAX_PRICE_MINOR: MAX_PRICE_MINOR
   };

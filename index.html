@@ -501,20 +501,18 @@
   .bsrow input:focus{border-color:var(--cy)}
   .bsrow input.nm{flex:1}
   .bsrow input.pr{width:84px;flex:none;text-align:right;font-variant-numeric:tabular-nums}
-  .bsrow .own{flex:none;border:1px solid var(--bd2);background:transparent;color:var(--dim);border-radius:99px;padding:6px 8px;font-size:10px;font-family:inherit;cursor:pointer;white-space:nowrap}
-  .bsrow .own.on{background:var(--grn-bg);border-color:var(--grn-bd2);color:var(--grn3);font-weight:700}
-  .bsrow .x{flex:none;width:30px;height:30px;border-radius:9px;border:1px solid var(--bd2);background:transparent;color:var(--dim);font-family:inherit;cursor:pointer}
-  .bs-ta{width:100%;box-sizing:border-box;min-height:84px;background:var(--inset);border:1px solid var(--bd2);border-radius:12px;color:var(--tx);font-size:16px;padding:9px 11px;font-family:inherit;outline:none;resize:vertical}
-  .bs-ta:focus{border-color:var(--cy)}
-  .bs-err{font-size:10.5px;color:var(--red2);margin:6px 2px 0;line-height:1.55}
+  .bsrow .bs-dot{flex:none;width:28px;height:34px;border:0;background:transparent;color:var(--dim);font-size:22px;line-height:1;font-family:inherit;cursor:pointer}
+  .bsrow .bs-dot:focus{color:var(--cy2);outline:0}
   .bs-img{margin-top:8px;border:1px solid var(--bd2);border-radius:12px;overflow:hidden;max-height:180px;cursor:zoom-in}
-  .bs-img.big{max-height:none;cursor:zoom-out}
   .bs-img img{width:100%;display:block}
   .bs-chips{display:flex;gap:6px;flex-wrap:wrap}
   .bs-chip{border:1px solid var(--bd2);background:var(--inset);color:var(--mut);border-radius:99px;padding:7px 12px;font-size:11.5px;font-weight:600;font-family:inherit;cursor:pointer}
   .bs-chip.on{background:var(--grn-bg);border-color:var(--grn-bd2);color:var(--grn3)}
   .bs-in{width:100%;box-sizing:border-box;background:var(--inset);border:1px solid var(--bd2);border-radius:11px;color:var(--tx);font-size:16px;padding:9px 12px;font-family:inherit;outline:none}
   .bs-in:focus{border-color:var(--cy)}
+  .bs-friends{display:flex;flex-direction:column;gap:6px}
+  .bs-friend{display:flex;gap:6px;align-items:center}
+  .bs-friend .x{width:32px;height:34px;flex:none;border:1px solid var(--bd2);border-radius:10px;background:transparent;color:var(--dim);font-family:inherit;cursor:pointer}
   .bs-check{margin-top:12px;border:1px solid var(--bd2);border-radius:12px;background:var(--inset);padding:10px 12px;font-size:11.5px;color:var(--mut);line-height:1.7}
   .bs-check b{color:var(--tx)}
   .bs-check.ok{border-color:var(--grn-bd2);background:var(--grn-bg)}
@@ -556,6 +554,38 @@
   .bshome{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px solid var(--bd2);font-size:12px;cursor:pointer}
   .bshome:first-of-type{border-top:0}
   .bshome .r{color:var(--mut);flex:none;font-size:11px}
+  /* บิลแชร์ v3: แผงจัดการบรรทัดจากด้านล่าง */
+  .bs-sheet-ov{position:fixed;inset:0;z-index:140;background:rgba(0,0,0,.58);display:flex;align-items:flex-end;padding:0;animation:bsfade .16s ease-out}
+  .bs-sheet{width:100%;box-sizing:border-box;max-height:88vh;overflow:auto;border:1px solid var(--bd3);border-bottom:0;border-radius:24px 24px 0 0;background:var(--card);padding:10px 18px calc(18px + env(safe-area-inset-bottom));animation:bssheet .2s ease-out;touch-action:pan-y}
+  .bs-sheet-handle{width:40px;height:5px;border-radius:99px;background:var(--bd3);margin:0 auto 14px}
+  .bs-sheet-title{text-align:center;font-size:15px;font-weight:750;line-height:1.45}
+  .bs-sheet-sub{text-align:center;color:var(--mut);font-size:11px;margin-top:3px}
+  .bs-sheet-btn{width:100%;box-sizing:border-box;margin-top:12px;border:1px solid var(--cy);border-radius:14px;background:var(--cy);color:#062026;padding:13px;font:750 14px inherit;cursor:pointer}
+  .bs-sheet-btn.red{background:transparent;border-color:var(--red-bd2);color:var(--red2)}
+  .bs-sheet-btn.clear{background:transparent;border-color:var(--bd2);color:var(--mut)}
+  .bs-suggest{margin-top:14px;border:1px solid var(--amb-bd2);background:var(--amb-bg2);color:var(--amb2);border-radius:12px;padding:9px 10px;font-size:11.5px;font-weight:650;line-height:1.5}
+  .bs-split-chips{display:flex;justify-content:center;gap:8px;margin:14px 0 10px;flex-wrap:wrap}
+  .bs-split-chips button{border:1px solid var(--bd2);border-radius:99px;background:var(--inset);color:var(--mut);padding:8px 14px;font:700 12px inherit;cursor:pointer}
+  .bs-split-chips button.on{background:var(--grn-bg);border-color:var(--grn-bd2);color:var(--grn3)}
+  .bs-split-chips button.sugc{background:var(--amb-bg2);border-color:var(--amb-bd2);color:var(--amb2)}
+  .bs-split-chips button.on.sugc{box-shadow:0 0 0 2px var(--amb-bd2);font-weight:800}
+  .bs-parts{display:flex;flex-direction:column;gap:7px;margin-top:10px}
+  .bs-part{display:flex;gap:10px;align-items:center;border:1px solid var(--bd2);border-radius:12px;background:var(--inset);padding:9px 11px;font-size:12px}
+  .bs-part .ring{width:25px;height:25px;border-radius:50%;border:2px solid var(--bd3);box-sizing:border-box;flex:none}
+  .bs-part .nm{flex:1;font-weight:650;min-width:0}
+  .bs-part .pr{font-weight:750;font-variant-numeric:tabular-nums;flex:none}
+  .bs-part input.pr{width:88px;border:1px solid var(--bd2);border-radius:8px;background:var(--card);color:var(--tx);padding:5px 7px;text-align:right;font:750 14px inherit}
+  .bs-custom-n{display:flex;justify-content:center;align-items:center;gap:12px;margin:4px 0 10px;color:var(--mut);font-size:12px}
+  .bs-custom-n button{width:31px;height:31px;border:1px solid var(--bd2);border-radius:50%;background:var(--inset);color:var(--tx);font:700 17px inherit;cursor:pointer}
+  .bs-split-actions{display:flex;gap:8px;margin-top:14px}.bs-split-actions .bs-sheet-btn{margin-top:0}.bs-split-actions .back{width:40%;background:transparent;border-color:var(--bd2);color:var(--mut)}
+  .bs-sheet-btn.off{opacity:.38;cursor:not-allowed}
+  @keyframes bsfade{from{opacity:0}to{opacity:1}}@keyframes bssheet{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  /* ภาพบิล: viewer เต็มจอ; crop อยู่ในพิกัดภาพต้นฉบับ */
+  .bs-viewer{position:fixed;inset:0;z-index:170;background:#07090d;color:#f5f7fa;display:flex;flex-direction:column;touch-action:none}
+  .bs-vtop{display:flex;align-items:center;gap:10px;min-height:56px;padding:0 14px;border-bottom:1px solid #28303b}.bs-vtop .close{border:0;background:transparent;color:#dbe4ee;font:26px inherit;cursor:pointer}.bs-vtop .title{font-size:14px;font-weight:750;flex:1}.bs-vzoom{border:1px solid var(--cy-bd2);color:var(--cy);border-radius:99px;padding:5px 9px;font-size:11px;font-weight:700}
+  .bs-vstage{position:relative;flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#020304}.bs-vstage img{position:absolute;left:0;top:0;max-width:none;max-height:none;display:block;user-select:none;-webkit-user-select:none;-webkit-user-drag:none;pointer-events:none}
+  .bs-crop{position:absolute;border:3px solid var(--cy);box-sizing:border-box;z-index:2;box-shadow:0 0 0 9999px rgba(0,0,0,.49)}.bs-crop i{touch-action:none}.bs-crop i{position:absolute;width:26px;height:26px;background:var(--cy);border:2px solid #062026;border-radius:3px;box-sizing:border-box}.bs-crop .tl{left:-14px;top:-14px}.bs-crop .tr{right:-14px;top:-14px}.bs-crop .bl{left:-14px;bottom:-14px}.bs-crop .br{right:-14px;bottom:-14px}
+  .bs-vbottom{border-top:1px solid #28303b;padding:10px 14px calc(14px + env(safe-area-inset-bottom))}.bs-vhint{text-align:center;color:#aeb8c6;font-size:10.5px;line-height:1.5;margin-bottom:9px}.bs-vactions{display:flex;gap:8px}.bs-vactions button{border:1px solid #394350;border-radius:12px;background:transparent;color:#dbe4ee;padding:10px 12px;font:650 12px inherit;cursor:pointer}.bs-vactions .use{flex:1;background:var(--cy);border-color:var(--cy);color:#062026;font-weight:750}
 </style>
 </head>
 <body>
@@ -646,7 +676,7 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.2.12-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · CC 9 ต.ค. 69: v4.2.12 = บิลแชร์ เพื่อนติ๊กเอง + แถวปุ่มลัดหน้าหลัก (TASK_cc_billbox_share) · v4.2.11 = บิลรอคืน รอบ 2 (ปุ่มบิลในหน้ารายการ + แยกเอง + ส่วนของเรา · TASK_cc_bill_return_app2) · v4.2.10 = บิลรอคืนบน Supabase (TASK_cc_bill_return_app) · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
+var APP_BUILD = 'v4.2.13-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · CC 10 ต.ค. 69: v4.2.13 = แชร์บิล v3 (จดต่อเนื่อง + ⋮ แผงล่าง แยก 2/3/กำหนดเอง + เพื่อนเป็น + + ซูม/ครอปภาพบิล · TASK_cc_billshare_v3) · CC 9 ต.ค. 69: v4.2.12 = บิลแชร์ เพื่อนติ๊กเอง + แถวปุ่มลัดหน้าหลัก (TASK_cc_billbox_share) · v4.2.11 = บิลรอคืน รอบ 2 (ปุ่มบิลในหน้ารายการ + แยกเอง + ส่วนของเรา · TASK_cc_bill_return_app2) · v4.2.10 = บิลรอคืนบน Supabase (TASK_cc_bill_return_app) · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
 var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, budForm:null, budOpen:{}, view:null, imp:null, pMonth:null, recLumpOpen:false, catForm:null, shortForm:null };  // catForm/shortForm: Hermes 7 ต.ค. 69 — ฟอร์มหมวดทำเอง/รายการลัด (หน้าแยก v4.2.8)  // pMonth: แก้โดย Hermes 5 ต.ค. 69 — เดือนที่เลือกในแท็บรอยืนยัน (แยกเดือน) · recLumpOpen: Hermes 7 ต.ค. 69 (§16) — กาง "ก้อนรายจ่ายประจำ" ในงบรายหมวด
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
@@ -833,6 +863,7 @@ function paintDetail(){
     el2.innerHTML = '<div class="dt-top"><button class="dt-back" data-act="vclose"><svg><use href="#i-back"/></svg></button><div class="ttl">รายละเอียด</div></div><div class="hint" style="margin:8px 2px">แสดงรายละเอียดไม่ได้</div>';
   }
   el2.className = 'detail on';
+  if (S.view.t === 'bsNew' && S.bsForm && S.bsForm.imgView) bsViewerInit();  // TASK_cc_billshare_v3: viewer ซูม/ครอป — ผูกนิ้ว + วางภาพตามขนาดจอ
 }
 
 function LOGO_URL(key){
@@ -2154,7 +2185,7 @@ function htmlSettings(d){
     + cardMyCats(d)        // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หมวดทำเอง
     + cardMyShortcuts(d)   // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): รายการลัด
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.12-supabase</span></div>'  // CC 9 ต.ค. 69: v4.2.11 = บิลรอคืน รอบ 2 · v4.2.10 = บิลรอคืนบน Supabase · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.13-supabase</span></div>'  // CC 10 ต.ค. 69: v4.2.13 = แชร์บิล v3 · CC 9 ต.ค. 69: v4.2.11 = บิลรอคืน รอบ 2 · v4.2.10 = บิลรอคืนบน Supabase · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -2498,11 +2529,22 @@ document.addEventListener('click', function(e){
   if (act === 'bsTx') { bsSyncInputs(); S.bsForm.tx = ref; paint(); return; }
   if (act === 'bsMore') { bsSyncInputs(); S.bsForm.showAll = true; paint(); return; }
   if (act === 'bsImg') { var bsi1 = el('bsImgIn'); if (bsi1) bsi1.click(); return; }
-  if (act === 'bsImgZoom') { bsSyncInputs(); S.bsForm.imgBig = !S.bsForm.imgBig; paint(); return; }
-  if (act === 'bsParse') { bsParse(); return; }
-  if (act === 'bsAddRow') { bsSyncInputs(); S.bsForm.items.push({ name: '', price: '', own: false }); paint(); var bsn = document.querySelectorAll('#detail input[data-bs^="name:"]'); if (bsn.length) try { bsn[bsn.length - 1].focus(); } catch (e2) {} return; }
-  if (act === 'bsDel') { bsSyncInputs(); S.bsForm.items.splice(parseInt(t.getAttribute('data-i'), 10), 1); paint(); return; }
-  if (act === 'bsOwn') { bsSyncInputs(); var bso = S.bsForm.items[parseInt(t.getAttribute('data-i'), 10)]; if (bso) bso.own = !bso.own; paint(); return; }
+  if (act === 'bsImgZoom') { bsSyncInputs(); bsOpenViewer(); return; }
+  if (act === 'bsDot') { bsSyncInputs(); bsOpenSheet(parseInt(t.getAttribute('data-i'), 10)); return; }
+  if (act === 'bsSheetStay') return;   // แตะพื้นที่ในแผง (ไม่ใช่ปุ่ม) = ไม่ปิด
+  if (act === 'bsSheetClose') { bsCloseSheet(); return; }
+  if (act === 'bsSplit') { bsSplitOpen(); return; }
+  if (act === 'bsSplitPick') { bsSplitPick(parseInt(t.getAttribute('data-n'), 10)); return; }
+  if (act === 'bsCustom') { bsSplitCustom(); return; }
+  if (act === 'bsCustomN') { bsSplitCustomN(parseInt(t.getAttribute('data-d'), 10)); return; }
+  if (act === 'bsSplitBack') { bsSplitBack(); return; }
+  if (act === 'bsSplitApply') { bsSplitApply(); return; }
+  if (act === 'bsDeleteRow') { bsDeleteRow(); return; }
+  if (act === 'bsFriendAdd') { bsFriendAdd(); return; }
+  if (act === 'bsFriendDel') { bsFriendDel(parseInt(t.getAttribute('data-i'), 10)); return; }
+  if (act === 'bsViewerClose') { bsCloseViewer(); return; }
+  if (act === 'bsViewerReset') { bsResetViewer(); return; }
+  if (act === 'bsViewerUse') { bsUseCrop(); return; }
   if (act === 'bsSvc') { bsSyncInputs(); S.bsForm.svc = parseInt(t.getAttribute('data-v'), 10) || 0; paint(); return; }
   if (act === 'bsVat') { bsSyncInputs(); S.bsForm.vat = parseInt(t.getAttribute('data-v'), 10) || 0; paint(); return; }
   if (act === 'bsCreate') { bsCreate(); return; }
@@ -4300,23 +4342,25 @@ function bsTxCands(){
   all.sort(function(a, b){ return a.at > b.at ? -1 : (a.at < b.at ? 1 : 0); });
   return all;
 }
-function bsFormDefault(mode){ return { mode: mode || 'type', tx: '', owner: 'เรา', items: [], svc: 0, vat: 700, friends: '', text: '', img: '', imgBig: false, showAll: false, errs: [] }; }
+function bsFormDefault(mode){ return { mode: mode || 'type', tx: '', owner: 'เรา', items: [{ name:'', price:'' }], svc: 0, vat: 700, friends: [], img: '', imgOrig: '', imgView: null, sheet: null, showAll: false }; }
 function bsOpen(mode, txRef){
   S.bsForm = bsFormDefault(mode);
   if (txRef) S.bsForm.tx = txRef;
   openView({ t: 'bsNew' }, null);
 }
 function bsSyncInputs(){  // ค่าในช่อง → ฟอร์ม (ก่อนวาดใหม่ทุกครั้ง · แบบ recSyncInputs)
-  var f = S.bsForm; if (!f) return;
+  var f = S.bsForm; if (!f || f._noSync) return;
   var ns = document.querySelectorAll('#detail [data-bs]');
   for (var i = 0; i < ns.length; i++){
     var k = ns[i].getAttribute('data-bs'), v = ns[i].value;
     var m = /^(name|price):(\d+)$/.exec(k);
     if (m){ var it = f.items[parseInt(m[2], 10)]; if (it) it[m[1]] = v; }
-    else if (k === 'owner' || k === 'friends' || k === 'text') f[k] = v;
+    else if (k === 'owner') f.owner = v;
+    else if ((m = /^friend:(\d+)$/.exec(k))){ if (!Array.isArray(f.friends)) f.friends = []; f.friends[parseInt(m[1], 10)] = v; }
+    else if ((m = /^part:(\d+)$/.exec(k)) && f.sheet && f.sheet.custom) f.sheet.parts[parseInt(m[1], 10)] = v;
   }
 }
-function bsItemsOf(f){ return f.items.map(function(it, i){ return { id: i + 1, name: String(it.name || '').replace(/\s+/g, ' ').trim(), price_minor: parseBahtMinor(it.price) }; }); }
+function bsItemsOf(f){ return f.items.filter(function(it){ return String(it.name || '').trim() || String(it.price || '').trim(); }).map(function(it, i){ return { id: i + 1, name: String(it.name || '').replace(/\s+/g, ' ').trim(), price_minor: parseBahtMinor(it.price) }; }); }
 function bsTxOf(ref){ var it = ref ? findItem(ref) : null; return it || null; }
 function bsPct(bp){ return (bp / 100) + '%'; }
 function bsCheck(f){  // สถานะเช็คดุลของหน้าสร้าง → { ok, html, cls }
@@ -4324,8 +4368,6 @@ function bsCheck(f){  // สถานะเช็คดุลของหน้�
   var tx = bsTxOf(f.tx);
   var items = bsItemsOf(f);
   var sub = items.reduce(function(a, it){ return a + it.price_minor; }, 0);
-  var ownSub = 0;
-  f.items.forEach(function(it, i){ if (it.own) ownSub += items[i].price_minor; });
   if (!B) return { ok: false, cls: 'bad', html: '<span class="st">โหลดตัวคำนวณไม่ได้ — รีเฟรชหน้า</span>' };
   var bad = items.length ? B.validateItems(items) : '';
   var gross = B.grossOf(sub, f.svc, f.vat);
@@ -4333,12 +4375,20 @@ function bsCheck(f){  // สถานะเช็คดุลของหน้�
     + ' = ยอดจากรายการ <b>'+fmtBaht(gross)+'฿</b>';
   if (!tx) return { ok: false, cls: '', html: lines + '<br><span class="st">เลือก "รายการจ่ายจริง" ด้านบนก่อน — ใช้เป็นยอดเช็คดุล</span>' };
   lines += '<br>ยอดจ่ายจริง <b>'+fmtBaht(tx.amount_minor)+'฿</b> · '+esc(shortName(tx))+' '+fmtWhen(tx.at);
-  var own = f.items.some(function(it){ return it.own; }) ? '<br>ส่วนของเรา (ติ๊กไว้) ≈ <b>'+fmtBaht(B.estimate(ownSub, f.svc, f.vat))+'฿</b> — ไม่หลุดเข้า "รอคืน"' : '';
-  if (!items.length) return { ok: false, cls: '', html: lines + '<br><span class="st">ใส่รายการในบิลก่อน (วาง/พิมพ์ลิสต์ หรือ ＋ เพิ่มบรรทัด)</span>' };
+  if (!items.length) return { ok: false, cls: '', html: lines + '<br><span class="st">ใส่รายการในบิลก่อน</span>' };
   if (bad) return { ok: false, cls: 'bad', html: lines + '<br><span class="st">✗ ' + esc(bad) + '</span>' };
   var ck = B.billCheck(items, f.svc, f.vat, tx.amount_minor);
-  if (!ck.ok) return { ok: false, cls: 'bad', html: lines + '<br><span class="st">✗ ไม่ตรงบิลจริง — ต่าง '+(ck.diff > 0 ? '+' : '−')+fmtBaht(Math.abs(ck.diff))+'฿ · แก้รายการ/ราคา/เปอร์เซ็นต์ให้ตรงก่อน (ระบบไม่โปะเศษเอง)</span>' + own };
-  return { ok: true, cls: 'ok', html: lines + '<br><span class="st">✓ ตรงยอดจ่ายจริงเป๊ะ — ส่วนต่าง 0.00</span>' + own };
+  if (!ck.ok) return { ok: false, cls: 'bad', html: lines + '<br><span class="st">✗ ไม่ตรงบิลจริง — ต่าง '+(ck.diff > 0 ? '+' : '−')+fmtBaht(Math.abs(ck.diff))+'฿ · แก้รายการ/ราคา/เปอร์เซ็นต์ให้ตรงก่อน (ระบบไม่โปะเศษเอง)</span>' };
+  return { ok: true, cls: 'ok', html: lines + '<br><span class="st">✓ ตรงยอดจ่ายจริงเป๊ะ — ส่วนต่าง 0.00</span>' };
+}
+function bsRowHtml(it, i){
+  return '<div class="bsrow" data-row="'+i+'"><input class="nm" data-bs="name:'+i+'" type="text" maxlength="80" enterkeyhint="next" value="'+esc(it.name)+'" placeholder="ชื่อรายการ">'
+    + '<input class="pr" data-bs="price:'+i+'" type="text" inputmode="decimal" enterkeyhint="next" value="'+esc(it.price)+'" placeholder="ราคา">'
+    + '<button class="bs-dot" type="button" data-act="bsDot" data-i="'+i+'" aria-label="จัดการบรรทัด">⋮</button></div>';
+}
+function bsFriendHtml(nm, i){
+  return '<div class="bs-friend"><input class="bs-in" data-bs="friend:'+i+'" type="text" maxlength="30" value="'+esc(nm)+'" placeholder="ชื่อเพื่อน">'
+    + '<button class="x" type="button" data-act="bsFriendDel" data-i="'+i+'" aria-label="ลบชื่อเพื่อน">✕</button></div>';
 }
 function bsNewHtml(){
   var f = S.bsForm || bsFormDefault('type');
@@ -4349,38 +4399,31 @@ function bsNewHtml(){
       return '<button class="bstx'+(it.ref === f.tx ? ' on' : '')+'" type="button" data-act="bsTx" data-ref="'+esc(it.ref)+'"><span class="n">'+esc(shortName(it))+'<small>'+fmtWhen(it.at)+' · '+(KIND[it.kind] || it.kind)+'</small></span><span class="a">'+fmtBaht(it.amount_minor)+'฿</span></button>';
     }).join('') + ((!f.showAll && cands.length > 5) ? '<button class="miniact" type="button" data-act="bsMore" style="align-self:flex-start">ดูรายการก่อนหน้า ('+(cands.length - 5)+')</button>' : '')
     : '<div class="hint">ยังไม่มีรายการจ่ายที่ผูกได้ — รออีเมลธนาคารของบิลนี้เข้าก่อน</div>';
-  var rows = f.items.map(function(it, i){
-    return '<div class="bsrow"><button class="own'+(it.own ? ' on' : '')+'" type="button" data-act="bsOwn" data-i="'+i+'">'+(it.own ? '✓ ของเรา' : 'ของเรา?')+'</button>'
-      + '<input class="nm" data-bs="name:'+i+'" type="text" maxlength="80" value="'+esc(it.name)+'" placeholder="ชื่อรายการ">'
-      + '<input class="pr" data-bs="price:'+i+'" type="text" inputmode="decimal" value="'+esc(it.price)+'" placeholder="ราคา">'
-      + '<button class="x" type="button" data-act="bsDel" data-i="'+i+'" aria-label="ลบบรรทัด">✕</button></div>';
-  }).join('');
-  var img = f.img
-    ? '<div class="bs-img'+(f.imgBig ? ' big' : '')+'" data-act="bsImgZoom"><img src="'+esc(f.img)+'" alt="ภาพบิล"></div>'
-    : '';
+  var rows = f.items.map(bsRowHtml).join('');
+  var friends = (f.friends || []).map(bsFriendHtml).join('');
+  var img = f.img ? '<div class="bs-img" data-act="bsImgZoom"><img src="'+esc(f.img)+'" alt="ภาพบิล"></div>' : '';
   var ck = bsCheck(f);
-  var errs = (f.errs || []).length ? '<div class="bs-err">'+f.errs.map(function(e){ return 'บรรทัด '+e.line+': '+esc(e.text)+' — '+esc(e.msg); }).join('<br>')+'</div>' : '';
   return '<div class="dt-top"><button class="dt-back" data-act="vclose"><svg><use href="#i-back"/></svg></button><div class="ttl">'+(f.mode === 'scan' ? '📷 สแกนบิล' : '🧾 แชร์บิล')+' — ให้เพื่อนติ๊กเอง</div></div>'
     + '<div class="bs-s">สร้างลิงก์เฉพาะบิลนี้ → เพื่อนเปิดได้ไม่ต้องสมัคร ติ๊กรายการของตัวเอง → ยอดต่อคนรวมเท่ายอดจ่ายจริงเป๊ะ → สรุปเข้าบิลรอคืน</div>'
     + '<div class="bs-lbl">① รายการจ่ายจริง (ยอดเช็คดุล)</div><div class="bs-txs">'+txHtml+'</div>'
     + '<div class="bs-lbl">② รายการในบิล — แก้ได้ทุกบรรทัดจนกว่าจะสร้างลิงก์</div>'
     + '<div class="incbtns"><button class="miniact" type="button" data-act="bsImg">📷 '+(f.img ? 'เปลี่ยนภาพบิล' : 'ถ่าย/เลือกภาพบิล')+'</button></div>'
     + img
-    + (f.img ? '<div class="hint" style="margin:6px 2px 0">ภาพอยู่ในเครื่องนี้เท่านั้น (ไม่อัปโหลด) · แตะภาพเพื่อซูม · อ่านอัตโนมัติในแอปยังไม่เปิด — ดูภาพแล้วพิมพ์ หรือวางผลที่อ่านมาในช่องด้านล่าง</div>' : '')
-    + '<textarea class="bs-ta" data-bs="text" placeholder="วาง/พิมพ์ลิสต์ บรรทัดละรายการ: ชื่อ ราคา&#10;เช่น อาคามิยากิ จานใหญ่ 198&#10;ข้าวญี่ปุ่น 35 x2 (แยกเป็น 2 บรรทัด)" style="margin-top:8px">'+esc(f.text)+'</textarea>'
-    + '<div class="incbtns" style="margin-top:6px"><button class="miniact cy2" type="button" data-act="bsParse">⤵ แปลงเป็นรายการ</button><button class="miniact" type="button" data-act="bsAddRow">＋ เพิ่มบรรทัด</button></div>'
-    + errs
-    + (rows ? '<div style="margin-top:10px">'+rows+'</div>' : '')
+    + (f.img ? '<div class="hint" style="margin:6px 2px 0">ภาพอยู่ในเครื่องนี้เท่านั้น (ไม่อัปโหลด) · แตะภาพ = ซูม/ครอปเต็มจอ · อ่านอัตโนมัติในแอปยังไม่เปิด — ดูภาพแล้วพิมพ์รายการด้านล่าง</div>' : '')
+    + '<div id="bsRows" style="margin-top:10px">'+rows+'</div>'
+    + '<div class="hint" style="margin:2px 2px 0">พิมพ์จบราคา = บรรทัดใหม่ขึ้นเอง · ⋮ = แยก/ลบบรรทัด · บรรทัดว่างไม่นับ</div>'
     + '<div class="bs-lbl">③ ค่าบริการร้าน</div><div class="bs-chips">'
     + [0, 500, 1000].map(function(v){ return '<button class="bs-chip'+(f.svc === v ? ' on' : '')+'" type="button" data-act="bsSvc" data-v="'+v+'">เซอร์วิส '+bsPct(v)+'</button>'; }).join('')
     + '<button class="bs-chip'+(f.vat === 700 ? ' on' : '')+'" type="button" data-act="bsVat" data-v="700">VAT 7%</button>'
     + '<button class="bs-chip'+(f.vat === 0 ? ' on' : '')+'" type="button" data-act="bsVat" data-v="0">ราคารวม VAT แล้ว</button></div>'
-    + '<div class="bs-lbl">④ ชื่อเรา (ส่วนของเรา = ไม่ต้องรอคืน) · ชื่อเพื่อน (ไม่บังคับ — ให้เพื่อนกดเลือกชื่อ)</div>'
+    + '<div class="bs-lbl">④ ชื่อเรา · ชื่อเพื่อน (ไม่บังคับ — ให้เพื่อนกดเลือกชื่อ) · "ของเรา" ไปติ๊กพร้อมเพื่อนในหน้าติดตาม</div>'
     + '<div class="bsrow"><input class="nm" data-bs="owner" type="text" maxlength="30" value="'+esc(f.owner)+'" placeholder="ชื่อเรา"></div>'
-    + '<input class="bs-in" data-bs="friends" type="text" maxlength="300" value="'+esc(f.friends)+'" placeholder="เช่น เพื่อน A, เพื่อน B, เพื่อน C">'
+    + '<div class="bs-friends" id="bsFriends">'+friends+'</div>'
+    + '<button class="miniact dash" type="button" data-act="bsFriendAdd" style="margin-top:6px">＋ เพิ่มเพื่อน</button>'
     + '<div class="bs-check '+ck.cls+'" id="bsCheck">'+ck.html+'</div>'
     + '<button class="bs-go'+(ck.ok ? '' : ' off')+'" id="bsGo" type="button" data-act="bsCreate">🔗 สร้างลิงก์ให้เพื่อน</button>'
-    + '<div class="hint" style="margin:8px 2px">หลังสร้างลิงก์ รายการ/ราคาแก้ไม่ได้ (เพื่อนติ๊กอิงบรรทัดเดิม) — ผิดให้ยกเลิกแล้วสร้างใหม่</div>';
+    + '<div class="hint" style="margin:8px 2px">หลังสร้างลิงก์ รายการ/ราคาแก้ไม่ได้ (เพื่อนติ๊กอิงบรรทัดเดิม) — ผิดให้ยกเลิกแล้วสร้างใหม่</div>'
+    + bsSheetHtml(f) + bsViewerHtml(f);
 }
 function bsLiveCheck(){
   var f = S.bsForm; if (!f) return;
@@ -4388,19 +4431,399 @@ function bsLiveCheck(){
   if (box){ box.className = 'bs-check ' + ck.cls; box.innerHTML = ck.html; }
   if (go) go.className = 'bs-go' + (ck.ok ? '' : ' off');
 }
+/* ---------- C v3 (TASK_cc_billshare_v3 · P เคาะ 10 ต.ค. 69): จดต่อเนื่อง — บรรทัดใหม่ขึ้นเองเมื่อแถวสุดท้ายมีราคา ---------- */
+function bsRowEmpty(it){ return !it || (!String(it.name || '').trim() && !String(it.price || '').trim()); }
+function bsEnsureTail(f){  // ท้ายสุดต้องมีแถวว่าง 1 แถวเสมอ (ลบจนหมด = เหลือแถวว่าง)
+  if (!f.items.length || !bsRowEmpty(f.items[f.items.length - 1])) f.items.push({ name: '', price: '' });
+}
+function bsAppendRow(){  // ต่อแถวว่างท้ายสุดโดยไม่วาดทั้งหน้า (ช่องที่กำลังพิมพ์ไม่หลุด focus · คีย์บอร์ดค้าง)
+  var f = S.bsForm; if (!f) return;
+  var i = f.items.length;
+  f.items.push({ name: '', price: '' });
+  var host = el('bsRows');
+  if (host && host.insertAdjacentHTML) host.insertAdjacentHTML('beforeend', bsRowHtml(f.items[i], i));
+  else paint();
+}
+function bsRepaint(f){  // วาดใหม่หลังแก้โครงสร้างแถว (แยก/ลบ/เลิกทำ/ลบเพื่อน) — ห้าม sync ช่องเก่ากลับ (index เลื่อนแล้ว = ทับแถวผิด)
+  f._noSync = true;
+  try { paint(); } finally { f._noSync = false; }
+}
+function bsFocus(sel){ var n = document.querySelector(sel); if (n) try { n.focus(); } catch (e) {} return n; }
 document.addEventListener('input', function(e){
-  var t = e.target;
-  if (t && t.getAttribute && t.getAttribute('data-bs') && S.bsForm){ bsSyncInputs(); bsLiveCheck(); }
-});
-function bsParse(){
-  var f = S.bsForm, B = BSX(); if (!f || !B) return;
+  var t = e.target, k = t && t.getAttribute && t.getAttribute('data-bs');
+  if (!k || !S.bsForm) return;
   bsSyncInputs();
-  var r = B.parseList(f.text);
-  r.items.forEach(function(it){ f.items.push({ name: it.name, price: (it.price_minor % 100 === 0) ? String(it.price_minor / 100) : (it.price_minor / 100).toFixed(2), own: false }); });
-  f.errs = r.errors;
-  if (!r.errors.length) f.text = '';
+  var m = /^price:(\d+)$/.exec(k);
+  if (m && parseInt(m[1], 10) === S.bsForm.items.length - 1 && String(t.value || '').trim()) bsAppendRow();
+  if (/^part:/.test(k)) bsSplitLive();
+  bsLiveCheck();
+});
+document.addEventListener('keydown', function(e){  // Enter/ถัดไป: ชื่อ → ราคา → ชื่อบรรทัดถัดไป
+  var t = e.target, k = t && t.getAttribute && t.getAttribute('data-bs');
+  if (!k || !S.bsForm || e.key !== 'Enter') return;
+  var m = /^(name|price):(\d+)$/.exec(k);
+  if (!m) return;
+  e.preventDefault();
+  var i = parseInt(m[2], 10);
+  if (m[1] === 'name'){ bsFocus('#detail input[data-bs="price:'+i+'"]'); return; }
+  bsSyncInputs();
+  if (i === S.bsForm.items.length - 1){ if (bsRowEmpty(S.bsForm.items[i])) return; bsAppendRow(); }
+  bsFocus('#detail input[data-bs="name:'+(i + 1)+'"]');
+});
+/* ---------- แผงด้านล่าง (⋮): แผง 1 แยก/ลบ → แผง 2 แยกส่วน (สลับเนื้อหาในแผงเดิม) ---------- */
+var BS_SUGGEST_RE = /[x×*]\s?(\d{1,2})|(\d{1,2})\s?[x×*]/i;
+function bsSuggestN(name){  // เจอ ×N ในชื่อ → แนะนำแยก N (2–9) · แนะนำเท่านั้น ไม่ auto
+  var m = BS_SUGGEST_RE.exec(String(name || ''));
+  if (!m) return 0;
+  var n = parseInt(m[1] || m[2], 10);
+  return (n >= 2 && n <= 9) ? n : 0;
+}
+function bsMinorStr(m){ return (m % 100 === 0) ? String(m / 100) : (m / 100).toFixed(2); }
+function bsShortBaht(m){ return fmtBaht(m).replace(/\.00$/, ''); }
+function bsLineName(it){ return String((it && it.name) || '').replace(/\s+/g, ' ').trim(); }
+function bsSplitPrices(s, priceMinor){  // แผง 2 → { parts:[สตางค์], ok, sum } · Σ ต้อง = ราคาเดิมเป๊ะ
+  var B = BSX();
+  if (!s || !B || !(priceMinor > 0)) return { parts: [], ok: false, sum: 0 };
+  if (s.custom){
+    var p = (s.parts || []).map(parseBahtMinor);
+    var sum = p.reduce(function(a, x){ return a + x; }, 0);
+    return { parts: p, ok: p.length >= 2 && p.length <= 9 && p.every(function(x){ return x > 0; }) && sum === priceMinor, sum: sum };
+  }
+  if (!(s.n >= 2)) return { parts: [], ok: false, sum: 0 };
+  return { parts: B.splitParts(priceMinor, s.n), ok: true, sum: priceMinor };
+}
+function bsSplitRows(name, parts){  // ชื่อเดิม + " (k/N)" ต่อส่วน
+  var base = String(name || '').replace(/\s+/g, ' ').trim().slice(0, 80 - 7), N = parts.length;
+  return parts.map(function(p, k){ return { name: base + ' (' + (k + 1) + '/' + N + ')', price: bsMinorStr(p) }; });
+}
+function bsSplitSumTxt(r, pm){
+  return r.ok ? '✓ รวม '+fmtBaht(r.sum)+' = ราคาเดิมพอดี' : 'รวม '+fmtBaht(r.sum || 0)+' / '+fmtBaht(pm)+'฿ — ต้องเท่าราคาเดิมพอดี (ทุกส่วน > 0)';
+}
+function bsSheetInner(f){
+  var s = f.sheet, it = f.items[s.i] || {};
+  var name = bsLineName(it), pm = parseBahtMinor(it.price), nm = esc(name || '(ยังไม่มีชื่อ)');
+  var head = '<div class="bs-sheet-handle"></div>';
+  if (s.step !== 2){
+    return head + '<div class="bs-sheet-title">'+nm+' — '+bsShortBaht(pm)+'฿</div><div class="bs-sheet-sub">บรรทัดที่ '+(s.i + 1)+' ของบิล</div>'
+      + '<button class="bs-sheet-btn'+(pm > 0 ? '' : ' off')+'" type="button" data-act="bsSplit">✂ แยกบรรทัด</button>'
+      + (pm > 0 ? '' : '<div class="bs-sheet-sub">ใส่ราคาก่อนจึงแยกได้</div>')
+      + '<button class="bs-sheet-btn red" type="button" data-act="bsDeleteRow">🗑 ลบบรรทัด</button>'
+      + '<button class="bs-sheet-btn clear" type="button" data-act="bsSheetClose">ยกเลิก</button>';
+  }
+  var sug = bsSuggestN(name), r = bsSplitPrices(s, pm);
+  var chip = function(on, sg, attrs, label){ return '<button type="button" class="'+(on ? 'on' : '')+(sg ? ' sugc' : '')+'" '+attrs+'>'+label+'</button>'; };
+  var html = head + '<div class="bs-sheet-title">✂ แยก «'+nm+'» — '+bsShortBaht(pm)+'฿</div><div class="bs-sheet-sub">เลือกวิธีแยก — แต่ละส่วนติ๊กแยกกันได้</div>'
+    + (sug ? '<div class="bs-suggest" id="bsSuggest">💡 แนะนำ: แยก '+sug+' — เจอ «×'+sug+'» ในบรรทัดนี้</div>' : '')
+    + '<div class="bs-split-chips">'
+    + chip(!s.custom && s.n === 2, sug === 2, 'data-act="bsSplitPick" data-n="2"', 'แยก 2')
+    + chip(!s.custom && s.n === 3, sug === 3, 'data-act="bsSplitPick" data-n="3"', 'แยก 3')
+    + chip(!!s.custom, sug > 3, 'data-act="bsCustom"', 'กำหนดเอง') + '</div>';
+  if (s.custom){
+    html += '<div class="bs-custom-n"><button type="button" data-act="bsCustomN" data-d="-1" aria-label="ลดจำนวนส่วน">−</button><span>'+s.parts.length+' ส่วน</span>'
+      + '<button type="button" data-act="bsCustomN" data-d="1" aria-label="เพิ่มจำนวนส่วน">＋</button></div>';
+  }
+  if (r.parts.length){
+    var N = r.parts.length;
+    html += '<div class="bs-parts" id="bsParts">' + r.parts.map(function(p, k){
+      return '<div class="bs-part"><span class="ring"></span><span class="nm">'+nm+' ('+(k + 1)+'/'+N+')</span>'
+        + (s.custom ? '<input class="pr" data-bs="part:'+k+'" type="text" inputmode="decimal" value="'+esc(s.parts[k])+'">' : '<span class="pr">'+bsShortBaht(p)+'</span>') + '</div>';
+    }).join('') + '</div>';
+    if (s.custom) html += '<div class="bs-sheet-sub" id="bsSplitSum">'+bsSplitSumTxt(r, pm)+'</div>';
+  } else html += '<div class="bs-sheet-sub">แตะชิปเพื่อดูตัวอย่างก่อนแยก</div>';
+  return html + '<div class="bs-split-actions"><button class="bs-sheet-btn back" type="button" data-act="bsSplitBack">← ย้อนกลับ</button>'
+    + '<button class="bs-sheet-btn'+(r.ok ? '' : ' off')+'" id="bsSplitGo" type="button" data-act="bsSplitApply">✂ แยกเลย</button></div>';
+}
+function bsSheetHtml(f){
+  if (!f.sheet || !f.items[f.sheet.i]) return '';
+  return '<div class="bs-sheet-ov" id="bsSheet" data-act="bsSheetClose"><div class="bs-sheet" id="bsSheetBody" data-act="bsSheetStay" role="dialog" aria-modal="true">'
+    + bsSheetInner(f) + '</div></div>';
+}
+function bsRepaintSheet(){  // สลับเนื้อหาในแผงเดิม (ไม่ปิด-เปิดใหม่ · ไม่เล่นแอนิเมชันซ้ำ)
+  var f = S.bsForm, b = el('bsSheetBody');
+  if (f && f.sheet && b && b.parentNode) b.innerHTML = bsSheetInner(f);
+  else paint();
+}
+function bsOpenSheet(i){
+  var f = S.bsForm; if (!f || !f.items[i]) return;
+  try { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch (e) {}
+  f.sheet = { i: i, step: 1, n: 0, custom: false, parts: [] };
   paint();
-  toast(r.items.length ? ('เพิ่ม ' + r.items.length + ' บรรทัด' + (r.errors.length ? ' · มี ' + r.errors.length + ' บรรทัดที่อ่านไม่ได้' : '')) : 'ไม่เจอรายการที่มีราคา', !r.items.length);
+}
+function bsCloseSheet(){
+  var f = S.bsForm; if (!f) return;
+  bsSyncInputs();
+  f.sheet = null;
+  var ov = el('bsSheet');
+  if (ov && ov.parentNode) ov.parentNode.removeChild(ov); else paint();
+}
+function bsSplitOpen(){
+  var f = S.bsForm; if (!f || !f.sheet) return;
+  if (!(parseBahtMinor((f.items[f.sheet.i] || {}).price) > 0)){ toast('ใส่ราคาบรรทัดนี้ก่อน', true); return; }
+  f.sheet.step = 2; f.sheet.n = 0; f.sheet.custom = false; f.sheet.parts = [];
+  bsRepaintSheet();
+}
+function bsSplitBack(){ var f = S.bsForm; if (!f || !f.sheet) return; f.sheet.step = 1; bsRepaintSheet(); }
+function bsSplitPick(n){ var f = S.bsForm; if (!f || !f.sheet) return; f.sheet.custom = false; f.sheet.n = n; f.sheet.parts = []; bsRepaintSheet(); }
+function bsCustomParts(f, n){
+  var pm = parseBahtMinor((f.items[f.sheet.i] || {}).price), B = BSX();
+  return B ? B.splitParts(pm, n).map(bsMinorStr) : [];
+}
+function bsSplitCustom(){
+  var f = S.bsForm; if (!f || !f.sheet) return;
+  var n = f.sheet.n || bsSuggestN(bsLineName(f.items[f.sheet.i])) || 2;
+  f.sheet.custom = true; f.sheet.n = 0; f.sheet.parts = bsCustomParts(f, n);
+  bsRepaintSheet();
+}
+function bsSplitCustomN(d){
+  var f = S.bsForm; if (!f || !f.sheet || !f.sheet.custom) return;
+  var n = Math.max(2, Math.min(9, f.sheet.parts.length + (d || 0)));
+  f.sheet.parts = bsCustomParts(f, n);
+  bsRepaintSheet();
+}
+function bsSplitLive(){  // พิมพ์ราคาส่วน (กำหนดเอง) → อัปเดตยอดรวม/ปุ่มยืนยันโดยไม่วาดใหม่ (focus ไม่หลุด)
+  var f = S.bsForm; if (!f || !f.sheet) return;
+  var pm = parseBahtMinor((f.items[f.sheet.i] || {}).price), r = bsSplitPrices(f.sheet, pm);
+  var go = el('bsSplitGo'), sm = el('bsSplitSum');
+  if (go) go.className = 'bs-sheet-btn' + (r.ok ? '' : ' off');
+  if (sm) sm.textContent = bsSplitSumTxt(r, pm);
+}
+function bsSplitApply(){
+  var f = S.bsForm; if (!f || !f.sheet) return;
+  bsSyncInputs();
+  var i = f.sheet.i, it = f.items[i];
+  var r = bsSplitPrices(f.sheet, parseBahtMinor(it && it.price));
+  if (!it || !r.ok){ toast('ยอดแต่ละส่วนรวมต้องเท่าราคาเดิมพอดี', true); return; }
+  var rows = bsSplitRows(bsLineName(it), r.parts);
+  Array.prototype.splice.apply(f.items, [i, 1].concat(rows));
+  f.sheet = null;
+  bsEnsureTail(f);
+  bsRepaint(f);
+  toast('แยกเป็น ' + rows.length + ' บรรทัดแล้ว');
+}
+function bsDeleteRow(){
+  var f = S.bsForm; if (!f || !f.sheet) return;
+  bsSyncInputs();
+  var i = f.sheet.i, it = f.items.splice(i, 1)[0];
+  f.sheet = null;
+  bsEnsureTail(f);
+  bsRepaint(f);
+  toast('ลบบรรทัด «' + (bsLineName(it) || 'ว่าง') + '» แล้ว', false, '↩ เลิกทำ', function(){
+    if (S.bsForm !== f) return;
+    bsSyncInputs();
+    f.items.splice(Math.min(i, f.items.length), 0, it);   // คืนตำแหน่งเดิม
+    bsRepaint(f);
+  });
+}
+(function(){  // ปัดแผงลงเพื่อปิด
+  var y0 = null, dy = 0, sheet = null;
+  document.addEventListener('touchstart', function(e){
+    var s = e.target && e.target.closest ? e.target.closest('.bs-sheet') : null;
+    if (!s || e.target.closest('input') || s.scrollTop > 0 || e.touches.length !== 1){ y0 = null; return; }
+    y0 = e.touches[0].clientY; dy = 0; sheet = s;
+  }, { passive: true });
+  document.addEventListener('touchmove', function(e){
+    if (y0 === null || !sheet) return;
+    dy = Math.max(0, e.touches[0].clientY - y0);
+    sheet.style.transform = dy ? 'translateY(' + dy + 'px)' : '';
+  }, { passive: true });
+  document.addEventListener('touchend', function(){
+    if (y0 === null || !sheet) return;
+    var s = sheet; y0 = null; sheet = null;
+    if (dy > 70) bsCloseSheet(); else s.style.transform = '';
+  }, { passive: true });
+})();
+/* ---------- ④ เพื่อน: เพิ่มทีละคน ---------- */
+function bsFriendsOf(f){
+  var seen = {};
+  return (Array.isArray(f.friends) ? f.friends : []).map(function(x){ return String(x || '').replace(/\s+/g, ' ').trim(); })
+    .filter(function(x){ if (!x || seen[x]) return false; seen[x] = 1; return true; });
+}
+function bsFriendAdd(){
+  var f = S.bsForm; if (!f) return;
+  bsSyncInputs();
+  if (!Array.isArray(f.friends)) f.friends = [];
+  if (f.friends.length >= 30){ toast('ใส่ชื่อเพื่อนได้สูงสุด 30 คน', true); return; }
+  f.friends.push('');
+  paint();
+  bsFocus('#detail input[data-bs="friend:'+(f.friends.length - 1)+'"]');
+}
+function bsFriendDel(i){
+  var f = S.bsForm; if (!f || !Array.isArray(f.friends)) return;
+  bsSyncInputs();
+  f.friends.splice(i, 1);
+  bsRepaint(f);
+}
+/* ---------- ภาพบิล: ซูม/ครอปเต็มจอ (ในเครื่องเท่านั้น · ไม่อัปโหลด) ----------
+   ภาพวางแบบ contain ใน stage แล้วขยาย zoom (1–4×) รอบกลางจอ + เลื่อน pan · กรอบครอปเก็บเป็นพิกัดภาพ 0..1 (l,t,r,b)
+   → ซูม/เลื่อนแล้วกรอบติดภาพเสมอ · ครอปจริงด้วย canvas ตามพิกัดภาพต้นฉบับ */
+var BS_ZMAX = 4, BS_CMIN = 0.06;
+function bsVGeom(stW, stH, natW, natH, zoom, panX, panY){  // ตำแหน่งภาพบนจอ (px ใน stage)
+  if (!(stW > 0 && stH > 0 && natW > 0 && natH > 0)) return { x: 0, y: 0, w: 0, h: 0 };
+  var fit = Math.min(stW / natW, stH / natH), w = natW * fit * zoom, h = natH * fit * zoom;
+  return { x: (stW - w) / 2 + (panX || 0), y: (stH - h) / 2 + (panY || 0), w: w, h: h };
+}
+function bsClampPan(stW, stH, natW, natH, zoom, panX, panY){  // เลื่อนได้เฉพาะส่วนที่ล้นจอ
+  var g = bsVGeom(stW, stH, natW, natH, zoom, 0, 0);
+  var mx = Math.max(0, (g.w - stW) / 2), my = Math.max(0, (g.h - stH) / 2);
+  return { x: Math.max(-mx, Math.min(mx, panX || 0)), y: Math.max(-my, Math.min(my, panY || 0)) };
+}
+function bsPinchPan(mid0, pan0, z0, mid, z, center){  // จุดใต้นิ้วคงที่ระหว่างหุบ–กาง
+  return { x: mid.x - center.x - (mid0.x - center.x - pan0.x) * z / z0, y: mid.y - center.y - (mid0.y - center.y - pan0.y) * z / z0 };
+}
+function bsCropMove(c, mode, dx, dy){  // ลากกรอบ: dx/dy = สัดส่วนของภาพ · mode = move|tl|tr|bl|br → กรอบใหม่ (อยู่ในภาพ · ไม่เล็กกว่าขั้นต่ำ)
+  var l = c.l, t = c.t, r = c.r, b = c.b;
+  if (mode === 'move'){
+    var w = r - l, h = b - t;
+    l = Math.max(0, Math.min(1 - w, l + dx)); t = Math.max(0, Math.min(1 - h, t + dy));
+    return { l: l, t: t, r: l + w, b: t + h };
+  }
+  if (mode.charAt(1) === 'l') l = Math.max(0, Math.min(r - BS_CMIN, l + dx)); else r = Math.min(1, Math.max(l + BS_CMIN, r + dx));
+  if (mode.charAt(0) === 't') t = Math.max(0, Math.min(b - BS_CMIN, t + dy)); else b = Math.min(1, Math.max(t + BS_CMIN, b + dy));
+  return { l: l, t: t, r: r, b: b };
+}
+function bsCropSrc(c, natW, natH){  // กรอบ (0..1) → พิกัด drawImage บนภาพต้นฉบับ (px เต็ม · อยู่ในภาพ)
+  var sx = Math.max(0, Math.min(natW - 1, Math.round(c.l * natW))), sy = Math.max(0, Math.min(natH - 1, Math.round(c.t * natH)));
+  var ex = Math.max(sx + 1, Math.min(natW, Math.round(c.r * natW))), ey = Math.max(sy + 1, Math.min(natH, Math.round(c.b * natH)));
+  return { sx: sx, sy: sy, sw: ex - sx, sh: ey - sy };
+}
+function bsCropFull(c){ return c.l <= 0.001 && c.t <= 0.001 && c.r >= 0.999 && c.b >= 0.999; }
+function bsViewerHtml(f){
+  if (!f.imgView || !f.img) return '';
+  return '<div class="bs-viewer" id="bsViewer" role="dialog" aria-modal="true">'
+    + '<div class="bs-vtop"><button class="close" type="button" data-act="bsViewerClose" aria-label="ปิด">✕</button><div class="title">📷 ภาพบิล · ซูม/ครอป</div><div class="bs-vzoom" id="bsVZoom">ซูม '+f.imgView.z.toFixed(1)+'×</div></div>'
+    + '<div class="bs-vstage" id="bsVStage"><img id="bsVImg" src="'+esc(f.img)+'" alt="ภาพบิล" draggable="false">'
+    + '<div class="bs-crop" id="bsVCrop"><i class="tl" data-c="tl"></i><i class="tr" data-c="tr"></i><i class="bl" data-c="bl"></i><i class="br" data-c="br"></i></div></div>'
+    + '<div class="bs-vbottom"><div class="bs-vhint">หุบ–กางนิ้ว = ซูม · ลาก = เลื่อน · ลากมุมกรอบ = ครอป</div>'
+    + '<div class="bs-vactions"><button type="button" data-act="bsViewerReset">↺ รีเซ็ต</button><button class="use" type="button" data-act="bsViewerUse">✓ ใช้ภาพนี้ (ครอปแล้ว)</button></div></div></div>';
+}
+function bsViewNew(){ return { z: 1, px: 0, py: 0, c: { l: 0, t: 0, r: 1, b: 1 } }; }
+function bsOpenViewer(){
+  var f = S.bsForm; if (!f || !f.img) return;
+  try { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch (e) {}
+  f.imgView = bsViewNew();
+  paint();
+}
+function bsCloseViewer(){ var f = S.bsForm; if (!f) return; f.imgView = null; paint(); }
+function bsResetViewer(){  // คืนต้นฉบับ + กรอบเต็ม + ซูม 1×
+  var f = S.bsForm; if (!f) return;
+  if (f.imgOrig && f.img !== f.imgOrig){ try { URL.revokeObjectURL(f.img); } catch (e) {} f.img = f.imgOrig; }
+  f.imgView = bsViewNew();
+  paint();
+}
+function bsVStageDims(){
+  var st = el('bsVStage'), im = el('bsVImg');
+  if (!st || !im || !im.naturalWidth) return null;
+  return { st: st, im: im, w: st.clientWidth, h: st.clientHeight, nw: im.naturalWidth, nh: im.naturalHeight };
+}
+function bsViewerApply(){  // state → DOM (ไม่วาดใหม่ระหว่างนิ้วขยับ)
+  var f = S.bsForm, v = f && f.imgView, d = bsVStageDims();
+  if (!v || !d) return;
+  var p = bsClampPan(d.w, d.h, d.nw, d.nh, v.z, v.px, v.py); v.px = p.x; v.py = p.y;
+  var g = bsVGeom(d.w, d.h, d.nw, d.nh, v.z, v.px, v.py), cr = el('bsVCrop'), zc = el('bsVZoom');
+  d.im.style.left = g.x + 'px'; d.im.style.top = g.y + 'px'; d.im.style.width = g.w + 'px'; d.im.style.height = g.h + 'px';
+  if (cr){ cr.style.left = (g.x + v.c.l * g.w) + 'px'; cr.style.top = (g.y + v.c.t * g.h) + 'px'; cr.style.width = ((v.c.r - v.c.l) * g.w) + 'px'; cr.style.height = ((v.c.b - v.c.t) * g.h) + 'px'; }
+  if (zc) zc.textContent = 'ซูม ' + v.z.toFixed(1) + '×';
+}
+function bsViewerInit(){  // เรียกหลังวาด #detail ทุกครั้งที่ viewer เปิดอยู่
+  var im = el('bsVImg'); if (!im) return;
+  if (im.complete && im.naturalWidth) bsViewerApply(); else im.onload = bsViewerApply;
+  var st = el('bsVStage'); if (!st || st._bsBound) return;
+  st._bsBound = true;
+  var g0 = null, lastTap = 0;
+  function pt(t){ var r = st.getBoundingClientRect(); return { x: t.clientX - r.left, y: t.clientY - r.top }; }
+  function begin(list, target){
+    var v = S.bsForm && S.bsForm.imgView, d = bsVStageDims(); if (!v || !d) return null;
+    var g = bsVGeom(d.w, d.h, d.nw, d.nh, v.z, v.px, v.py);
+    if (list.length >= 2){
+      var a = pt(list[0]), b = pt(list[1]);
+      return { mode: 'pinch', d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, z0: v.z, mid0: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, pan0: { x: v.px, y: v.py }, c: { x: d.w / 2, y: d.h / 2 } };
+    }
+    var p = pt(list[0]), corner = target && target.getAttribute && target.getAttribute('data-c');
+    var inBox = p.x >= g.x + v.c.l * g.w && p.x <= g.x + v.c.r * g.w && p.y >= g.y + v.c.t * g.h && p.y <= g.y + v.c.b * g.h;
+    // กรอบเต็มภาพ + ซูมอยู่ = ลากเลื่อนภาพ · กรอบถูกครอปแล้ว = ลากในกรอบเลื่อนกรอบ
+    var mode = corner || ((inBox && !(bsCropFull(v.c) && v.z > 1)) ? 'move' : (v.z > 1 ? 'pan' : 'none'));
+    return { mode: mode, p0: p, c0: { l: v.c.l, t: v.c.t, r: v.c.r, b: v.c.b }, pan0: { x: v.px, y: v.py }, gw: g.w, gh: g.h, moved: false };
+  }
+  function move(list){
+    var v = S.bsForm && S.bsForm.imgView; if (!v || !g0) return;
+    if (g0.mode === 'pinch'){
+      if (list.length < 2) return;
+      var a = pt(list[0]), b = pt(list[1]), dd = Math.hypot(a.x - b.x, a.y - b.y);
+      var z = Math.max(1, Math.min(BS_ZMAX, g0.z0 * dd / g0.d0));
+      var pp = bsPinchPan(g0.mid0, g0.pan0, g0.z0, { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, z, g0.c);
+      v.z = z; v.px = pp.x; v.py = pp.y;
+    } else {
+      var p = pt(list[0]), dx = p.x - g0.p0.x, dy = p.y - g0.p0.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) g0.moved = true;
+      if (g0.mode === 'pan'){ v.px = g0.pan0.x + dx; v.py = g0.pan0.y + dy; }
+      else if (g0.mode !== 'none' && g0.gw > 0) v.c = bsCropMove(g0.c0, g0.mode, dx / g0.gw, dy / g0.gh);
+    }
+    bsViewerApply();
+  }
+  function tapZoom(p){  // ดับเบิลแตะ = ซูมเข้า 2.5× ที่จุดแตะ / ซูมออก 1×
+    var v = S.bsForm && S.bsForm.imgView, d = bsVStageDims(); if (!v || !d) return;
+    if (v.z > 1.05){ v.z = 1; v.px = 0; v.py = 0; }
+    else { var c = { x: d.w / 2, y: d.h / 2 }, pp = bsPinchPan(p, { x: v.px, y: v.py }, v.z, c, 2.5, c); v.z = 2.5; v.px = pp.x; v.py = pp.y; }
+    bsViewerApply();
+  }
+  var CORNERS = { tl: 1, tr: 1, bl: 1, br: 1 };
+  // แตะ = นิ้วเดียว ไม่ขยับ ไม่เคยเป็น 2 นิ้ว · นับตอนยกนิ้ว (2 นิ้วบางเครื่องส่ง touchstart ทีละนิ้ว → ห้ามนับตอนแตะลง)
+  var tap = null;
+  st.addEventListener('touchstart', function(e){
+    e.preventDefault(); e.stopPropagation();
+    g0 = begin(e.touches, e.target);
+    tap = (e.touches.length === 1 && g0 && !CORNERS[g0.mode]) ? { t: Date.now(), p: pt(e.touches[0]) } : null;
+  }, { passive: false });
+  st.addEventListener('touchmove', function(e){
+    e.preventDefault(); e.stopPropagation();
+    if (g0 && g0.mode !== 'pinch' && e.touches.length >= 2) g0 = begin(e.touches, null);
+    move(e.touches);
+    if (tap && (!g0 || g0.mode === 'pinch' || g0.moved)) tap = null;
+  }, { passive: false });
+  st.addEventListener('touchend', function(e){
+    e.stopPropagation();
+    if (e.touches.length){ g0 = begin(e.touches, null); if (g0) g0.moved = true; tap = null; return; }   // เหลือนิ้วเดียวหลังหุบ–กาง = เลื่อนต่อ ไม่นับเป็นแตะ
+    g0 = null;
+    var now = Date.now();
+    if (!tap || now - tap.t > 280){ tap = null; lastTap = 0; return; }
+    if (lastTap && now - lastTap < 320){ lastTap = 0; tapZoom(tap.p); }
+    else lastTap = now;
+    tap = null;
+  }, { passive: false });
+  st.addEventListener('touchcancel', function(e){ e.stopPropagation(); g0 = null; });
+  st.addEventListener('mousedown', function(e){ e.preventDefault(); e.stopPropagation(); g0 = begin([e], e.target); });
+  st.addEventListener('mousemove', function(e){ if (g0 && (e.buttons & 1)) move([e]); });
+  st.addEventListener('mouseup', function(){ g0 = null; });
+  st.addEventListener('mouseleave', function(){ g0 = null; });
+  st.addEventListener('dblclick', function(e){ e.preventDefault(); tapZoom(pt(e)); });
+  st.addEventListener('wheel', function(e){
+    e.preventDefault();
+    var v = S.bsForm && S.bsForm.imgView, d = bsVStageDims(); if (!v || !d) return;
+    var z = Math.max(1, Math.min(BS_ZMAX, v.z * (e.deltaY < 0 ? 1.15 : 1 / 1.15))), p = pt(e);
+    var pp = bsPinchPan(p, { x: v.px, y: v.py }, v.z, p, z, { x: d.w / 2, y: d.h / 2 });
+    v.z = z; v.px = pp.x; v.py = pp.y; bsViewerApply();
+  }, { passive: false });
+}
+if (typeof window !== 'undefined' && window.addEventListener) window.addEventListener('resize', function(){ if (S.bsForm && S.bsForm.imgView) bsViewerApply(); });
+function bsUseCrop(){  // ครอปผ่าน canvas → blob URL ใหม่แทน f.img · เก็บต้นฉบับไว้คืนได้ในเซสชัน
+  var f = S.bsForm, v = f && f.imgView, im = el('bsVImg');
+  if (!v) return;
+  if (bsCropFull(v.c) || !im || !im.naturalWidth){ bsCloseViewer(); return; }
+  var r = bsCropSrc(v.c, im.naturalWidth, im.naturalHeight);
+  var cv = document.createElement('canvas'); cv.width = r.sw; cv.height = r.sh;
+  var cx = cv.getContext && cv.getContext('2d');
+  if (!cx){ toast('ครอปไม่ได้บนเครื่องนี้', true); return; }
+  cx.drawImage(im, r.sx, r.sy, r.sw, r.sh, 0, 0, r.sw, r.sh);
+  function done(url){
+    if (S.bsForm !== f) return;
+    if (!f.imgOrig) f.imgOrig = f.img;
+    else if (f.img !== f.imgOrig){ try { URL.revokeObjectURL(f.img); } catch (e) {} }
+    f.img = url; f.imgView = null;
+    paint();
+    toast('ครอปภาพแล้ว · ภาพอยู่ในเครื่องเท่านั้น');
+  }
+  if (cv.toBlob) cv.toBlob(function(b){ if (b) done(URL.createObjectURL(b)); else toast('ครอปไม่สำเร็จ', true); }, 'image/jpeg', 0.92);
+  else done(cv.toDataURL('image/jpeg', 0.92));
 }
 function bsCreate(){
   var f = S.bsForm, B = BSX(); if (!f || !B) return;
@@ -4412,8 +4835,7 @@ function bsCreate(){
     tx_ref: f.tx, title: shortName(tx), owner_name: String(f.owner || '').replace(/\s+/g, ' ').trim() || 'เรา',
     items: bsItemsOf(f).map(function(it){ return { name: it.name, price_minor: it.price_minor }; }),
     svc_bp: f.svc, vat_bp: f.vat,
-    friends: String(f.friends || '').split(/[,،\n]+/).map(function(x){ return x.replace(/\s+/g, ' ').trim(); }).filter(function(x){ return x; }),
-    own: f.items.map(function(it, i){ return it.own ? i : -1; }).filter(function(i){ return i >= 0; })
+    friends: bsFriendsOf(f)   // v3: แถวเพื่อนทีละคน (array) · ไม่ส่ง own แล้ว — "ของเรา" ติ๊กในหน้าติดตาม
   };
   if (IS_DEMO){ bsDemoCreate(payload, tx); return; }
   if (S._bsBusy) return;
@@ -4444,7 +4866,7 @@ function bsDemoCreate(p, tx){  // เดโม่: เก็บในหน่�
   S.data.shares.unshift({ id: id, token: bsRandToken(), tx_ref: p.tx_ref, title: p.title, owner_name: p.owner_name,
     items: p.items.map(function(it, i){ return { id: i + 1, name: it.name, price_minor: it.price_minor }; }),
     svc_bp: p.svc_bp, vat_bp: p.vat_bp, total_minor: tx.amount_minor, status: 'open', result: null, at: todayISO() + 'T12:00:00', locked_at: '',
-    ticks: p.own.map(function(i){ return { item_id: i + 1, person: p.owner_name, is_owner: true }; }),
+    ticks: [],   // v3: ไม่ seed ติ๊กจากหน้าสร้าง — เจ้าของติ๊ก "ของเรา" ในหน้าติดตามพร้อมเพื่อน
     people: p.friends.map(function(n){ return { name: n, done: false, joined: false }; }) });
   S.bsForm = null;
   S.view = { t: 'bsView', id: id, fresh: true };
@@ -4646,8 +5068,9 @@ if (typeof setInterval === 'function') setInterval(function(){  // หน้า�
     if (!file || !S.bsForm) return;
     bsSyncInputs();
     try { if (S.bsForm.img) URL.revokeObjectURL(S.bsForm.img); } catch (e) {}
+    try { if (S.bsForm.imgOrig && S.bsForm.imgOrig !== S.bsForm.img) URL.revokeObjectURL(S.bsForm.imgOrig); } catch (e) {}
     S.bsForm.img = URL.createObjectURL(file);
-    S.bsForm.imgBig = false;
+    S.bsForm.imgOrig = ''; S.bsForm.imgView = null;
     paint();
   });
 })();
