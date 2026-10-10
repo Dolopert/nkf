@@ -483,7 +483,12 @@
   .fns{display:flex;gap:12px;margin:10px 0 2px;overflow-x:auto;scrollbar-width:none;padding:2px 1px}
   .fns::-webkit-scrollbar{height:0;display:none}
   .fn{flex:0 0 72px;text-align:center;background:none;border:0;padding:0;font-family:inherit;color:var(--tx);cursor:pointer}
-  .fn .ic{width:54px;height:54px;margin:0 auto;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center}
+  .fn .ic{width:54px;height:54px;margin:0 auto;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;position:relative}
+  /* CC 10 ต.ค. 69 (TASK_cc_billlist_v1 · รอบ 12): แบดจ์นับบิลค้าง + กระพริบ 10 วิ (ปุ่ม «บิล») */
+  .fn .ic .nb{position:absolute;top:-3px;right:-4px;background:var(--cy);color:#062026;font-size:9px;font-weight:800;border-radius:99px;padding:1.5px 6px;line-height:1.3}
+  .fn-blink .ic{outline:2.5px solid transparent;outline-offset:3px;animation:fnBlink 1s ease-in-out infinite}
+  @keyframes fnBlink{0%,100%{outline-color:transparent}50%{outline-color:var(--cy)}}
+  @media (prefers-reduced-motion:reduce){.fn-blink .ic{animation:none;outline-color:var(--cy)}}
   html[data-theme="light"] .fn .ic{background:rgba(15,23,42,.07)}
   .fn .ic svg{width:24px;height:24px;stroke:var(--tx);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
   .fn .lb{font-size:11px;color:var(--tx);font-weight:600;margin-top:8px;line-height:1.3}
@@ -580,9 +585,17 @@
   .bs-btns{display:flex;gap:8px;margin-top:10px}
   .bs-btns .bs-go{margin-top:0;flex:1}
   .bs-btns .miniact{flex:none}
-  .bshome{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px solid var(--bd2);font-size:12px;cursor:pointer}
-  .bshome:first-of-type{border-top:0}
-  .bshome .r{color:var(--mut);flex:none;font-size:11px}
+  /* หน้า «บิล» (ม็อก 2 · TASK_cc_billlist_v1) */
+  .bl-n{margin-left:auto;font-size:11px;color:var(--mut)}
+  .bl-row{display:flex;justify-content:space-between;gap:8px;padding:9px 2px;border-top:1px solid var(--bd2);font-size:12.5px;cursor:pointer;align-items:baseline}
+  .bl-row:first-of-type{border-top:0}
+  .bl-row .l{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bl-row .l .sub{display:block;font-size:10px;color:var(--dim);margin-top:2px;overflow:hidden;text-overflow:ellipsis}
+  .bl-row .r{flex:none;font-variant-numeric:tabular-nums;font-weight:600;font-size:11.5px}
+  .bl-row .r.wait{color:var(--amb2)}
+  .bl-row .r.ok{color:var(--grn3)}
+  .bl-row .r.go{color:var(--cy2)}
+  .bl-empty{font-size:12px;color:var(--mut);text-align:center;padding:28px 0}
   /* บิลแชร์ v3: แผงจัดการบรรทัดจากด้านล่าง */
   .bs-sheet-ov{position:fixed;inset:0;z-index:140;background:rgba(0,0,0,.58);display:flex;align-items:flex-end;padding:0;animation:bsfade .16s ease-out}
   .bs-sheet{width:100%;box-sizing:border-box;max-height:88vh;overflow:auto;border:1px solid var(--bd3);border-bottom:0;border-radius:24px 24px 0 0;background:var(--card);padding:10px 18px calc(18px + env(safe-area-inset-bottom));animation:bssheet .2s ease-out;touch-action:pan-y}
@@ -706,7 +719,7 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.2.19-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · CC 10 ต.ค. 69: v4.2.19 = TrueMoney คงเหลือจริงจาก statement + บัญชียอดตั้งเอง (เป๋าตัง/เงินสด/ทะเบียนธนาคารไทย · TASK_cc_tm_accounts_v1) · v4.2.18 = บิลแชร์ จัดการรายชื่อ («ไม่ใช่ฉัน» หน้าเพื่อน + ปล่อย/ลบ/เพิ่มชื่อหน้าติดตาม) + หารเท่าไม่มีชื่อ (ตั้งจำนวนคน · TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน + ปุ่ม ‹ › (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติจากภาพ (Edge Function readbill · เหลือง = ไม่ชัวร์ · ชิปเซอร์วิส/VAT ตามบิล) + โหมดหารเท่า (TASK_cc_readauto_party_v1) · v4.2.15 = ซูม/ครอปภาพบิล v2 (ลากขอบปรับด้านเดียว + บีบ 2 โหมด: กลาง=ซูม · ขอบซ้าย/ขวา=ปรับกรอบ · TASK_cc_zoomcrop_v1) · v4.2.14 = แชร์บิล v3.1 ① รายการที่จ่ายไปล่าสุด (5/ชุด + ปัดเปลี่ยนชุด + กรองเฉพาะที่เริ่มบิลได้ · TASK_cc_billshare_v31_picker) · v4.2.13 = แชร์บิล v3 (จดต่อเนื่อง + ⋮ แผงล่าง แยก 2/3/กำหนดเอง + เพื่อนเป็น + + ซูม/ครอปภาพบิล · TASK_cc_billshare_v3) · CC 9 ต.ค. 69: v4.2.12 = บิลแชร์ เพื่อนติ๊กเอง + แถวปุ่มลัดหน้าหลัก (TASK_cc_billbox_share) · v4.2.11 = บิลรอคืน รอบ 2 (ปุ่มบิลในหน้ารายการ + แยกเอง + ส่วนของเรา · TASK_cc_bill_return_app2) · v4.2.10 = บิลรอคืนบน Supabase (TASK_cc_bill_return_app) · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
+var APP_BUILD = 'v4.2.20-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · CC 10 ต.ค. 69: v4.2.20 = หน้า «บิล» + แบดจ์ + กระพริบ 10 วิ (TASK_cc_billlist_v1) · v4.2.19 = TrueMoney คงเหลือจริงจาก statement + บัญชียอดตั้งเอง (เป๋าตัง/เงินสด/ทะเบียนธนาคารไทย · TASK_cc_tm_accounts_v1) · v4.2.18 = บิลแชร์ จัดการรายชื่อ («ไม่ใช่ฉัน» หน้าเพื่อน + ปล่อย/ลบ/เพิ่มชื่อหน้าติดตาม) + หารเท่าไม่มีชื่อ (ตั้งจำนวนคน · TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน + ปุ่ม ‹ › (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติจากภาพ (Edge Function readbill · เหลือง = ไม่ชัวร์ · ชิปเซอร์วิส/VAT ตามบิล) + โหมดหารเท่า (TASK_cc_readauto_party_v1) · v4.2.15 = ซูม/ครอปภาพบิล v2 (ลากขอบปรับด้านเดียว + บีบ 2 โหมด: กลาง=ซูม · ขอบซ้าย/ขวา=ปรับกรอบ · TASK_cc_zoomcrop_v1) · v4.2.14 = แชร์บิล v3.1 ① รายการที่จ่ายไปล่าสุด (5/ชุด + ปัดเปลี่ยนชุด + กรองเฉพาะที่เริ่มบิลได้ · TASK_cc_billshare_v31_picker) · v4.2.13 = แชร์บิล v3 (จดต่อเนื่อง + ⋮ แผงล่าง แยก 2/3/กำหนดเอง + เพื่อนเป็น + + ซูม/ครอปภาพบิล · TASK_cc_billshare_v3) · CC 9 ต.ค. 69: v4.2.12 = บิลแชร์ เพื่อนติ๊กเอง + แถวปุ่มลัดหน้าหลัก (TASK_cc_billbox_share) · v4.2.11 = บิลรอคืน รอบ 2 (ปุ่มบิลในหน้ารายการ + แยกเอง + ส่วนของเรา · TASK_cc_bill_return_app2) · v4.2.10 = บิลรอคืนบน Supabase (TASK_cc_bill_return_app) · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
 var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, budForm:null, budOpen:{}, view:null, imp:null, pMonth:null, hMonth:null, recLumpOpen:false, catForm:null, shortForm:null };  // catForm/shortForm: Hermes 7 ต.ค. 69 — ฟอร์มหมวดทำเอง/รายการลัด (หน้าแยก v4.2.8)  // hMonth: CC 10 ต.ค. 69 — เดือนที่เลือกในแท็บรายการ (แยกจาก pMonth ของรอยืนยัน)  // pMonth: แก้โดย Hermes 5 ต.ค. 69 — เดือนที่เลือกในแท็บรอยืนยัน (แยกเดือน) · recLumpOpen: Hermes 7 ต.ค. 69 (§16) — กาง "ก้อนรายจ่ายประจำ" ในงบรายหมวด
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
@@ -830,6 +843,7 @@ function render(data){
   el('loading').style.display = 'none';
   el('dateChip').textContent = thToday();
   updateBadge();
+  if (!S._blinkFired) billBlinkStart();  // TASK_cc_billlist_v1: ครั้งแรกหลังโหลดข้อมูล
   paint();
 }
 function updateBadge(){
@@ -889,11 +903,13 @@ function paintDetail(){
       : (S.view.t === 'bsNew' ? bsNewHtml()      // CC 9 ต.ค. 69 (TASK_cc_billbox_share): หน้าสร้างบิลแชร์ (C)
       : (S.view.t === 'bsView' ? bsViewHtml()    // CC 9 ต.ค. 69: หน้าติดตาม/สรุป (O)
       : (S.view.t === 'acctAdd' ? acctAddHtml()  // CC 10 ต.ค. 69 (TASK_cc_tm_accounts_v1): ➕ เพิ่มบัญชี / กระเป๋า
-      : viewAcctHtml(S.data, S.view.a))))))));  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หน้าแยก เพิ่มรายการ / หมวดทำเอง / รายการลัด
+      : (S.view.t === 'bills' ? billsPageHtml()  // CC 10 ต.ค. 69 (TASK_cc_billlist_v1): หน้า «บิล» (ม็อก 2)
+      : viewAcctHtml(S.data, S.view.a)))))))));  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หน้าแยก เพิ่มรายการ / หมวดทำเอง / รายการลัด
   } catch (e) {
     el2.innerHTML = '<div class="dt-top"><button class="dt-back" data-act="vclose"><svg><use href="#i-back"/></svg></button><div class="ttl">รายละเอียด</div></div><div class="hint" style="margin:8px 2px">แสดงรายละเอียดไม่ได้</div>';
   }
   el2.className = 'detail on';
+  if (S.view.t === 'bills') billSeenMark();  // เปิด/รีเฟรชหน้า «บิล» = เห็นอัปเดตแล้ว
   if (S.view.t === 'bsNew' && S.bsForm && S.bsForm.imgView) bsViewerInit();  // TASK_cc_billshare_v3: viewer ซูม/ครอป — ผูกนิ้ว + วางภาพตามขนาดจอ
 }
 
@@ -1412,25 +1428,8 @@ function htmlSummary(d){
     + (s.pendingCount > 0
       ? '<div class="pend"><div class="e">⏳</div><div class="txt"><div class="t1">รอยืนยัน '+s.pendingCount+' รายการ</div><div class="t2">รวม ฿'+fmtBaht(s.pendingSum)+' · ยังไม่ถูกบันทึก</div></div><button class="btn-cy" data-act="tab" data-i="1">จัดการ →</button></div>'
       : '<div class="pend" style="border-color:var(--grn-bd);background:var(--grn-bg)"><div class="e">🎉</div><div class="txt"><div class="t1">เคลียร์ครบแล้ว</div><div class="t2">รออีเมลใหม่จากรอบถัดไป</div></div></div>')
-    + htmlShares(d)   // CC 9 ต.ค. 69 (TASK_cc_billbox_share): บิลแชร์ที่เปิดอยู่ (แตะ = หน้าติดตาม)
-    + htmlBills(d)
     + htmlIncomeCard(d)
     + (latestP.length ? '<div class="sec-t">ล่าสุด</div>' + latest : '');
-}
-function htmlBills(d){
-  var bills = d.bills || [];
-  var open = bills.filter(function(b){ return b.status === 'open'; });
-  var done = bills.filter(function(b){ return b.status === 'done'; });
-  if (!open.length && !done.length) return '';
-  var totalRemain = open.reduce(function(a, b){ return a + b.remaining_minor; }, 0);
-  var rows = open.concat(done).slice(0, 8).map(function(b){
-    var nm = shortName({ counterparty: b.name });
-    return '<div class="brow"><span class="l">🔁 '+esc(nm)+(b.status === 'done' ? ' <span class="ok">✓ ครบ</span>' : '')+'</span>'
-      + '<span class="r">'+(b.status === 'open' ? 'เหลือ '+fmtBaht(b.remaining_minor)+'฿' : 'ครบ '+fmtBaht(b.expect_minor)+'฿')+'</span></div>';
-  }).join('');
-  return '<div class="card"><div class="gr-head"><div class="t">บิลรอเงินคืน</div>'
-    + '<div class="r">เปิดอยู่ '+open.length+' ใบ · รวมรอ '+fmtBaht(totalRemain)+'฿</div></div>'
-    + rows + '</div>';
 }
 function htmlIncomeCard(d){
   var s = d.summary;
@@ -2307,7 +2306,7 @@ function htmlSettings(d){
     + cardMyCats(d)        // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หมวดทำเอง
     + cardMyShortcuts(d)   // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): รายการลัด
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.19-supabase</span></div>'  // CC 10 ต.ค. 69: v4.2.19 = TrueMoney คงเหลือจริง + บัญชียอดตั้งเอง (TASK_cc_tm_accounts_v1) · v4.2.18 = บิลแชร์ จัดการรายชื่อ + หารเท่าไม่มีชื่อ (TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติ + หารเท่า · v4.2.15 = ซูม/ครอปภาพบิล v2 · v4.2.14 = แชร์บิล v3.1 picker ① · v4.2.13 = แชร์บิล v3 · CC 9 ต.ค. 69: v4.2.11 = บิลรอคืน รอบ 2 · v4.2.10 = บิลรอคืนบน Supabase · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.20-supabase</span></div>'  // CC 10 ต.ค. 69: v4.2.20 = หน้า «บิล» (TASK_cc_billlist_v1) · v4.2.19 = TrueMoney คงเหลือจริง + บัญชียอดตั้งเอง (TASK_cc_tm_accounts_v1) · v4.2.18 = บิลแชร์ จัดการรายชื่อ + หารเท่าไม่มีชื่อ (TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติ + หารเท่า · v4.2.15 = ซูม/ครอปภาพบิล v2 · v4.2.14 = แชร์บิล v3.1 picker ① · v4.2.13 = แชร์บิล v3 · CC 9 ต.ค. 69: v4.2.11 = บิลรอคืน รอบ 2 · v4.2.10 = บิลรอคืนบน Supabase · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -2508,7 +2507,7 @@ document.addEventListener('click', function(e){
     return;
   }
   if (act === 'more') { if (ref) { S.ext[ref] = !S.ext[ref]; paint(); } return; }
-  if (act === 'goitem') { S.tab = 1; if (ref){ S.open[ref] = true; var gi = findItem(ref); if (gi) S.pMonth = (gi.at || '').slice(0, 7); } paint(); el('main').scrollTop = 0; return; }  // แก้โดย Hermes 5 ต.ค. 69: พาไปเดือนของแถวนั้นด้วย (แท็บรอยืนยันแยกเดือน)
+  if (act === 'goitem') { S.view = null; S.tab = 1; if (ref){ S.open[ref] = true; var gi = findItem(ref); if (gi) S.pMonth = (gi.at || '').slice(0, 7); } paint(); el('main').scrollTop = 0; return; }  // แก้โดย Hermes 5 ต.ค. 69: พาไปเดือนของแถวนั้นด้วย (แท็บรอยืนยันแยกเดือน)
   if (act === 'pmon') { var pm = t.getAttribute('data-m'); if (pm && pm !== S.pMonth){ S.pMonth = pm; paint(); el('main').scrollTop = 0; } return; }  // แก้โดย Hermes 5 ต.ค. 69: กดชิปเลือกเดือนในแท็บรอยืนยัน
   if (act === 'hstep') {  // CC 10 ต.ค. 69: ‹ › เปลี่ยนเดือนในแท็บรายการ (แพตเทิร์น vstep)
     var hm = histMonths(S.data).order;
@@ -4465,8 +4464,8 @@ var FN_ICONS = {
 };
 // แถวปุ่มลัดใต้การ์ดยอด — ไม่มีป้ายชื่อแถว (P สั่ง 9 ต.ค. 69 เย็น) · ชุดเริ่มต้น 5 ปุ่ม
 function htmlFns(){
-  function fn(act, key, label){ return '<button class="fn" type="button" data-act="'+act+'"><div class="ic"><svg viewBox="0 0 24 24">'+FN_ICONS[key]+'</svg></div><div class="lb">'+label+'</div></button>'; }
-  return '<div class="fns">' + fn('fnScan', 'scan', 'สแกนบิล') + fn('fnShare', 'share', 'แชร์บิล') + fn('fnBills', 'bills', 'บิลรอคืน')
+  function fn(act, key, label, n, cls){ return '<button class="fn'+(cls || '')+'" type="button" data-act="'+act+'"><div class="ic"><svg viewBox="0 0 24 24">'+FN_ICONS[key]+'</svg>'+(n > 0 ? '<span class="nb">'+(n > 99 ? '99+' : n)+'</span>' : '')+'</div><div class="lb">'+label+'</div></button>'; }
+  return '<div class="fns">' + fn('fnScan', 'scan', 'สแกนบิล') + fn('fnShare', 'share', 'แชร์บิล') + fn('fnBills', 'bills', 'บิล', billCount(S.data), S.billBlink ? ' fn-blink' : '')
     + fn('recNew', 'add', 'เพิ่มรายการ') + fn('fnImp', 'imp', 'นำเข้า') + '</div>';
 }
 function bsShares(){ return ((S.data && S.data.shares) || []).filter(function(s){ return s.status !== 'cancelled'; }); }
@@ -5569,38 +5568,81 @@ function bsShareLink(id){
   if (navigator.share) navigator.share({ title: 'บิล ' + sh.title, text: 'ติ๊กรายการของคุณในบิล ' + sh.title + ' (ไม่ต้องสมัคร)', url: url }).catch(function(){});
   else bsCopy(id);
 }
-function htmlShares(d){  // การ์ดหน้าแรก: บิลแชร์ที่ยังเปิด/เพิ่งล็อก — แตะ = หน้าติดตาม
-  var B = BSX();
-  var list = bsShares().filter(function(s){ return s.status === 'open' || s.status === 'locked'; });
-  if (!list.length || !B) return '';
-  var open = list.filter(function(s){ return s.status === 'open'; });
-  var rows = open.concat(list.filter(function(s){ return s.status === 'locked'; })).slice(0, 4).map(function(s){
-    var sum = B.summarize(s);
-    var n = (s.items || []).length, got = n - sum.unclaimed.length;
-    var eqTxt = '';
-    if (s.split_mode === 'equal' && s.party_n != null) eqTxt = '🎉 หารเท่า · รับทราบ ' + Math.min(Number(s.ack_count) || 0, s.party_n - 1) + '/' + (s.party_n - 1) + ' คน';   // 0015: ไม่มีชื่อ
-    else if (s.split_mode === 'equal'){   // CC 10 ต.ค. 69: หารเท่า = นับคนกดรับทราบแทนบรรทัด
-      var ppl = s.people || [];
-      eqTxt = '🎉 หารเท่า · รับทราบ ' + ppl.filter(function(p){ return p.done; }).length + '/' + ppl.length + ' คน';
-    }
-    return '<div class="bshome" data-act="bsView" data-id="'+s.id+'"><span>🧾 '+esc(s.title)+'</span><span class="r">'
-      + (s.status === 'locked' ? '🔒 เข้าบิลรอคืนแล้ว' : (eqTxt || (sum.complete ? '✓ ครบ — พร้อมสรุป' : 'ติ๊กแล้ว '+got+'/'+n+' บรรทัด')))+' ›</span></div>';
-  }).join('');
-  return '<div class="card"><div class="gr-head"><div class="t">บิลแชร์</div><div class="r">เปิดอยู่ '+open.length+' ใบ</div></div>' + rows + '</div>';
+/* ---------- CC 10 ต.ค. 69 (TASK_cc_billlist_v1 · รอบ 12): หน้า «บิล» (ม็อก 2) — แทนการ์ด บิลแชร์/บิลรอเงินคืน บนหน้าแรก ---------- */
+var BILL_BLINK_MS = 10000;
+function billLists(d){
+  d = d || {};
+  return { shares: (d.shares || []).filter(function(s){ return s.status === 'open'; }),
+           bills: (d.bills || []).filter(function(b){ return b.status === 'open'; }) };
 }
-function fnBills(){
-  var cards = document.querySelectorAll('#pane0 .card .gr-head .t');
-  for (var i = 0; i < cards.length; i++){
-    if (cards[i].textContent === 'บิลรอเงินคืน'){
-      var c = cards[i].closest('.card');
-      try { c.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { c.scrollIntoView(); }
-      animPop('#pane0 .card');
-      return;
-    }
+function billCount(d){ var L = billLists(d); return L.shares.length + L.bills.length; }
+// สัญญาณอัปเดตต่อบิล (ขึ้นอย่างเดียวเมื่อมีความคืบหน้า): แชร์ = คนเปิดลิงก์/เสร็จ/รับทราบ/บรรทัดที่ติ๊ก · รอคืน = ยอดคืนแล้ว
+function billSignals(d){
+  var L = billLists(d), out = {};
+  L.shares.forEach(function(s){
+    var ppl = s.people || [];
+    out['s:' + s.id] = ppl.filter(function(p){ return p.joined; }).length * 1e9 + ppl.filter(function(p){ return p.done; }).length * 1e7
+      + (Number(s.ack_count) || 0) * 1e5 + (s.ticks || []).length;
+  });
+  L.bills.forEach(function(b){ out['b:' + b.ref] = Number(b.returned_minor) || 0; });
+  return out;
+}
+function computeUnread(prev, cur){
+  prev = prev || {};
+  for (var k in cur) if (!(k in prev) || cur[k] > prev[k]) return true;
+  return false;
+}
+function billSeenGet(){ try { return JSON.parse(localStorage.getItem('nkf_bill_seen') || '{}') || {}; } catch (e) { return {}; } }
+function billSeenMark(){ try { localStorage.setItem('nkf_bill_seen', JSON.stringify(billSignals(S.data))); } catch (e) {} }
+function billBlinkStart(){  // ยิงครั้งเดียวต่อการเปิดแอป · ไม่มีเสียง/สั่น
+  S._blinkFired = true;
+  if (!computeUnread(billSeenGet(), billSignals(S.data))) return;
+  S.billBlink = true;
+  S._blinkT = setTimeout(billBlinkStop, BILL_BLINK_MS);
+}
+function billBlinkStop(){
+  S.billBlink = false;
+  if (S._blinkT) { clearTimeout(S._blinkT); S._blinkT = null; }
+  document.querySelectorAll('.fn-blink').forEach(function(n){ n.classList.remove('fn-blink'); });
+}
+function billShareRow(s){
+  var B = BSX(), sum = B ? B.summarize(s) : null;
+  var n = (s.items || []).length, got = sum ? n - sum.unclaimed.length : 0;
+  var ppl = s.people || [], sub, r;
+  if (s.split_mode === 'equal'){   // หารเท่า = สรุปได้ทันที · นับคนกดรับทราบแทนบรรทัด
+    var tot = s.party_n != null ? s.party_n - 1 : ppl.length;
+    var ack = s.party_n != null ? Math.min(Number(s.ack_count) || 0, tot) : ppl.filter(function(p){ return p.done; }).length;
+    sub = '🎉 หารเท่า · รับทราบ ' + ack + '/' + tot + ' คน';
+    r = '<span class="r ok">✓ ครบ — รอสรุป ›</span>';
+  } else {
+    var ticked = {}; (s.ticks || []).forEach(function(t){ if (!t.is_owner) ticked[t.person] = 1; });
+    var names = ppl.map(function(p){ return p.name; });
+    Object.keys(ticked).forEach(function(nm){ if (names.indexOf(nm) < 0) names.push(nm); });
+    sub = names.map(function(nm){
+      var p = ppl.filter(function(x){ return x.name === nm; })[0] || {};
+      return nm + ' ' + (p.done ? 'เสร็จแล้ว' : (ticked[nm] ? 'ติ๊กแล้ว' : (p.joined ? 'เปิดแล้ว' : 'ยังไม่เปิด')));
+    }).join(' · ') || 'ยังไม่มีเพื่อนเปิดลิงก์';
+    r = sum && sum.complete ? '<span class="r ok">✓ ครบ — รอสรุป ›</span>' : '<span class="r go">ติ๊กแล้ว '+got+'/'+n+' บรรทัด ›</span>';
   }
-  S.tab = 3; paint(); el('main').scrollTop = 0;
-  toast('ยังไม่มีบิลรอคืนที่เปิดอยู่ — แตะรายการ แล้วกด 💸 จ่ายก่อน — รอเงินคืน');
+  return '<div class="bl-row" data-act="bsView" data-id="'+s.id+'"><span class="l">🧾 '+esc(s.title)+'<span class="sub">'+esc(sub)+'</span></span>'+r+'</div>';
 }
+function billRetRow(b){
+  var sh = bsByTx(b.ref);
+  var act = ((S.data && S.data.pending) || []).some(function(p){ return p.ref === b.ref; }) ? 'goitem' : 'bsGoBill';   // ยังรอยืนยัน = เปิดในแท็บรอยืนยัน · บันทึกแล้ว = แท็บรายการ
+  var sub = 'รอเพื่อนโอนคืน' + (sh && sh.status === 'locked' ? ' · ล็อกแล้ว' : '') + (b.returned_minor > 0 ? ' · คืนแล้ว ' + fmtBaht(b.returned_minor) + '฿' : '');
+  return '<div class="bl-row" data-act="'+act+'" data-ref="'+esc(b.ref)+'"><span class="l">🧾 '+esc(shortName({ counterparty: b.name }))+'<span class="sub">'+sub+'</span></span>'
+    + '<span class="r wait">รอคืน '+fmtBaht(b.remaining_minor || 0)+'฿ ›</span></div>';
+}
+function billsPageHtml(){
+  var L = billLists(S.data), n = L.shares.length + L.bills.length;
+  var h = '<div class="dt-top"><button class="dt-back" data-act="vclose"><svg><use href="#i-back"/></svg></button><div class="ttl">🧾 บิล</div>'
+    + (n ? '<div class="bl-n">ค้าง '+n+' ใบ</div>' : '') + '</div>';
+  if (!n) return h + '<div class="bl-empty">เคลียร์ครบ 🎉 ไม่มีบิลค้าง</div>';
+  if (L.shares.length) h += '<div class="sec-t">🧾 บิลแชร์ — กำลังติ๊ก / รอสรุป</div><div class="card">' + L.shares.map(billShareRow).join('') + '</div>';
+  if (L.bills.length) h += '<div class="sec-t">💸 รอเงินคืน</div><div class="card">' + L.bills.map(billRetRow).join('') + '</div>';
+  return h;
+}
+function fnBills(){ billBlinkStop(); openView({ t: 'bills' }, null); }
 if (typeof setInterval === 'function') setInterval(function(){  // หน้าติดตามบิลแชร์เปิดอยู่ → ดึงความคืบหน้าของเพื่อนทุก 15 วิ (หยุดเมื่อออกจากหน้า/ซ่อนแท็บ)
   if (IS_DEMO || !S.view || S.view.t !== 'bsView' || S._bsBusy) return;
   if (document.visibilityState && document.visibilityState !== 'visible') return;
