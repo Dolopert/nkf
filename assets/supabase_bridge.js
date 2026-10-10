@@ -764,6 +764,10 @@
         var key = merchantKeyFor(r.counterparty, r.kind);
         var mm = merchMap[key];
         var bm = (strv(r.direction) === 'out') ? billMap[strv(r.ref)] : null;  // CC 9 ต.ค. 69: บิลรอคืนของแถวนี้ (ถ้ามี)
+        // CC 11 ต.ค. 69 (TASK_cc_shopmem_v1 · §6 จุดเริ่ม 1): ความจำร้านชุดเดียว — DB ไม่มี suggested (เช่น นำเข้าในแอป) → เติมจาก merchants
+        //   · ค่าที่ DB มีห้ามทับ · card:unknown ไม่แนะนำ (กติกา 22 ก.ย.) · แถว money_in_check มีแผงยืนยันของตัวเอง → ไม่เติม · แสดงอย่างเดียว ไม่บันทึกอัตโนมัติ
+        var sug = strv(r.suggested);
+        if (!sug && mm && strv(mm.category) && key !== 'card:unknown' && strv(r.kind) !== 'money_in_check') sug = strv(mm.category);
         return {
           at: toThaiLocal(r.at),
           ref: strv(r.ref),
@@ -775,7 +779,7 @@
           category: strv(r.category),
           saved_at: toThaiLocal(r.confirmed_at),
           display_name: (mm && mm.display) ? mm.display : '',
-          suggested: strv(r.suggested),
+          suggested: sug,
           bill_expect: bm ? bm.expect : 0, bill_returned: bm ? bm.returned : 0, bill_status: bm ? bm.status : '',
           balance_minor: numv(r.balance_minor),
           account: strv(r.account),

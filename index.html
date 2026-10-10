@@ -719,7 +719,7 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.2.20-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · CC 10 ต.ค. 69: v4.2.20 = หน้า «บิล» + แบดจ์ + กระพริบ 10 วิ (TASK_cc_billlist_v1) · v4.2.19 = TrueMoney คงเหลือจริงจาก statement + บัญชียอดตั้งเอง (เป๋าตัง/เงินสด/ทะเบียนธนาคารไทย · TASK_cc_tm_accounts_v1) · v4.2.18 = บิลแชร์ จัดการรายชื่อ («ไม่ใช่ฉัน» หน้าเพื่อน + ปล่อย/ลบ/เพิ่มชื่อหน้าติดตาม) + หารเท่าไม่มีชื่อ (ตั้งจำนวนคน · TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน + ปุ่ม ‹ › (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติจากภาพ (Edge Function readbill · เหลือง = ไม่ชัวร์ · ชิปเซอร์วิส/VAT ตามบิล) + โหมดหารเท่า (TASK_cc_readauto_party_v1) · v4.2.15 = ซูม/ครอปภาพบิล v2 (ลากขอบปรับด้านเดียว + บีบ 2 โหมด: กลาง=ซูม · ขอบซ้าย/ขวา=ปรับกรอบ · TASK_cc_zoomcrop_v1) · v4.2.14 = แชร์บิล v3.1 ① รายการที่จ่ายไปล่าสุด (5/ชุด + ปัดเปลี่ยนชุด + กรองเฉพาะที่เริ่มบิลได้ · TASK_cc_billshare_v31_picker) · v4.2.13 = แชร์บิล v3 (จดต่อเนื่อง + ⋮ แผงล่าง แยก 2/3/กำหนดเอง + เพื่อนเป็น + + ซูม/ครอปภาพบิล · TASK_cc_billshare_v3) · CC 9 ต.ค. 69: v4.2.12 = บิลแชร์ เพื่อนติ๊กเอง + แถวปุ่มลัดหน้าหลัก (TASK_cc_billbox_share) · v4.2.11 = บิลรอคืน รอบ 2 (ปุ่มบิลในหน้ารายการ + แยกเอง + ส่วนของเรา · TASK_cc_bill_return_app2) · v4.2.10 = บิลรอคืนบน Supabase (TASK_cc_bill_return_app) · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
+var APP_BUILD = 'v4.2.21-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · CC 11 ต.ค. 69: v4.2.21 = ความจำร้านชุดเดียว ใช้ทุกช่องทางเข้า (ชิป «แนะนำ» แถวนำเข้าในแอป + ชื่อโชว์รหัสเทียบ statement · TASK_cc_shopmem_v1) · CC 10 ต.ค. 69: v4.2.20 = หน้า «บิล» + แบดจ์ + กระพริบ 10 วิ (TASK_cc_billlist_v1) · v4.2.19 = TrueMoney คงเหลือจริงจาก statement + บัญชียอดตั้งเอง (เป๋าตัง/เงินสด/ทะเบียนธนาคารไทย · TASK_cc_tm_accounts_v1) · v4.2.18 = บิลแชร์ จัดการรายชื่อ («ไม่ใช่ฉัน» หน้าเพื่อน + ปล่อย/ลบ/เพิ่มชื่อหน้าติดตาม) + หารเท่าไม่มีชื่อ (ตั้งจำนวนคน · TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน + ปุ่ม ‹ › (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติจากภาพ (Edge Function readbill · เหลือง = ไม่ชัวร์ · ชิปเซอร์วิส/VAT ตามบิล) + โหมดหารเท่า (TASK_cc_readauto_party_v1) · v4.2.15 = ซูม/ครอปภาพบิล v2 (ลากขอบปรับด้านเดียว + บีบ 2 โหมด: กลาง=ซูม · ขอบซ้าย/ขวา=ปรับกรอบ · TASK_cc_zoomcrop_v1) · v4.2.14 = แชร์บิล v3.1 ① รายการที่จ่ายไปล่าสุด (5/ชุด + ปัดเปลี่ยนชุด + กรองเฉพาะที่เริ่มบิลได้ · TASK_cc_billshare_v31_picker) · v4.2.13 = แชร์บิล v3 (จดต่อเนื่อง + ⋮ แผงล่าง แยก 2/3/กำหนดเอง + เพื่อนเป็น + + ซูม/ครอปภาพบิล · TASK_cc_billshare_v3) · CC 9 ต.ค. 69: v4.2.12 = บิลแชร์ เพื่อนติ๊กเอง + แถวปุ่มลัดหน้าหลัก (TASK_cc_billbox_share) · v4.2.11 = บิลรอคืน รอบ 2 (ปุ่มบิลในหน้ารายการ + แยกเอง + ส่วนของเรา · TASK_cc_bill_return_app2) · v4.2.10 = บิลรอคืนบน Supabase (TASK_cc_bill_return_app) · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
 var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, budForm:null, budOpen:{}, view:null, imp:null, pMonth:null, hMonth:null, recLumpOpen:false, catForm:null, shortForm:null };  // catForm/shortForm: Hermes 7 ต.ค. 69 — ฟอร์มหมวดทำเอง/รายการลัด (หน้าแยก v4.2.8)  // hMonth: CC 10 ต.ค. 69 — เดือนที่เลือกในแท็บรายการ (แยกจาก pMonth ของรอยืนยัน)  // pMonth: แก้โดย Hermes 5 ต.ค. 69 — เดือนที่เลือกในแท็บรอยืนยัน (แยกเดือน) · recLumpOpen: Hermes 7 ต.ค. 69 (§16) — กาง "ก้อนรายจ่ายประจำ" ในงบรายหมวด
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
@@ -766,6 +766,16 @@ function fmtDay(dstr){
 }
 function shortName(it){
   var s = it.display_name || it.counterparty || it.subject || KIND[it.kind] || '';
+  // CC 11 ต.ค. 69 (TASK_cc_shopmem_v1): ยังไม่มีชื่อที่สอน + ท้ายเป็นรหัส (6-12 หลัก) → เก็บรหัสไว้เทียบ statement
+  //   «ชื่อ · รหัส» ในงบ 34 ตัว — ล้นงบ: ตัดวงเล็บท้ายของชื่อก่อน (เช่น «(settle)» — บรรทัดย่อยบอกชนิดอยู่แล้ว) แล้วค่อย …
+  //   ที่ส่วนชื่อ · รหัสอยู่รอดเสมอ (วงเล็บอื่นตัดเหมือนเดิม)
+  var code = !it.display_name && String(s).match(/\s*\((\d{6,12})\)\s*$/);
+  if (code){
+    var tail = ' · ' + code[1], base = String(s).slice(0, code.index).trim(), room = 34 - tail.length;
+    if (base.length > room) base = base.replace(/\s*\([^)]*\)\s*$/, '');
+    if (!base) return code[1];
+    return (base.length > room ? base.slice(0, room - 1) + '…' : base) + tail;
+  }
   s = String(s).replace(/\s*\([^)]*\)\s*$/, '');
   return s.length > 34 ? s.slice(0,33) + '…' : s;
 }
@@ -2306,7 +2316,7 @@ function htmlSettings(d){
     + cardMyCats(d)        // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หมวดทำเอง
     + cardMyShortcuts(d)   // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): รายการลัด
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.20-supabase</span></div>'  // CC 10 ต.ค. 69: v4.2.20 = หน้า «บิล» (TASK_cc_billlist_v1) · v4.2.19 = TrueMoney คงเหลือจริง + บัญชียอดตั้งเอง (TASK_cc_tm_accounts_v1) · v4.2.18 = บิลแชร์ จัดการรายชื่อ + หารเท่าไม่มีชื่อ (TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติ + หารเท่า · v4.2.15 = ซูม/ครอปภาพบิล v2 · v4.2.14 = แชร์บิล v3.1 picker ① · v4.2.13 = แชร์บิล v3 · CC 9 ต.ค. 69: v4.2.11 = บิลรอคืน รอบ 2 · v4.2.10 = บิลรอคืนบน Supabase · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.21-supabase</span></div>'  // CC 11 ต.ค. 69: v4.2.21 = ความจำร้านชุดเดียว ใช้ทุกช่องทางเข้า (TASK_cc_shopmem_v1) · CC 10 ต.ค. 69: v4.2.20 = หน้า «บิล» (TASK_cc_billlist_v1) · v4.2.19 = TrueMoney คงเหลือจริง + บัญชียอดตั้งเอง (TASK_cc_tm_accounts_v1) · v4.2.18 = บิลแชร์ จัดการรายชื่อ + หารเท่าไม่มีชื่อ (TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติ + หารเท่า · v4.2.15 = ซูม/ครอปภาพบิล v2 · v4.2.14 = แชร์บิล v3.1 picker ① · v4.2.13 = แชร์บิล v3 · CC 9 ต.ค. 69: v4.2.11 = บิลรอคืน รอบ 2 · v4.2.10 = บิลรอคืนบน Supabase · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -5679,6 +5689,8 @@ var DEMO = {
     {at:'2026-09-18T03:38:36',ref:'D5',kind:'transfer',direction:'out',amount_minor:100,counterparty:'ผู้ใช้ทดสอบ สาม',status:'new',category:'',saved_at:'',display_name:'',suggested:'',bill_expect:0,bill_returned:0,bill_status:''},
     {at:'2026-09-18T08:48:37',ref:'D6',kind:'transfer',direction:'out',amount_minor:2500,counterparty:'ผู้ใช้ทดสอบ สี่',status:'new',category:'',saved_at:'',display_name:'',suggested:'',bill_expect:0,bill_returned:0,bill_status:''},
     // แก้โดย Hermes 8 ต.ค. 69 (วงเงินเข้า §18): แถว "ตรวจอัตโนมัติ" — เดโม่ของฟีเจอร์ P เคาะ (ยอด ฿16,000 แบบเคสจริงของพ่อ · ทายชื่อจาก recurring)
+    // CC 11 ต.ค. 69 (TASK_cc_shopmem_v1): แถวนำเข้าในแอป (กระเป๋า · ต่อรหัสท้ายชื่อ) — ยังไม่มีชื่อที่สอน → ชื่อโชว์รหัสไว้เทียบ statement + ชิป «แนะนำ» จากความจำร้าน (code:…)
+    {at:'2026-10-01T08:05:12',ref:'D10',kind:'wallet_settle',direction:'out',amount_minor:6500,counterparty:'รายการ TrueMoney (settle) (295204282)',status:'new',category:'',saved_at:'',display_name:'',suggested:'food',bill_expect:0,bill_returned:0,bill_status:''},
     {at:'2026-10-01T10:17:09',ref:'D9',kind:'money_in_check',direction:'in',amount_minor:1600000,counterparty:'รายรับพ่อ',status:'new',category:'',saved_at:'',display_name:'',suggested:'',bill_expect:0,bill_returned:0,bill_status:'',note:'จากยอดคงเหลือ 219.99 → 16119.99'},
     // แก้โดย Hermes 5 ต.ค. 69: เพิ่ม 2 แถวเดือน ต.ค. ให้เดโม่เห็นการแยกเดือนของรอยืนยัน + กดเลือกเดือนได้ (ข้อมูลสมมติล้วน)
     {at:'2026-10-04T21:11:48',ref:'D7',kind:'qr_merchant',direction:'out',amount_minor:12900,counterparty:'ร้านสเต็กตัวอย่าง (ชื่อบัญชี: นาย ตัวอย่าง)',status:'new',category:'',saved_at:'',display_name:'',suggested:'food',bill_expect:0,bill_returned:0,bill_status:''},
@@ -5769,7 +5781,7 @@ var DEMO = {
     kplus:{ total_minor:677000, transfer_minor:180000, cats:[{cat:'food',n:308000},{cat:'shopping',n:54000},{cat:'fuel',n:45000},{cat:'house',n:10000}] },
     truemoney:{ total_minor:0, transfer_minor:0, cats:[] }
   },
-  summary:{ monthSpent:501050, monthIncome:2500000, cashflow:1998950, pendingCount:9, pendingSum:65700, today:5000,  // Hermes 8 ต.ค. 69 (วงเงินเข้า): +D9 — ยังไม่ยืนยัน = ยังไม่นับเป็นรายรับ (นับตอนกด "ใช่")
+  summary:{ monthSpent:501050, monthIncome:2500000, cashflow:1998950, pendingCount:10, pendingSum:72200, today:5000,  // CC 11 ต.ค. 69 (TASK_cc_shopmem_v1): +D10 แถวรหัส (9→10 · +฿65) · Hermes 8 ต.ค. 69 (วงเงินเข้า): +D9 — ยังไม่ยืนยัน = ยังไม่นับเป็นรายรับ (นับตอนกด "ใช่")
     monthOut:681050, walletIn:180000, walletSpent:71050, walletCount:4,
     daily:[{d:'2026-09-10',n:10500},{d:'2026-09-11',n:8200},{d:'2026-09-12',n:1000},{d:'2026-09-13',n:7600},{d:'2026-09-14',n:3000},{d:'2026-09-15',n:6800},{d:'2026-09-16',n:2700},{d:'2026-09-17',n:1500},{d:'2026-09-18',n:5000}] },
   meta:{ total:24, savedCount:12, skippedCount:0, sheetUrl:'#', logTail:[{time:'2026-09-18 09:20:00',ok:'OK',scanned:20,parsed:0,dup:19,skipped:1,appended:0}], genAt:'2026-09-18T09:35:00', triggerMinutes:10, memCount:24, llmOn:true,
