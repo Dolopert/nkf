@@ -1,3 +1,4 @@
+/* © 2026 Dolopert (NongKept) — สงวนลิขสิทธิ์ · All rights reserved */
 /* share.js — CC 9 ต.ค. 69 (TASK_cc_billbox_share · รอบ 3): หน้าเพื่อน (F) ของบิลแชร์
  *  - ลิงก์ = .../b/#<token 64 hex> (token อยู่หลัง # → ไม่ถูกส่งไปเซิร์ฟเวอร์/Referer)
  *  - ใส่ชื่อครั้งแรก → bill_share_join → ได้ key เก็บในเครื่องนี้ (localStorage) → ติ๊กของตัวเองได้จนเจ้าของปิดบิล
