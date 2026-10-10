@@ -706,7 +706,7 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.2.18-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · CC 10 ต.ค. 69: v4.2.18 = บิลแชร์ จัดการรายชื่อ («ไม่ใช่ฉัน» หน้าเพื่อน + ปล่อย/ลบ/เพิ่มชื่อหน้าติดตาม) + หารเท่าไม่มีชื่อ (ตั้งจำนวนคน · TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน + ปุ่ม ‹ › (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติจากภาพ (Edge Function readbill · เหลือง = ไม่ชัวร์ · ชิปเซอร์วิส/VAT ตามบิล) + โหมดหารเท่า (TASK_cc_readauto_party_v1) · v4.2.15 = ซูม/ครอปภาพบิล v2 (ลากขอบปรับด้านเดียว + บีบ 2 โหมด: กลาง=ซูม · ขอบซ้าย/ขวา=ปรับกรอบ · TASK_cc_zoomcrop_v1) · v4.2.14 = แชร์บิล v3.1 ① รายการที่จ่ายไปล่าสุด (5/ชุด + ปัดเปลี่ยนชุด + กรองเฉพาะที่เริ่มบิลได้ · TASK_cc_billshare_v31_picker) · v4.2.13 = แชร์บิล v3 (จดต่อเนื่อง + ⋮ แผงล่าง แยก 2/3/กำหนดเอง + เพื่อนเป็น + + ซูม/ครอปภาพบิล · TASK_cc_billshare_v3) · CC 9 ต.ค. 69: v4.2.12 = บิลแชร์ เพื่อนติ๊กเอง + แถวปุ่มลัดหน้าหลัก (TASK_cc_billbox_share) · v4.2.11 = บิลรอคืน รอบ 2 (ปุ่มบิลในหน้ารายการ + แยกเอง + ส่วนของเรา · TASK_cc_bill_return_app2) · v4.2.10 = บิลรอคืนบน Supabase (TASK_cc_bill_return_app) · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
+var APP_BUILD = 'v4.2.19-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · CC 10 ต.ค. 69: v4.2.19 = TrueMoney คงเหลือจริงจาก statement + บัญชียอดตั้งเอง (เป๋าตัง/เงินสด/ทะเบียนธนาคารไทย · TASK_cc_tm_accounts_v1) · v4.2.18 = บิลแชร์ จัดการรายชื่อ («ไม่ใช่ฉัน» หน้าเพื่อน + ปล่อย/ลบ/เพิ่มชื่อหน้าติดตาม) + หารเท่าไม่มีชื่อ (ตั้งจำนวนคน · TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน + ปุ่ม ‹ › (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติจากภาพ (Edge Function readbill · เหลือง = ไม่ชัวร์ · ชิปเซอร์วิส/VAT ตามบิล) + โหมดหารเท่า (TASK_cc_readauto_party_v1) · v4.2.15 = ซูม/ครอปภาพบิล v2 (ลากขอบปรับด้านเดียว + บีบ 2 โหมด: กลาง=ซูม · ขอบซ้าย/ขวา=ปรับกรอบ · TASK_cc_zoomcrop_v1) · v4.2.14 = แชร์บิล v3.1 ① รายการที่จ่ายไปล่าสุด (5/ชุด + ปัดเปลี่ยนชุด + กรองเฉพาะที่เริ่มบิลได้ · TASK_cc_billshare_v31_picker) · v4.2.13 = แชร์บิล v3 (จดต่อเนื่อง + ⋮ แผงล่าง แยก 2/3/กำหนดเอง + เพื่อนเป็น + + ซูม/ครอปภาพบิล · TASK_cc_billshare_v3) · CC 9 ต.ค. 69: v4.2.12 = บิลแชร์ เพื่อนติ๊กเอง + แถวปุ่มลัดหน้าหลัก (TASK_cc_billbox_share) · v4.2.11 = บิลรอคืน รอบ 2 (ปุ่มบิลในหน้ารายการ + แยกเอง + ส่วนของเรา · TASK_cc_bill_return_app2) · v4.2.10 = บิลรอคืนบน Supabase (TASK_cc_bill_return_app) · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
 var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, budForm:null, budOpen:{}, view:null, imp:null, pMonth:null, hMonth:null, recLumpOpen:false, catForm:null, shortForm:null };  // catForm/shortForm: Hermes 7 ต.ค. 69 — ฟอร์มหมวดทำเอง/รายการลัด (หน้าแยก v4.2.8)  // hMonth: CC 10 ต.ค. 69 — เดือนที่เลือกในแท็บรายการ (แยกจาก pMonth ของรอยืนยัน)  // pMonth: แก้โดย Hermes 5 ต.ค. 69 — เดือนที่เลือกในแท็บรอยืนยัน (แยกเดือน) · recLumpOpen: Hermes 7 ต.ค. 69 (§16) — กาง "ก้อนรายจ่ายประจำ" ในงบรายหมวด
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
@@ -888,7 +888,8 @@ function paintDetail(){
       : (S.view.t === 'shortNew' || S.view.t === 'shortEdit' ? shortPageHtml()
       : (S.view.t === 'bsNew' ? bsNewHtml()      // CC 9 ต.ค. 69 (TASK_cc_billbox_share): หน้าสร้างบิลแชร์ (C)
       : (S.view.t === 'bsView' ? bsViewHtml()    // CC 9 ต.ค. 69: หน้าติดตาม/สรุป (O)
-      : viewAcctHtml(S.data, S.view.a)))))));  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หน้าแยก เพิ่มรายการ / หมวดทำเอง / รายการลัด
+      : (S.view.t === 'acctAdd' ? acctAddHtml()  // CC 10 ต.ค. 69 (TASK_cc_tm_accounts_v1): ➕ เพิ่มบัญชี / กระเป๋า
+      : viewAcctHtml(S.data, S.view.a))))))));  // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หน้าแยก เพิ่มรายการ / หมวดทำเอง / รายการลัด
   } catch (e) {
     el2.innerHTML = '<div class="dt-top"><button class="dt-back" data-act="vclose"><svg><use href="#i-back"/></svg></button><div class="ttl">รายละเอียด</div></div><div class="hint" style="margin:8px 2px">แสดงรายละเอียดไม่ได้</div>';
   }
@@ -1237,6 +1238,75 @@ function budDel(key){
   if (IS_DEMO){ toast('ลบงบแล้ว ✓'); return; }
   callAction('deleteBudget', [key], 'ลบงบแล้ว ✓');
 }
+/* ---------- CC 10 ต.ค. 69 (TASK_cc_tm_accounts_v1): บัญชีเต็มแบบ «ข» — ทะเบียนธนาคารไทย (BANKS-TH.md: พาณิชย์ 15 + รัฐ 6) + เงินสด ---------- */
+var BANKS_TH = [
+  ['kbank','กสิกรไทย','c'],['scb','ไทยพาณิชย์','c'],['ktb','กรุงไทย','c'],['bbl','กรุงเทพ','c'],['bay','กรุงศรีอยุธยา','c'],
+  ['ttb','ทหารไทยธนชาต','c'],['kkp','เกียรตินาคินภัทร','c'],['cimbt','ซีไอเอ็มบี ไทย','c'],['tisco','ทิสโก้','c'],['lhb','แลนด์ แอนด์ เฮ้าส์','c'],
+  ['tcr','ไทยเครดิต','c'],['uob','ยูโอบี (ไทย)','c'],['icbct','ไอซีบีซี (ไทย)','c'],['scbt','สแตนดาร์ดชาร์เตอร์ด (ไทย)','c'],['boct','แห่งประเทศจีน (ไทย)','c'],
+  ['gsb','ออมสิน','g'],['baac','ธ.ก.ส.','g'],['ghb','อาคารสงเคราะห์','g'],['exim','EXIM (ส่งออกและนำเข้า)','g'],['smeb','SME D Bank','g'],['ibank','อิสลามแห่งประเทศไทย','g'],
+  ['cash','เงินสด','w']
+];
+function thDayMon(at){ return at ? parseInt(at.slice(8, 10), 10) + ' ' + TH_M[parseInt(at.slice(5, 7), 10) - 1] : ''; }
+function acctSub(a){
+  if (a.key === 'gwallet') return 'กระเป๋า · ผูก KTB';
+  if (a.key === 'cash') return 'ยอดตั้งเอง';
+  for (var i = 0; i < BANKS_TH.length; i++) if (BANKS_TH[i][0] === a.bank_code) return 'ธ.' + BANKS_TH[i][1] + ' · ยอดตั้งเอง';
+  return 'ยอดตั้งเอง';
+}
+function uiAcct(key){ var r = null; ((S.data && S.data.uiAccounts) || []).forEach(function(a){ if (a.key === key) r = a; }); return r; }
+function acctAddHtml(){
+  var head = '<div class="dt-top"><button class="dt-back" data-act="vclose"><svg><use href="#i-back"/></svg></button><div class="ttl">เพิ่มบัญชี / กระเป๋า</div></div>';
+  function grp(t, g){
+    return '<div class="sec-t">' + t + '</div><div class="card" style="padding:12px;display:flex;flex-wrap:wrap;gap:7px">'
+      + BANKS_TH.filter(function(b){ return b[2] === g; }).map(function(b){
+          return '<button class="miniact" data-act="acctPick" data-k="' + b[0] + '">' + (b[0] === 'cash' ? '💵 ' : '🏦 ') + esc(b[1]) + ((b[0] === 'kbank' || uiAcct(b[0])) ? ' ✓' : '') + '</button>';
+        }).join('') + '</div>';
+  }
+  return head + grp('ธนาคารพาณิชย์', 'c') + grp('ธนาคารของรัฐ', 'g') + grp('กระเป๋า', 'w');
+}
+function acctPick(k){
+  if (k === 'kbank'){ S.view = { t: 'acct', a: 'kplus' }; paint(); return; }   // KBank = การ์ด K PLUS ที่เชื่อมแล้ว
+  var b = null;
+  for (var i = 0; i < BANKS_TH.length; i++) if (BANKS_TH[i][0] === k) b = BANKS_TH[i];
+  if (!b) return;
+  if (!uiAcct(k)){
+    var row = { key: k, name: b[1], emoji: k === 'cash' ? '💵' : '🏦', bank_code: k === 'cash' ? '' : k,
+                base_minor: 0, balance_minor: 0, balance_at: '', auto: false, in_minor: 0, in_count: 0, in_rows: [] };
+    (S.data.uiAccounts = S.data.uiAccounts || [{ key: 'kplus', builtin: true }, { key: 'truemoney', builtin: true }]).push(row);
+    if (IS_DEMO) toast('เพิ่มบัญชีแล้ว ✓');
+    else callAction('addAccount', [k, row.name, row.emoji], 'เพิ่มบัญชีแล้ว ✓');
+  }
+  S.view = { t: 'acct', a: k }; S.prev = null;
+  paint(); el('detail').scrollTop = 0;
+}
+function acctSetBal(key){
+  var a = uiAcct(key); if (!a) return;
+  var s = prompt('ตั้งยอด «' + a.name + '» (บาท)', (a.balance_minor / 100).toFixed(2));
+  if (s === null || s === undefined) return;
+  var v = Math.round(parseFloat(String(s).replace(/[,\s฿]/g, '')) * 100);
+  if (!(isFinite(v) && v >= 0 && v <= 100000000000)) { toast('ยอดไม่ถูกต้อง', true); return; }
+  a.balance_minor = v; a.base_minor = v;   // เปลี่ยนทันที — โหลดใหม่จะได้ยอดจริงจาก DB ตามมา
+  paint();
+  if (IS_DEMO) toast('ตั้งยอดแล้ว ✓');
+  else callAction('setWalletBalance', [key, v], 'ตั้งยอดแล้ว ✓');
+}
+function viewWalletHtml(d, key){
+  var head = '<div class="dt-top"><button class="dt-back" data-act="vclose"><svg><use href="#i-back"/></svg></button><div class="ttl">รายละเอียดบัญชี</div></div>';
+  var a = uiAcct(key);
+  if (!a) return head + '<div class="hint" style="margin:8px 2px">ไม่พบบัญชีนี้</div>';
+  var h = head + '<div class="conncard"><div><div class="c1">' + esc(a.emoji || '🏦') + ' ' + esc(a.name) + '</div><div class="c2">' + esc(acctSub(a)) + '</div></div></div>'
+    + '<div class="card" style="padding:14px"><div class="hint" style="margin:0">ยอดคงเหลือ</div>'
+    + '<div class="wbal" style="font-size:26px;font-weight:800;margin:4px 0 10px;font-variant-numeric:tabular-nums">฿' + fmtBaht(a.balance_minor || 0) + '</div>'
+    + '<button class="dt-imp" data-act="acctSetBal" data-k="' + esc(a.key) + '">ตั้งยอดใหม่</button></div>';
+  if (a.auto){
+    h += '<div class="sec-t">เงินเข้า</div><div class="card" style="padding:8px 14px">'
+      + ((a.in_rows || []).length
+          ? a.in_rows.map(function(x){ return '<div class="titem">↪ เติมจาก K PLUS <span class="note2">' + esc(fmtWhen(x.at)) + '</span><span class="r cy">+฿' + fmtBaht(x.amount_minor) + '</span></div>'; }).join('')
+          : '<div class="hint" style="margin:4px 0">ยังไม่มีเงินเข้า</div>')
+      + '</div><div class="trknote">กระเป๋านี้ยังไม่มีช่องข้อมูลรายจ่าย — ยอดอัปเดตอัตโนมัติเมื่อมีเงินเข้า</div>';
+  }
+  return h;
+}
 function htmlSummary(d){
   var s = d.summary || {};
   var accts = d.accts || {}, flow = d.flow || {}, fixed = d.fixed || [];
@@ -1254,6 +1324,7 @@ function htmlSummary(d){
   var wtrHtml = (wIn > 0 && tmOn) ? '<div class="wtr">↪ ย้ายเข้ากระเป๋า ฿'+fmtBaht(wIn)+' <span>ไม่นับเป็นรายจ่าย</span></div>' : '';
   var kp = accts.kplus || {}, tm = accts.truemoney || {};
   var tmOn = tmTrackOn();  // แก้โดย Hermes 5 ต.ค. 69: โหมดสรุปกระเป๋า — ปิดติดตามรายการย่อยอยู่ไหม
+  var tmSnapOn = tm.balance_minor != null;  // CC 10 ต.ค. 69: มี snapshot ยอดคงเหลือจาก statement
   var acctHtml = '<div class="sec-t">บัญชีของฉัน</div><div class="accts">'
     + '<div class="acct" data-act="vopen" data-v="acct:kplus" style="cursor:pointer"><span class="chev">›</span><div class="a1">'+(LOGO_URL('kplus') ? logoImg('kplus','lgx') : '🏦')+' K PLUS</div>'
     + '<div class="a2">บัญชีหลัก · KBank</div>'
@@ -1261,7 +1332,11 @@ function htmlSummary(d){
     + '<div class="a4">เดือนนี้ −฿'+fmtBaht(kp.out_minor || 0)+' · +฿'+fmtBaht(kp.in_minor || 0)+'</div>'
     + connChip('kplus')+'</div>'
     + '<div class="acct" data-act="vopen" data-v="acct:truemoney" style="cursor:pointer"><span class="chev">›</span><div class="a1">'+(LOGO_URL('truemoney') ? logoImg('truemoney','lgx') : '👛')+' TrueMoney</div>'
-    + (tmOn
+    + ((tmOn && tm.balance_minor != null)   // CC 10 ต.ค. 69 (TASK_cc_tm_accounts_v1): คงเหลือจริงจาก statement (ไม่มี snapshot = แบบเดิมทุกอย่าง)
+        ? '<div class="a2">กระเป๋า</div>'
+          + '<div class="a3">฿'+fmtBaht(tm.balance_minor)+'</div>'
+          + '<div class="a4">คงเหลือ (statement '+thDayMon(tm.balance_as_of)+') · ใช้จากกระเป๋าเดือนนี้ ฿'+fmtBaht(flow.wallet_spent || 0)+'</div>'
+        : tmOn
         ? '<div class="a2">กระเป๋า</div>'
           + '<div class="a3">'+((tm.spent_month || tm.spent_is_current) ? '฿'+fmtBaht(tm.spent_minor || 0) : '—')+'</div>'
           + '<div class="a4">'+(tm.spent_is_current ? 'ใช้เดือนนี้' : (tm.spent_month ? 'ใช้ ('+TH_M[parseInt(tm.spent_month.slice(5,7),10)-1]+')' : 'รอ statement'))+' · เติมเข้า ฿'+fmtBaht(tm.in_minor || 0)+'</div>'
@@ -1269,7 +1344,13 @@ function htmlSummary(d){
           + '<div class="a3">—</div>'
           + '<div class="a4">ไม่ติดตามรายการย่อย · แตะเปิดได้</div>')
     + connChip('truemoney')+'</div>'
-    + '<div class="acct soon" data-act="vopen" data-v="soon" style="cursor:pointer"><span class="chev">›</span><div class="a1">💳 บัตรเครดิต</div><div class="a2">ช่องว่างไว้</div><div class="a3">—</div><div class="a4">เมื่อมีบัตร: ใบแจ้งยอด → อีเมล</div></div>'
+    + (d.uiAccounts || []).filter(function(a){ return !a.builtin; }).map(function(a){   // CC 10 ต.ค. 69 (TASK_cc_tm_accounts_v1): เป๋าตัง/เงินสด/ธนาคารที่เพิ่มเอง
+        return '<div class="acct" data-act="vopen" data-v="acct:'+esc(a.key)+'" style="cursor:pointer"><span class="chev">›</span><div class="a1">'+esc(a.emoji || '🏦')+' '+esc(a.name)+'</div>'
+          + '<div class="a2">'+esc(acctSub(a))+'</div>'
+          + '<div class="a3">฿'+fmtBaht(a.balance_minor || 0)+'</div>'
+          + '<div class="a4">'+(a.auto ? 'เติมเข้า ฿'+fmtBaht(a.in_minor || 0)+' · ยังไม่เห็นรายจ่าย' : 'ยอดที่ตั้งไว้ · อัปเดตเองเมื่อใช้')+'</div></div>';
+      }).join('')
+    + '<div class="acct soon" data-act="acctAdd" style="cursor:pointer"><span class="chev">›</span><div class="a1">➕ เพิ่มบัญชี / กระเป๋า</div></div>'
     + '</div>';
   var flowHtml = '<div class="sec-t">💰 เงินไปไหนเดือนนี้</div>'
     + '<div class="card" style="padding:12px 13px">'
@@ -1277,13 +1358,17 @@ function htmlSummary(d){
     + '<div class="tree">'
     + '<div class="titem">💸 ใช้จ่ายตรง <span class="note2">scan / โอน</span><span class="r rd">−฿'+fmtBaht(bankSpent)+'</span></div>'
     + (wIn > 0 ? '<div class="titem">↪ ย้ายเข้า <span class="note2">'+(s.walletCount || 0)+' ครั้ง · ไม่นับรายจ่าย</span><span class="r cy">−฿'+fmtBaht(wIn)+'</span></div>' : '')
+    + ((flow.gwallet_in || 0) > 0 ? '<div class="titem">↪ ย้ายเข้าเป๋าตัง <span class="note2">'+(flow.gwallet_count || 0)+' ครั้ง · ไม่นับรายจ่าย</span><span class="r cy">−฿'+fmtBaht(flow.gwallet_in)+'</span></div>' : '')  // CC 10 ต.ค. 69
     + (tmOn
-        ? '<div class="subwrap"><div class="tnode" style="margin:6px 0 2px">'+logoImg('truemoney','lgx')+' กระเป๋า TrueMoney <small>ค้าง ~฿'+fmtBaht(flow.wallet_remain || 0)+'</small></div>'
+        ? '<div class="subwrap"><div class="tnode" style="margin:6px 0 2px">'+logoImg('truemoney','lgx')+' กระเป๋า TrueMoney <small>'+(tmSnapOn ? 'คงเหลือ ฿'+fmtBaht(tm.balance_minor)+' · statement '+thDayMon(tm.balance_as_of) : 'ค้าง ~฿'+fmtBaht(flow.wallet_remain || 0))+'</small></div>'
           + '<div class="tree">'
           + ((flow.wallet_spent || 0) > 0
               ? '<div class="titem">🛒 ใช้จากกระเป๋า<span class="r am">−฿'+fmtBaht(flow.wallet_spent)+'</span></div>'
               : '<div class="titem">🛒 ใช้จากกระเป๋า <span class="note2">ยังไม่มี statement</span><span class="r m">—</span></div>')
-          + '<div class="titem">⏸ ค้างใช้ต่อ<span class="r m">~฿'+fmtBaht(flow.wallet_remain || 0)+'</span></div>'
+          + ((flow.wallet_credit || 0) > 0 ? '<div class="titem">↪ เงินเข้าอื่น (เครดิต/คืนเงิน)<span class="r cy">+฿'+fmtBaht(flow.wallet_credit)+'</span></div>' : '')
+          + (tmSnapOn
+              ? '<div class="titem">⌛ คงเหลือจาก statement<span class="r m">฿'+fmtBaht(tm.balance_minor)+'</span></div>'
+              : '<div class="titem">⏸ ค้างใช้ต่อ<span class="r m">~฿'+fmtBaht(flow.wallet_remain || 0)+'</span></div>')
           + '</div></div>'
         : '<div class="subwrap"><div class="tnode" style="margin:6px 0 2px">'+logoImg('truemoney','lgx')+' กระเป๋า TrueMoney <small>โหมดสรุป — ไม่ติดตามรายการย่อย</small></div></div>')
     + '</div></div>';
@@ -2222,7 +2307,7 @@ function htmlSettings(d){
     + cardMyCats(d)        // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หมวดทำเอง
     + cardMyShortcuts(d)   // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): รายการลัด
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.18-supabase</span></div>'  // CC 10 ต.ค. 69: v4.2.18 = บิลแชร์ จัดการรายชื่อ + หารเท่าไม่มีชื่อ (TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติ + หารเท่า · v4.2.15 = ซูม/ครอปภาพบิล v2 · v4.2.14 = แชร์บิล v3.1 picker ① · v4.2.13 = แชร์บิล v3 · CC 9 ต.ค. 69: v4.2.11 = บิลรอคืน รอบ 2 · v4.2.10 = บิลรอคืนบน Supabase · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.19-supabase</span></div>'  // CC 10 ต.ค. 69: v4.2.19 = TrueMoney คงเหลือจริง + บัญชียอดตั้งเอง (TASK_cc_tm_accounts_v1) · v4.2.18 = บิลแชร์ จัดการรายชื่อ + หารเท่าไม่มีชื่อ (TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติ + หารเท่า · v4.2.15 = ซูม/ครอปภาพบิล v2 · v4.2.14 = แชร์บิล v3.1 picker ① · v4.2.13 = แชร์บิล v3 · CC 9 ต.ค. 69: v4.2.11 = บิลรอคืน รอบ 2 · v4.2.10 = บิลรอคืนบน Supabase · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -2489,6 +2574,9 @@ document.addEventListener('click', function(e){
   if (act === 'budMode') { budSyncInputs(); if (S.budForm) S.budForm.mode = (t.getAttribute('data-v') === 'day') ? 'day' : 'month'; paint(); return; }
   if (act === 'budSave') { budSave(); return; }
   if (act === 'budDel') { budDel(t.getAttribute('data-key')); return; }
+  if (act === 'acctAdd') { S.view = { t: 'acctAdd' }; S.prev = null; paint(); el('detail').scrollTop = 0; return; }   // CC 10 ต.ค. 69 (TASK_cc_tm_accounts_v1)
+  if (act === 'acctPick') { acctPick(t.getAttribute('data-k')); return; }
+  if (act === 'acctSetBal') { acctSetBal(t.getAttribute('data-k')); return; }
   if (act === 'vopen') {
     var v = t.getAttribute('data-v') || '';
     if (v === 'month'){ var ms = detailMonths(); S.view = { t: 'month', m: ms.length ? ms[0].m : '' }; }
@@ -3049,6 +3137,7 @@ function viewAllHtml(){
     + '<div class="card srows" style="padding:5px 14px 12px">' + detailRows(list, 999) + '</div>';
 }
 function viewAcctHtml(d, a){
+  if (a !== 'kplus' && a !== 'truemoney') return viewWalletHtml(d, a);   // CC 10 ต.ค. 69 (TASK_cc_tm_accounts_v1): บัญชียอดตั้งเอง (หน้ารายละเอียด generic)
   var acct = (d.dacct || {})[a] || { total_minor: 0, transfer_minor: 0, cats: [] };
   var metas = { kplus: { name: 'K PLUS', img: 'kplus', sub: 'บัญชีหลัก · KBank' }, truemoney: { name: 'TrueMoney', img: 'truemoney', sub: 'กระเป๋า' } };
   var meta = metas[a] || { name: a, img: '', sub: '' };
@@ -5580,8 +5669,15 @@ var DEMO = {
     {ref:'D2',name:'ร้านสินค้าตัวอย่าง',at:'2026-09-18T00:02:38',amount_minor:25000,expect_minor:25000,returned_minor:10000,remaining_minor:15000,status:'open'}
   ],
   accts:{ kplus:{ balance_minor:1234567, out_minor:681050, in_minor:2500000 },
-          truemoney:{ spent_minor:71050, spent_month:'', spent_is_current:true, in_minor:180000, remain_minor:108950 } },
-  flow:{ out_total:681050, spend:501050, wallet_in:180000, wallet_count:4, wallet_spent:71050, wallet_remain:108950 },
+          truemoney:{ spent_minor:71050, spent_month:'', spent_is_current:true, in_minor:180000, remain_minor:108950,
+                      balance_minor:8776, balance_as_of:'2026-10-10T13:00:00' } },   // CC 10 ต.ค. 69 (TASK_cc_tm_accounts_v1): snapshot จาก statement
+  flow:{ out_total:681050, spend:501050, wallet_in:180000, wallet_count:4, wallet_spent:71050, wallet_remain:108950,
+         wallet_credit:1000, gwallet_in:30000, gwallet_count:2 },
+  // CC 10 ต.ค. 69 (TASK_cc_tm_accounts_v1): บัญชียอดตั้งเอง — เป๋าตัง (ตั้ง 0 + เติมเข้า 2 ครั้ง 300) + เงินสด
+  uiAccounts:[ { key:'kplus', builtin:true }, { key:'truemoney', builtin:true },
+    { key:'gwallet', name:'เป๋าตัง G-WALLET', emoji:'📱', bank_code:'ktb', base_minor:0, balance_at:'2026-10-01T00:00:00', balance_minor:30000, auto:true,
+      in_minor:30000, in_count:2, in_rows:[ { at:'2026-10-06T12:00:00', ref:'GW2', amount_minor:10000 }, { at:'2026-10-02T09:30:00', ref:'GW1', amount_minor:20000 } ] },
+    { key:'cash', name:'เงินสด', emoji:'💵', bank_code:'', base_minor:0, balance_at:'2026-10-01T00:00:00', balance_minor:0, auto:false, in_minor:0, in_count:0, in_rows:[] } ],
   fixed:[
     {key:'income', label:'เงินจากพ่อ', emoji:'💰', amount_minor:1600000, day:1, dir:'in', status:'done', date:'2026-09-01', src:'auto'},
     {key:'house', label:'ค่าบ้านให้พี่', emoji:'🏠', amount_minor:400000, day:1, dir:'out', status:'done', date:'2026-09-02', src:'auto'},
@@ -5650,6 +5746,17 @@ var IMP_TMN_RE = /^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}:\d{2}:\d{2})\s+(เงิ�
 var IMP_BAL_RE = /^-?[\d,]+\.\d{2}(?:\s+-?[\d,]+\.\d{2})?$/;
 var IMP_HDR = ['ใบแสดงรายการ','statement of account','ชื่อบัญชี','เลขที่บัญชี','รอบรายการ','ยอดคงเหลือ','วันที่ ประเภท','account name','account no','statement date'];
 var IMP_SAMPLE = '12/09/2569 7-Eleven 45.00\n13/09/2569 รับเงิน โอนเข้า 2,500.00\n01/09/2026 13:46:40 เงินเข้า 300.00 kbankimobiledd01\n01/09/2026 13:47:26 เงินออก 224.00 im_onlinepayment_010000000000278672970\n02/09/2026 11:24:29 เงินออก 144.12 prepaidcard_master';
+var IMP_BAL2_RE = /\s(-?[\d,]+\.\d{2})\s+(-?[\d,]+\.\d{2})$/;
+function impMinor_(s){ return Math.round(parseFloat(s.replace(/,/g, '')) * 100); }
+/* ยอดคงเหลือจริงของกระเป๋า = ยอดหลังของรายการล่าสุด (at มากสุด · เท่ากัน = ตัวท้ายในไฟล์) · ไม่มีคอลัมน์ยอด = null */
+function impBalance_(rows){
+  var best = null;
+  for (var i = 0; rows && i < rows.length; i++){
+    var r = rows[i];
+    if (r.wallet && typeof r.bal_minor === 'number' && r.bal_minor >= 0 && (!best || r.at >= best.at)) best = { minor: r.bal_minor, at: r.at };
+  }
+  return best;
+}
 function impPad_(v){ return (v < 10 ? '0' : '') + v; }
 function impParseText(text){
   var out = [], cur = null;
@@ -5663,6 +5770,8 @@ function impParseText(text){
       var rest = m[7].replace(/\s+-?[\d,]+\.\d{2}(?:\s+-?[\d,]+\.\d{2})?$/, '').replace(/\s+$/, '');
       cur = { at: m[3] + '-' + m[2] + '-' + m[1] + 'T' + m[4], direction: (m[5] === 'เงินเข้า') ? 'in' : 'out',
               amount_minor: amt, detail: rest, wallet: true };
+      var bm = m[7].match(IMP_BAL2_RE);   // CC 10 ต.ค. 69 (TASK_cc_tm_accounts_v1): "ยอดก่อน ยอดหลัง" ท้ายบรรทัด → เก็บยอดหลัง
+      if (bm) cur.bal_minor = impMinor_(bm[2]);
       out.push(cur);
       continue;
     }
@@ -5671,7 +5780,8 @@ function impParseText(text){
       if (g2){ out.push(g2); cur = null; continue; }
       var low = line.toLowerCase(), isHdr = false;
       for (var h = 0; h < IMP_HDR.length; h++){ if (low.indexOf(IMP_HDR[h]) === 0){ isHdr = true; break; } }
-      if (isHdr || IMP_BAL_RE.test(line)) continue;
+      if (IMP_BAL_RE.test(line)){ var bb = (' ' + line).match(IMP_BAL2_RE); if (bb) cur.bal_minor = impMinor_(bb[2]); continue; }   // แถว band แยกบรรทัด
+      if (isHdr) continue;
       if (cur.detail.length < 160) cur.detail = cur.detail + line;
       continue;
     }
@@ -5731,6 +5841,9 @@ function impPdfItemsToText(items){
 }
 /* == NKF-PDF-TEXT-END == */
 function impAcctLabel(a){ return a === 'truemoney' ? 'TrueMoney' : 'K PLUS'; }
+/* CC 10 ต.ค. 69 (TASK_cc_tm_accounts_v1): ข้ามเฉพาะเงินเข้ากระเป๋าจาก K PLUS (kbanki*) · เครดิตแคมเปญ/คืนเงิน ส่งเข้า (DB เก็บเป็น wallet_credit) */
+function impSkip_(r){ return !!(r.wallet && r.direction === 'in' && /^kbanki/i.test(r.detail || '')); }
+function impSetBal_(){ var b = impBalance_(S.imp.rows); S.imp.balanceMinor = b ? b.minor : null; S.imp.balanceAt = b ? b.at : null; }
 function renderImp(){
   var box = el('impsh'); if (!box) return;
   var imp = S.imp || {};
@@ -5754,7 +5867,7 @@ function renderImp(){
   if (imp.rows && imp.rows.length){
     var tot = 0, inN = 0, goN = 0, i, j;
     for (i = 0; i < imp.rows.length; i++){
-      if (imp.rows[i].wallet && imp.rows[i].direction === 'in') { inN++; continue; }
+      if (impSkip_(imp.rows[i])) { inN++; continue; }
       goN++;
       if (imp.rows[i].direction !== 'in') tot += imp.rows[i].amount_minor;
     }
@@ -5762,7 +5875,7 @@ function renderImp(){
       + (inN ? ' · ข้ามเงินเข้า ' + inN + ' รายการ (ย้ายเงินตัวเอง)' : '') + '</div><div class="imp-list">';
     for (j = 0; j < imp.rows.length && j < 60; j++){
       var r = imp.rows[j];
-      var skipIt = (r.wallet && r.direction === 'in');
+      var skipIt = impSkip_(r);
       h += '<div class="improw' + (skipIt ? ' skiprow' : '') + '"><span class="d">' + esc(fmtWhen(r.at)) + '</span>'
         + '<span class="n">' + esc(r.detail) + '</span>'
         + (skipIt ? '<span class="tag skip">ข้าม: เงินเข้า</span>' : (r.wallet ? '<span class="tag">กระเป๋า</span>' : ''))
@@ -5782,11 +5895,13 @@ function renderImp(){
 function impGo(){
   if (!S.imp || !S.imp.rows || !S.imp.rows.length) return;
   var acct = S.imp.acct || 'kplus';
-  var payload = S.imp.rows.filter(function(r){ return !(r.wallet && r.direction === 'in'); }).map(function(r){
+  impSetBal_();
+  var payload = S.imp.rows.filter(function(r){ return !impSkip_(r); }).map(function(r){
     return { at: r.at, direction: r.direction, amount_minor: r.amount_minor, detail: r.detail, wallet: !!r.wallet };
   });
   if (!payload.length){ toast('ไม่มีรายการที่จะนำเข้า (ข้ามเงินเข้า — นับฝั่งบัญชีแล้ว)'); el('impov').classList.remove('on'); S.imp = null; return; }
   var meta = { source: (S.imp.pdfName || S.imp.fileName) ? 'upload' : 'paste', file: S.imp.pdfName || S.imp.fileName || '' };
+  if (acct === 'truemoney' && S.imp.balanceMinor != null){ meta.balance_minor = S.imp.balanceMinor; meta.balance_at = S.imp.balanceAt; }   // CC 10 ต.ค. 69: คงเหลือจริงจาก statement (0016)
   el('impov').classList.remove('on');
   S.imp = null;
   if (IS_DEMO){ toast('เดโม่: นำเข้า ' + payload.length + ' รายการ (ไม่บันทึกจริง)'); return; }
