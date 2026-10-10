@@ -496,6 +496,20 @@
   .bstx .n small{display:block;color:var(--dim);font-size:10px;margin-top:2px}
   .bstx .a{font-weight:700;font-variant-numeric:tabular-nums;flex:none}
   .bstx.on{border-color:var(--cy-bd2);background:var(--cy-bg2)}
+  /* v3.1 (TASK_cc_billshare_v31_picker): ① 5 รายการ/ชุด + ปัดซ้าย-ขวาเปลี่ยนชุด */
+  .bs-pg{display:flex;flex-direction:column;gap:6px;touch-action:pan-y}
+  .bs-pg.inl{animation:bsInL .18s ease-out}
+  .bs-pg.inr{animation:bsInR .18s ease-out}
+  @keyframes bsInL{from{transform:translateX(40px);opacity:.4}to{transform:none;opacity:1}}
+  @keyframes bsInR{from{transform:translateX(-40px);opacity:.4}to{transform:none;opacity:1}}
+  .bs-pin{display:flex;flex-direction:column;gap:6px;padding-bottom:8px;border-bottom:1px dashed var(--bd2)}
+  .bs-pinsep{font-size:10px;color:var(--dim);text-align:center}
+  .bs-pgbar{display:flex;align-items:center;justify-content:center;gap:4px;font-size:10.5px;color:var(--dim);margin-top:8px;border-top:1px dashed var(--bd2);padding-top:6px}
+  .bs-pgk{border:0;background:transparent;color:var(--cy2);font-size:14px;line-height:1;padding:6px 10px;font-family:inherit;cursor:pointer}
+  .bs-pgk:disabled{color:var(--bd3);cursor:default}
+  .bs-pdots{display:flex;gap:5px;justify-content:center;margin-top:4px}
+  .bs-pd{width:6px;height:6px;border-radius:99px;background:var(--bd3)}
+  .bs-pd.on{background:var(--cy);width:16px}
   .bsrow{display:flex;gap:6px;align-items:center;margin-bottom:6px}
   .bsrow input{min-width:0;background:var(--inset);border:1px solid var(--bd2);border-radius:10px;color:var(--tx);font-size:16px;padding:7px 9px;font-family:inherit;outline:none}
   .bsrow input:focus{border-color:var(--cy)}
@@ -676,7 +690,7 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.2.13-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · CC 10 ต.ค. 69: v4.2.13 = แชร์บิล v3 (จดต่อเนื่อง + ⋮ แผงล่าง แยก 2/3/กำหนดเอง + เพื่อนเป็น + + ซูม/ครอปภาพบิล · TASK_cc_billshare_v3) · CC 9 ต.ค. 69: v4.2.12 = บิลแชร์ เพื่อนติ๊กเอง + แถวปุ่มลัดหน้าหลัก (TASK_cc_billbox_share) · v4.2.11 = บิลรอคืน รอบ 2 (ปุ่มบิลในหน้ารายการ + แยกเอง + ส่วนของเรา · TASK_cc_bill_return_app2) · v4.2.10 = บิลรอคืนบน Supabase (TASK_cc_bill_return_app) · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
+var APP_BUILD = 'v4.2.14-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · CC 10 ต.ค. 69: v4.2.14 = แชร์บิล v3.1 ① รายการที่จ่ายไปล่าสุด (5/ชุด + ปัดเปลี่ยนชุด + กรองเฉพาะที่เริ่มบิลได้ · TASK_cc_billshare_v31_picker) · v4.2.13 = แชร์บิล v3 (จดต่อเนื่อง + ⋮ แผงล่าง แยก 2/3/กำหนดเอง + เพื่อนเป็น + + ซูม/ครอปภาพบิล · TASK_cc_billshare_v3) · CC 9 ต.ค. 69: v4.2.12 = บิลแชร์ เพื่อนติ๊กเอง + แถวปุ่มลัดหน้าหลัก (TASK_cc_billbox_share) · v4.2.11 = บิลรอคืน รอบ 2 (ปุ่มบิลในหน้ารายการ + แยกเอง + ส่วนของเรา · TASK_cc_bill_return_app2) · v4.2.10 = บิลรอคืนบน Supabase (TASK_cc_bill_return_app) · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
 var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, budForm:null, budOpen:{}, view:null, imp:null, pMonth:null, recLumpOpen:false, catForm:null, shortForm:null };  // catForm/shortForm: Hermes 7 ต.ค. 69 — ฟอร์มหมวดทำเอง/รายการลัด (หน้าแยก v4.2.8)  // pMonth: แก้โดย Hermes 5 ต.ค. 69 — เดือนที่เลือกในแท็บรอยืนยัน (แยกเดือน) · recLumpOpen: Hermes 7 ต.ค. 69 (§16) — กาง "ก้อนรายจ่ายประจำ" ในงบรายหมวด
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
@@ -2185,7 +2199,7 @@ function htmlSettings(d){
     + cardMyCats(d)        // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หมวดทำเอง
     + cardMyShortcuts(d)   // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): รายการลัด
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.13-supabase</span></div>'  // CC 10 ต.ค. 69: v4.2.13 = แชร์บิล v3 · CC 9 ต.ค. 69: v4.2.11 = บิลรอคืน รอบ 2 · v4.2.10 = บิลรอคืนบน Supabase · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.14-supabase</span></div>'  // CC 10 ต.ค. 69: v4.2.14 = แชร์บิล v3.1 picker ① · v4.2.13 = แชร์บิล v3 · CC 9 ต.ค. 69: v4.2.11 = บิลรอคืน รอบ 2 · v4.2.10 = บิลรอคืนบน Supabase · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -2526,8 +2540,9 @@ document.addEventListener('click', function(e){
   if (act === 'fnBills') { fnBills(); return; }
   if (act === 'fnImp') { S.imp = { acct: 'kplus', text: '', rows: null, err: '' }; el('impov').classList.add('on'); renderImp(); focusInput('impTx'); return; }
   if (act === 'bsNew') { bsOpen('type', ref); return; }
-  if (act === 'bsTx') { bsSyncInputs(); S.bsForm.tx = ref; paint(); return; }
-  if (act === 'bsMore') { bsSyncInputs(); S.bsForm.showAll = true; paint(); return; }
+  if (act === 'bsTx') { if (Date.now() - bsSwipeAt < 400) return; bsSyncInputs(); S.bsForm.tx = ref; paint(); return; }  // ปัดชุดเพิ่งจบ = ไม่นับเป็นแตะเลือก
+  if (act === 'bsPagePrev') { bsPage(-1); return; }  // v3.1: ① ชุดก่อนหน้า/ถัดไป (ขอบ = ไม่ขยับ)
+  if (act === 'bsPageNext') { bsPage(1); return; }
   if (act === 'bsImg') { var bsi1 = el('bsImgIn'); if (bsi1) bsi1.click(); return; }
   if (act === 'bsImgZoom') { bsSyncInputs(); bsOpenViewer(); return; }
   if (act === 'bsDot') { bsSyncInputs(); bsOpenSheet(parseInt(t.getAttribute('data-i'), 10)); return; }
@@ -4337,12 +4352,12 @@ function bsTxCands(){
   var d = S.data || {};
   var all = (d.pending || []).concat(d.history || []).filter(function(it){
     return it && it.direction === 'out' && !it.xf && it.kind !== 'money_in_check' && !bsByTx(it.ref)
-      && (it.bill_status === '' || it.bill_status === 'open' || !it.bill_status);
+      && !it.bill_status;   // v3.1: เฉพาะที่เริ่มบิลได้ — ตีตรา/มีบิลแล้ว (open/done/closed) ไม่ขึ้น (แถว open เข้าได้จากปุ่มในแถว → ปักหมุด)
   });
   all.sort(function(a, b){ return a.at > b.at ? -1 : (a.at < b.at ? 1 : 0); });
   return all;
 }
-function bsFormDefault(mode){ return { mode: mode || 'type', tx: '', owner: 'เรา', items: [{ name:'', price:'' }], svc: 0, vat: 700, friends: [], img: '', imgOrig: '', imgView: null, sheet: null, showAll: false }; }
+function bsFormDefault(mode){ return { mode: mode || 'type', tx: '', owner: 'เรา', items: [{ name:'', price:'' }], svc: 0, vat: 700, friends: [], img: '', imgOrig: '', imgView: null, sheet: null, page: 0 }; }
 function bsOpen(mode, txRef){
   S.bsForm = bsFormDefault(mode);
   if (txRef) S.bsForm.tx = txRef;
@@ -4373,7 +4388,7 @@ function bsCheck(f){  // สถานะเช็คดุลของหน้�
   var gross = B.grossOf(sub, f.svc, f.vat);
   var lines = 'อาหาร <b>'+fmtBaht(sub)+'</b>' + (f.svc ? ' + เซอร์วิส '+bsPct(f.svc) : '') + (f.vat ? ' + VAT '+bsPct(f.vat) : ' (ไม่บวก VAT)')
     + ' = ยอดจากรายการ <b>'+fmtBaht(gross)+'฿</b>';
-  if (!tx) return { ok: false, cls: '', html: lines + '<br><span class="st">เลือก "รายการจ่ายจริง" ด้านบนก่อน — ใช้เป็นยอดเช็คดุล</span>' };
+  if (!tx) return { ok: false, cls: '', html: lines + '<br><span class="st">เลือก "รายการที่จ่ายไปล่าสุด" ด้านบนก่อน — ใช้เป็นยอดเช็คดุล</span>' };
   lines += '<br>ยอดจ่ายจริง <b>'+fmtBaht(tx.amount_minor)+'฿</b> · '+esc(shortName(tx))+' '+fmtWhen(tx.at);
   if (!items.length) return { ok: false, cls: '', html: lines + '<br><span class="st">ใส่รายการในบิลก่อน</span>' };
   if (bad) return { ok: false, cls: 'bad', html: lines + '<br><span class="st">✗ ' + esc(bad) + '</span>' };
@@ -4390,22 +4405,74 @@ function bsFriendHtml(nm, i){
   return '<div class="bs-friend"><input class="bs-in" data-bs="friend:'+i+'" type="text" maxlength="30" value="'+esc(nm)+'" placeholder="ชื่อเพื่อน">'
     + '<button class="x" type="button" data-act="bsFriendDel" data-i="'+i+'" aria-label="ลบชื่อเพื่อน">✕</button></div>';
 }
+/* ---------- ① v3.1 (TASK_cc_billshare_v31_picker · P เคาะ "แบบ ก" 10 ต.ค. 69): 5 รายการ/ชุด + ปัดซ้าย-ขวา/ลูกศร = เปลี่ยนชุด ---------- */
+var BS_PER = 5, bsSwipeAt = 0;
+function bsPageOf(f, cands){  // ชุดปัจจุบัน (clamp ไม่วนรอบ) · f.page คงค่าข้ามการวาดใหม่ทุกกรณี
+  var n = Math.max(1, Math.ceil(cands.length / BS_PER));
+  return { p: Math.min(Math.max(parseInt(f.page, 10) || 0, 0), n - 1), n: n };
+}
+function bsPage(d){
+  var f = S.bsForm; if (!f) return;
+  var pg = bsPageOf(f, bsTxCands()), np = Math.min(Math.max(pg.p + d, 0), pg.n - 1);
+  if (np === pg.p){ f.page = np; return; }   // ขอบ = ไม่ขยับ
+  bsSyncInputs();
+  f.page = np; f._slide = d > 0 ? 'l' : 'r';
+  paint();
+}
+function bsTxBtn(it, f){
+  return '<button class="bstx'+(it.ref === f.tx ? ' on' : '')+'" type="button" data-act="bsTx" data-ref="'+esc(it.ref)+'"><span class="n">'+esc(shortName(it))+'<small>'+fmtWhen(it.at)+' · '+(KIND[it.kind] || it.kind)+'</small></span><span class="a">'+fmtBaht(it.amount_minor)+'฿</span></button>';
+}
+function bsPagerHtml(p, n){  // แถบใต้ลิสต์: ← ชุด k/N → + จุดสูงสุด 7 จุด (หน้าต่างเลื่อน · จุดปัจจุบัน = แคปซูล)
+  var w0 = Math.max(0, Math.min(p - 3, n - 7)), w1 = Math.min(n, w0 + 7), dots = '';
+  for (var i = w0; i < w1; i++) dots += '<span class="bs-pd'+(i === p ? ' on' : '')+'"></span>';
+  return '<div class="bs-pgbar"><button class="bs-pgk" type="button" data-act="bsPagePrev" aria-label="ชุดก่อนหน้า"'+(p <= 0 ? ' disabled' : '')+'>←</button>'
+    + '<span>ปัดดูรายการก่อนหน้า · ชุด '+(p + 1)+'/'+n+'</span>'
+    + '<button class="bs-pgk" type="button" data-act="bsPageNext" aria-label="ชุดถัดไป"'+(p >= n - 1 ? ' disabled' : '')+'>→</button></div>'
+    + '<div class="bs-pdots">'+dots+'</div>';
+}
+(function(){  // ปัดซ้าย = ชุดถัดไป (เก่ากว่า) · ปัดขวา = ชุดก่อนหน้า · ล็อกแกน: แนวตั้งปล่อยให้เลื่อนจอ (touch-action:pan-y)
+  var x0 = null, y0 = 0, dx = 0, axis = '', box = null;
+  document.addEventListener('touchstart', function(e){
+    var b = e.target && e.target.closest ? e.target.closest('#bsPg') : null;
+    if (!b || e.touches.length !== 1){ x0 = null; return; }
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; dx = 0; axis = ''; box = b;
+  }, { passive: true });
+  document.addEventListener('touchmove', function(e){
+    if (x0 === null || !box) return;
+    if (e.touches.length !== 1){ box.style.transform = ''; x0 = null; return; }   // 2 นิ้ว = ไม่ใช่ปัดชุด
+    var mx = e.touches[0].clientX - x0, my = e.touches[0].clientY - y0;
+    if (!axis){ if (Math.abs(mx) < 8 && Math.abs(my) < 8) return; axis = Math.abs(mx) > Math.abs(my) ? 'x' : 'y'; }
+    if (axis !== 'x'){ x0 = null; return; }
+    var pg = S.bsForm ? bsPageOf(S.bsForm, bsTxCands()) : { p: 0, n: 1 };
+    dx = mx;
+    var edge = (dx > 0 && pg.p <= 0) || (dx < 0 && pg.p >= pg.n - 1);
+    box.style.transform = 'translateX(' + (edge ? dx * 0.25 : dx) + 'px)';   // ตามนิ้ว · ขอบ = หนืด
+  }, { passive: true });
+  document.addEventListener('touchend', function(){
+    if (x0 === null || !box) return;
+    var b = box; x0 = null; box = null;
+    if (axis !== 'x') return;
+    bsSwipeAt = Date.now();
+    b.style.transform = '';
+    if (Math.abs(dx) >= 40) bsPage(dx < 0 ? 1 : -1);   // ไม่ถึง 40px = เด้งกลับ
+  }, { passive: true });
+})();
 function bsNewHtml(){
   var f = S.bsForm || bsFormDefault('type');
   var cands = bsTxCands();
-  var shown = f.showAll ? cands.slice(0, 40) : cands.slice(0, 5);
-  if (f.tx && !shown.some(function(it){ return it.ref === f.tx; })){ var cur = bsTxOf(f.tx); if (cur) shown.unshift(cur); }
-  var txHtml = shown.length ? shown.map(function(it){
-      return '<button class="bstx'+(it.ref === f.tx ? ' on' : '')+'" type="button" data-act="bsTx" data-ref="'+esc(it.ref)+'"><span class="n">'+esc(shortName(it))+'<small>'+fmtWhen(it.at)+' · '+(KIND[it.kind] || it.kind)+'</small></span><span class="a">'+fmtBaht(it.amount_minor)+'฿</span></button>';
-    }).join('') + ((!f.showAll && cands.length > 5) ? '<button class="miniact" type="button" data-act="bsMore" style="align-self:flex-start">ดูรายการก่อนหน้า ('+(cands.length - 5)+')</button>' : '')
-    : '<div class="hint">ยังไม่มีรายการจ่ายที่ผูกได้ — รออีเมลธนาคารของบิลนี้เข้าก่อน</div>';
+  var pg = bsPageOf(f, cands), shown = cands.slice(pg.p * BS_PER, pg.p * BS_PER + BS_PER);
+  var pin = (f.tx && !shown.some(function(it){ return it.ref === f.tx; })) ? bsTxOf(f.tx) : null;   // เลือกไว้แต่อยู่นอกชุดนี้ → ปักหมุดบนสุด
+  var slide = f._slide || ''; f._slide = '';
+  var txHtml = (pin ? '<div class="bs-pin"><div class="bs-pinsep">— รายการที่เลือก —</div>'+bsTxBtn(pin, f)+'</div>' : '')
+    + (shown.length ? '<div class="bs-pg'+(slide ? ' in' + slide : '')+'" id="bsPg">'+shown.map(function(it){ return bsTxBtn(it, f); }).join('')+'</div>' + bsPagerHtml(pg.p, pg.n)
+    : (pin ? '' : '<div class="hint">ยังไม่มีรายการจ่ายที่ผูกได้ — รออีเมลธนาคารของบิลนี้เข้าก่อน</div>'));
   var rows = f.items.map(bsRowHtml).join('');
   var friends = (f.friends || []).map(bsFriendHtml).join('');
   var img = f.img ? '<div class="bs-img" data-act="bsImgZoom"><img src="'+esc(f.img)+'" alt="ภาพบิล"></div>' : '';
   var ck = bsCheck(f);
   return '<div class="dt-top"><button class="dt-back" data-act="vclose"><svg><use href="#i-back"/></svg></button><div class="ttl">'+(f.mode === 'scan' ? '📷 สแกนบิล' : '🧾 แชร์บิล')+' — ให้เพื่อนติ๊กเอง</div></div>'
     + '<div class="bs-s">สร้างลิงก์เฉพาะบิลนี้ → เพื่อนเปิดได้ไม่ต้องสมัคร ติ๊กรายการของตัวเอง → ยอดต่อคนรวมเท่ายอดจ่ายจริงเป๊ะ → สรุปเข้าบิลรอคืน</div>'
-    + '<div class="bs-lbl">① รายการจ่ายจริง (ยอดเช็คดุล)</div><div class="bs-txs">'+txHtml+'</div>'
+    + '<div class="bs-lbl">① รายการที่จ่ายไปล่าสุด (ยอดเช็คดุล)</div><div class="bs-txs">'+txHtml+'</div>'
     + '<div class="bs-lbl">② รายการในบิล — แก้ได้ทุกบรรทัดจนกว่าจะสร้างลิงก์</div>'
     + '<div class="incbtns"><button class="miniact" type="button" data-act="bsImg">📷 '+(f.img ? 'เปลี่ยนภาพบิล' : 'ถ่าย/เลือกภาพบิล')+'</button></div>'
     + img
