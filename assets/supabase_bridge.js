@@ -722,6 +722,7 @@
           id: sid, token: strv(s.token), tx_ref: strv(s.tx_ref), title: strv(s.title), owner_name: strv(s.owner_name) || 'เรา',
           items: (Array.isArray(s.items) ? s.items : []).map(function (it) { return { id: numv(it.id), name: strv(it.name), price_minor: numv(it.price_minor) }; }),
           svc_bp: numv(s.svc_bp), vat_bp: numv(s.vat_bp), total_minor: numv(s.total_minor), status: strv(s.status),
+          split_mode: strv(s.split_mode) === 'equal' ? 'equal' : 'tick',   // CC 10 ต.ค. 69 (TASK_cc_readauto_party_v1 · 0013): ไม่มีคอลัมน์ = tick
           result: Array.isArray(s.result) ? s.result : null, at: toThaiLocal(s.created_at), locked_at: s.locked_at ? toThaiLocal(s.locked_at) : '',
           ticks: shareTickRows.filter(function (x) { return numv(x.share_id) === sid; }).map(function (x) { return { item_id: numv(x.item_id), person: strv(x.person), is_owner: !!x.is_owner }; }),
           people: sharePeopleRows.filter(function (x) { return numv(x.share_id) === sid; }).sort(function (a, b) { return numv(a.id) - numv(b.id); })
@@ -1293,18 +1294,30 @@
     if (!isIntIn(sid, 1, Number.MAX_SAFE_INTEGER)) return Promise.resolve(null);
     return Promise.all([
       sb.from('bill_shares').select('*').eq('id', sid).limit(1),
-      sb.from('bill_share_ticks').select('item_id,person,is_owner').eq('share_id', sid)
+      sb.from('bill_share_ticks').select('item_id,person,is_owner').eq('share_id', sid),
+      sb.from('bill_share_people').select('id,name').eq('share_id', sid)   // หารเท่า: รายชื่อตามลำดับ id (CC 10 ต.ค. 69)
     ]).then(function (rs) {
       if (rs[0].error) throw rs[0].error;
       if (rs[1].error) throw rs[1].error;
+      if (rs[2].error) throw rs[2].error;
       var s = (rs[0].data && rs[0].data[0]) || null;
       if (!s) return null;
       s.ticks = rs[1].data || [];
+      s.people = (rs[2].data || []).slice().sort(function (a, b) { return numv(a.id) - numv(b.id); }).map(function (x) { return strv(x.name); });
       return s;
     });
   }
 
-  // payload = { tx_ref, title, owner_name, items:[{name, price_minor}], svc_bp, vat_bp, friends:[ชื่อ], own:[index ของ items] }
+  // หารเท่า (CC 10 ต.ค. 69 · TASK_cc_readauto_party_v1 · 0013): เจ้าของก่อน แล้วเพื่อนตามลำดับรายชื่อ → [{name,is_owner,minor}] Σ = ยอดเป๊ะ
+  //   สูตรเดียวกับ SQL bill_share_equal_split_ (หน้าเพื่อนเห็นเลขเดียวกัน) · ไม่มีเพื่อน = null (ไม่คำนวณ)
+  function equalResult(B, ownerName, friendNames, totalMinor) {
+    var names = [ownerName].concat(friendNames || []);
+    if (names.length < 2 || !(totalMinor > 0)) return null;
+    var per = B.equalSplit(totalMinor, names.length);
+    return names.map(function (nm, i) { return { name: nm, is_owner: i === 0, minor: per[i] }; });
+  }
+
+  // payload = { tx_ref, title, owner_name, items:[{name, price_minor}], svc_bp, vat_bp, friends:[ชื่อ], own:[index ของ items], split_mode:'tick'|'equal' }
   function createShare(payload) {
     if (!CURRENT_UID) return Promise.resolve({ ok: false, msg: 'ยังไม่ได้ล็อกอิน — เข้าสู่ระบบก่อน' });
     var B = bsCalc();
@@ -1324,6 +1337,9 @@
     var friends = (Array.isArray(p.friends) ? p.friends : []).map(function (x) { return cleanName(x); })
       .filter(function (x) { if (!x || seen[x]) return false; seen[x] = 1; return true; }).slice(0, 30);
     var own = (Array.isArray(p.own) ? p.own : []).map(Number).filter(function (i) { return isIntIn(i, 0, items.length - 1); });
+    var equal = strv(p.split_mode) === 'equal';
+    if (equal && !friends.length) return Promise.resolve({ ok: false, msg: 'หารเท่าต้องมีชื่อเพื่อนอย่างน้อย 1 คน' });
+    if (equal) own = [];   // หารเท่า = ไม่ใช้ติ๊ก
     return sb.from('transactions').select('ref,direction,amount_minor,at,counterparty').eq('ref', ref).limit(1).then(function (r) {
       if (r.error) throw r.error;
       var tx = (r.data && r.data[0]) || null;
@@ -1341,10 +1357,12 @@
         if (active.length) return { ok: false, msg: 'รายการจ่ายนี้มีบิลแชร์อยู่แล้ว' };
         var bm = (!rs[1].error && rs[1].data && rs[1].data[0]) || null;
         if (bm && strv(bm.status) !== 'open') return { ok: false, msg: 'บิลรอคืนของรายการนี้จบแล้ว — สร้างบิลแชร์ไม่ได้' };
-        return sb.from('bill_shares').insert({
+        var row0 = {
           user_id: CURRENT_UID, tx_ref: ref, title: cleanName(p.title, 120) || strv(tx.counterparty).slice(0, 120),
           owner_name: owner, items: items, svc_bp: svc, vat_bp: vat, total_minor: total, status: 'open'
-        }).select('id,token').then(function (ins) {
+        };
+        if (equal) row0.split_mode = 'equal';   // tick = ไม่ส่งคอลัมน์ (default ของ 0013 · DB ที่ยังไม่ apply 0013 ก็สร้างแบบเดิมได้)
+        return sb.from('bill_shares').insert(row0).select('id,token').then(function (ins) {
           if (ins.error) throw ins.error;
           var row = ins.data && ins.data[0];
           if (!row || !row.id) return { ok: false, msg: 'สร้างบิลแชร์ไม่สำเร็จ' };
@@ -1410,6 +1428,18 @@
       return sb.from('bill_shares').update({ status: 'open', locked_at: null }).eq('id', sid).then(function () { return res; }, function () { return res; });
     }
     function proceed(s) {
+      if (strv(s.split_mode) === 'equal') {   // หารเท่า: ไม่ต้องรอติ๊ก — ยอดต่อคนจากสูตรเดียวกับ SQL
+        var eqr = equalResult(B, strv(s.owner_name) || 'เรา', s.people, numv(s.total_minor));
+        if (!eqr) return unlock({ ok: false, msg: 'ยังไม่มีเพื่อนในบิล — หารเท่าไม่ได้' });
+        var eqExpect = eqr.slice(1).reduce(function (a, r) { return a + r.minor; }, 0);
+        return markBill(strv(s.tx_ref), eqExpect).then(function (mr) {
+          if (!mr || !mr.ok) return unlock({ ok: false, msg: (mr && mr.msg) || 'เข้าบิลรอคืนไม่สำเร็จ' });
+          return sb.from('bill_shares').update({ result: eqr }).eq('id', sid).then(function (w) {
+            if (w.error) throw w.error;
+            return { ok: true, expect_minor: eqExpect, own_minor: eqr[0].minor, total_minor: numv(s.total_minor) };
+          });
+        });
+      }
       var sum = B.summarize(s);
       if (sum.unclaimed.length) return unlock({ ok: false, msg: 'ยังมี ' + sum.unclaimed.length + ' บรรทัดที่ไม่มีใครติ๊ก (' + bahtTxt(sum.unclaimedSub) + '฿) — ติ๊กให้ครบก่อนสรุป' });
       if (!sum.complete) return unlock({ ok: false, msg: 'ยอดต่อคนรวมไม่เท่ายอดจ่ายจริง (ต่าง ' + bahtTxt(sum.alloc.diff) + '฿) — สรุปไม่ได้' });
@@ -1433,6 +1463,50 @@
         return proceed(s);   // ล็อกรอบนี้ หรือ ล็อกค้างจากรอบก่อนที่เขียนผลไม่ทัน (เน็ตหลุด) → ทำต่อให้จบ
       });
     }).catch(function (e) { return { ok: false, msg: shareErr(e) }; });
+  }
+
+  // สลับวิธีแบ่ง ติ๊กเอง ⇄ หารเท่า (CC 10 ต.ค. 69 · 0013) — ได้จนกว่าล็อก (DB กันซ้ำด้วย trigger)
+  function setShareMode(id, mode) {
+    if (!CURRENT_UID) return Promise.resolve({ ok: false, msg: 'ยังไม่ได้ล็อกอิน — เข้าสู่ระบบก่อน' });
+    var sid = Number(id);
+    if (!isIntIn(sid, 1, Number.MAX_SAFE_INTEGER)) return Promise.resolve({ ok: false, msg: 'ไม่พบบิลแชร์นี้' });
+    if (mode !== 'tick' && mode !== 'equal') return Promise.resolve({ ok: false, msg: 'วิธีแบ่งไม่ถูกต้อง' });
+    return sb.from('bill_shares').update({ split_mode: mode }).eq('id', sid).eq('status', 'open').select('id').then(function (u) {
+      if (u.error) throw u.error;
+      if (!u.data || !u.data.length) return { ok: false, msg: 'สลับได้เฉพาะบิลแชร์ที่ยังไม่ล็อก' };
+      return { ok: true };
+    }).catch(function (e) { return { ok: false, msg: shareErr(e) }; });
+  }
+
+  // อ่านอัตโนมัติจากภาพบิล (CC 10 ต.ค. 69 · TASK_cc_readauto_party_v1) — Edge Function `readbill` (คีย์ตัวอ่านอยู่ฝั่งเซิร์ฟเวอร์)
+  //   supabase-js แนบ JWT ของ session ผู้ใช้ให้เอง · ภาพไม่ถูกเก็บ · ตรวจรูปแบบผลซ้ำฝั่งนี้ก่อนส่งให้แอป
+  function readBill(imageB64, mime) {
+    if (!CURRENT_UID) return Promise.resolve({ ok: false, msg: 'ยังไม่ได้ล็อกอิน — เข้าสู่ระบบก่อน' });
+    var b64 = strv(imageB64);
+    var mt = ['image/jpeg', 'image/png', 'image/webp'].indexOf(strv(mime)) >= 0 ? strv(mime) : 'image/jpeg';
+    if (!b64) return Promise.resolve({ ok: false, msg: 'ไม่มีภาพบิล' });
+    if (!sb.functions || typeof sb.functions.invoke !== 'function') return Promise.resolve({ ok: false, msg: 'อ่านไม่สำเร็จ' });
+    function money(v) { var x = Number(v); return (v === null || v === undefined || v === '' || !isFinite(x) || x < 0) ? null : Math.round(x * 100) / 100; }
+    return new Promise(function (res) { res(sb.functions.invoke('readbill', { body: { image_base64: b64, mime: mt } })); }).then(function (r) {   // invoke โยนตรง = ok:false เหมือนกัน
+      if (r && r.error) throw r.error;
+      var d = r ? r.data : null;
+      if (typeof d === 'string') { try { d = JSON.parse(d); } catch (_e) { d = null; } }
+      if (!d || d.ok !== true || !Array.isArray(d.items) || !d.items.length) return { ok: false, msg: 'อ่านไม่สำเร็จ', code: strv(d && d.error) };
+      var items = d.items.slice(0, 100).map(function (it) {
+        it = it || {};
+        var q = Number(it.qty), tot = money(it.total);
+        var nm = strv(it.name).replace(/\s+/g, ' ').trim().slice(0, 80);
+        return { name: nm, qty: (q >= 1 && q <= 99 && Math.floor(q) === q) ? q : 1, total: tot, uncertain: it.uncertain === true || !nm || tot === null };
+      });
+      var c = d.charges || {}, tt = d.totals || {};
+      var svc = (c.service_pct === null || c.service_pct === undefined || c.service_pct === '' || !isFinite(Number(c.service_pct))) ? null : Number(c.service_pct);
+      return {
+        ok: true, items: items,
+        charges: { service_pct: svc, vat: (c.vat === '7' || c.vat === 'included') ? c.vat : null },
+        totals: { subtotal: money(tt.subtotal), grand_total: money(tt.grand_total) },
+        warnings: (Array.isArray(d.warnings) ? d.warnings : []).slice(0, 10).map(function (w) { return strv(w).slice(0, 160); }).filter(Boolean)
+      };
+    }).catch(function () { return { ok: false, msg: 'อ่านไม่สำเร็จ' }; });
   }
 
   // ยกเลิกบิลแชร์ (ยังไม่ล็อก) — ลิงก์เพื่อนใช้ไม่ได้ทันที · สร้างใหม่กับรายการเดิมได้
@@ -1773,6 +1847,8 @@
     shareOwnTicks: shareOwnTicks,  // แก้โดย CC 9 ต.ค. 69: ติ๊ก "ส่วนของเรา"
     lockShare: lockShare,          // แก้โดย CC 9 ต.ค. 69: สรุป → ล็อก + เข้าบิลรอคืนเดิม (markBill)
     cancelShare: cancelShare,      // แก้โดย CC 9 ต.ค. 69: ยกเลิก (ยังไม่ล็อก)
+    setShareMode: setShareMode,    // แก้โดย CC 10 ต.ค. 69 (TASK_cc_readauto_party_v1): ติ๊กเอง ⇄ หารเท่า (จนกว่าล็อก)
+    readBill: readBill,            // แก้โดย CC 10 ต.ค. 69 (TASK_cc_readauto_party_v1): อ่านอัตโนมัติจากภาพ → Edge Function readbill
     appendIncome: appendIncome,
     ackFixed: ackFixed,
     setBudget: setBudget,

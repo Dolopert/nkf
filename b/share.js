@@ -38,6 +38,7 @@
     bad_key: 'ชื่อนี้ถูกจองจากเครื่องอื่น — ใช้เครื่องเดิมที่ติ๊กไว้',
     bad_name: 'ใส่ชื่อ 1–30 ตัวอักษร',
     too_many_people: 'บิลนี้คนเต็มแล้ว (30 คน)',
+    not_in_list: 'บิลนี้หารเท่า — เลือกได้เฉพาะชื่อที่เจ้าของใส่ไว้ (ไม่เจอชื่อ ให้ทักเจ้าของบิล)',
     item_not_found: 'ไม่พบบรรทัดนี้ในบิล',
     too_many_items: 'ติ๊กได้ไม่เกิน 100 บรรทัด'
   };
@@ -111,8 +112,19 @@
       return refresh(true);
     });
   }
+  function isEqual() { return !!(S.share && S.share.split_mode === 'equal'); }   // CC 10 ต.ค. 69 (TASK_cc_readauto_party_v1 · 0013): บิลหารเท่า
+  function myEqual() {   // ยอดของฉันในบิลหารเท่า — จาก DB (equal_split · สูตร SQL เดียวกับหน้าเจ้าของ) · ไม่เจอ = null
+    var out = null;
+    if (!S.share || !S.me) return null;
+    (S.share.equal_split || []).forEach(function (r) { if (!r.is_owner && r.name === S.me.name) out = Number(r.minor); });
+    return out;
+  }
+  function ack() {   // หารเท่า: «รับทราบ» = บันทึกว่าเห็นยอดแล้ว (ไม่ต้องติ๊กรายการ · ใช้ฟังก์ชัน set_ticks เดิม: ติ๊กว่าง + done)
+    if (!S.me || !S.share) return;
+    save([], true).then(function (res) { if (res && res.ok) toast('รับทราบแล้ว ✓ — โอนคืนเจ้าของได้เลย'); });
+  }
   function toggle(itemId) {
-    if (!S.share || S.share.status !== 'open' || !S.me || S.busy) return;
+    if (!S.share || S.share.status !== 'open' || !S.me || S.busy || isEqual()) return;
     var mine = mineSet();
     if (mine[itemId]) delete mine[itemId]; else mine[itemId] = 1;
     var ids = Object.keys(mine).map(Number).sort(function (a, b) { return a - b; });
@@ -152,8 +164,9 @@
     }
     var sh = S.share, locked = sh.status !== 'open';
     var head = '<div class="h">🧾 บิลของ "' + esc(sh.owner_name) + '" · ' + esc(sh.title) + '</div>'
-      + '<div class="s">' + esc(thDate(sh.at)) + ' · เปิดจากลิงก์ — <b>ไม่ต้องสมัคร</b> · แตะติ๊กรายการของคุณ'
+      + '<div class="s">' + esc(thDate(sh.at)) + ' · เปิดจากลิงก์ — <b>ไม่ต้องสมัคร</b> · ' + (isEqual() ? 'บิลหารเท่า — ดูยอดของคุณแล้วกดรับทราบ' : 'แตะติ๊กรายการของคุณ')
       + (DEMO ? ' · <b>โหมดเดโม่</b> (ข้อมูลสมมติ)' : '') + '</div>';
+    if (isEqual()) { renderEqual(sh, locked, head); return; }
     if (!S.me) {
       if (locked) { app.innerHTML = head + '<div class="msg">เจ้าของปิดบิลนี้แล้ว</div>'; bar.style.display = 'none'; return; }
       var free = (sh.people || []).filter(function (p) { return !p.joined; });
@@ -189,6 +202,40 @@
       + '</div>';
     bar.style.display = '';
   }
+  // บิลหารเท่า (CC 10 ต.ค. 69 · TASK_cc_readauto_party_v1): ยอดของคุณคงที่จาก DB · เลือกได้เฉพาะชื่อในรายชื่อ · ปุ่ม «รับทราบ» (ไม่ต้องติ๊ก)
+  function renderEqual(sh, locked, head) {
+    var app = $('app'), bar = $('bar');
+    var n = (sh.equal_split || []).length;
+    var info = '<div class="eq">🎉 <b>บิลนี้หารเท่า</b>' + (n ? ' ' + n + ' คน (รวม "' + esc(sh.owner_name) + '")' : '')
+      + ' · ยอดรวม ' + baht(sh.total_minor) + '฿ · ไม่ต้องติ๊กรายการ · เศษสตางค์กระจายให้รวมเท่าบิลจริงเป๊ะ</div>';
+    if (!S.me) {
+      if (locked) { app.innerHTML = head + '<div class="msg">เจ้าของปิดบิลนี้แล้ว</div>'; bar.style.display = 'none'; return; }
+      var free = (sh.people || []).filter(function (p) { return !p.joined; });
+      app.innerHTML = head + info + '<div class="card"><div class="lbl">คุณคือใคร? (เลือกชื่อที่เจ้าของใส่ไว้)</div>'
+        + (free.length ? '<div class="chips">' + free.map(function (p) { return '<button class="chip" type="button" data-join="' + esc(p.name) + '">' + esc(p.name) + '</button>'; }).join('') + '</div>'
+          : '<div class="note">ทุกชื่อถูกเลือกแล้ว — ถ้าเป็นคุณ ให้เปิดจากเครื่องเดิม หรือทักเจ้าของบิล</div>')
+        + '</div>' + itemsHtml(sh, {}, true) + footHtml();
+      bar.style.display = 'none';
+      return;
+    }
+    var amt = myEqual();
+    var lockBox = '';
+    if (locked) {
+      (sh.result || []).forEach(function (r) { if (!r.is_owner && r.name === S.me.name) amt = Number(r.minor); });
+      lockBox = '<div class="lock">🔒 เจ้าของปิดบิลแล้ว — ยอดสุดท้ายของคุณตามด้านล่าง · โอนคืนเจ้าของได้เลย</div>';
+    }
+    var amtTxt = amt === null ? '—' : baht(amt) + '฿';
+    app.innerHTML = head + lockBox + '<div class="eqbig" id="eqMine">🎉 บิลนี้หารเท่า — ยอดของคุณ <b>' + amtTxt + '</b></div>' + info
+      + '<div class="lbl" style="margin:4px 2px 8px">รายการในบิล (ดูอย่างเดียว)</div>' + itemsHtml(sh, {}, true) + footHtml();
+    var p = myPerson();
+    bar.innerHTML = '<div class="box"><div class="t1">บิลหารเท่า' + (n ? ' ' + n + ' คน' : '') + ' · ชื่อ: ' + esc(S.me.name) + '</div>'
+      + '<div class="t2">ยอดของคุณ <b>' + amtTxt + '</b></div>'
+      + (locked ? '' : (p && p.done
+          ? '<button class="btn ghost" type="button" id="ackBtn" disabled>✓ รับทราบแล้ว — โอนคืนเจ้าของได้เลย</button>'
+          : '<button class="btn" type="button" id="ackBtn"' + (S.busy ? ' disabled' : '') + '>รับทราบ</button>'))
+      + '</div>';
+    bar.style.display = '';
+  }
   function itemsHtml(sh, mine, readOnly) {
     return (sh.items || []).map(function (it) {
       var t = null;
@@ -214,6 +261,7 @@
     if (t.hasAttribute('data-join')) { join(t.getAttribute('data-join')); return; }
     if (t.id === 'joinBtn') { join(($('nameIn') || {}).value); return; }
     if (t.id === 'doneBtn') { finish(); return; }
+    if (t.id === 'ackBtn') { ack(); return; }
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target && e.target.id === 'nameIn') join(e.target.value); });
   window.addEventListener('hashchange', function () { location.reload(); });
@@ -235,7 +283,7 @@
     db.total_minor = B ? B.grossOf(db.items.reduce(function (a, it) { return a + it.price_minor; }, 0), 0, 700) : 0;
     function pub() {
       return JSON.parse(JSON.stringify({ title: db.title, owner_name: db.owner_name, at: db.at, items: db.items, svc_bp: db.svc_bp, vat_bp: db.vat_bp,
-        total_minor: db.total_minor, status: db.status, result: db.result, ticks: db.ticks,
+        total_minor: db.total_minor, status: db.status, result: db.result, ticks: db.ticks, split_mode: 'tick', equal_split: null, share_minor: null,
         people: db.people.map(function (p) { return { name: p.name, done: p.done, joined: p.joined }; }) }));
     }
     return function (fn, a) {

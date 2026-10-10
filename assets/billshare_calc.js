@@ -73,6 +73,20 @@
     return out;
   }
 
+  /* โหมด «หารเท่า» (CC 10 ต.ค. 69 · TASK_cc_readauto_party_v1): ยอด ÷ n คน → [สตางค์ต่อคน] Σ = ยอดเป๊ะ
+   *   ต่อหัว = half-up ของ total/n · ส่วนต่าง (total − ต่อหัว×n · ไม่เกิน n/2 สตางค์) กระจายทีละ ±1 สตางค์จากคนแรก
+   *   ลำดับ = เจ้าของ (index 0) ก่อน แล้วเพื่อนตามลำดับรายชื่อ → 2,923.24 ÷ 5 = [584.64, 584.65 ×4]
+   *   สูตรเดียวกับ SQL bill_share_equal_split_ (migration 0013) — หน้าเพื่อน (SQL) กับหน้าเจ้าของ (JS) ได้เลขเดียวกัน
+   *   (ไม่ใช้ alloc: alloc แจกเศษจาก floor ให้คนแรกก่อน → เจ้าของได้ 584.65 และเพื่อนคนท้าย 584.64 = ไม่ตรงสเปก) */
+  function equalSplit(totalMinor, n) {
+    var t = Math.round(Number(totalMinor) || 0), k = Math.floor(Number(n) || 0);
+    if (k < 1 || !(t > 0)) return [];
+    var base = Math.floor((2 * t + k) / (2 * k));
+    var diff = t - base * k, out = [];
+    for (var i = 0; i < k; i++) out.push(base + (diff > 0 && i < diff ? 1 : (diff < 0 && i < -diff ? -1 : 0)));
+    return out;
+  }
+
   /* สรุปบิลแชร์จากรายการ + ติ๊ก
    *   share = { items:[{id,name,price_minor}], ticks:[{item_id, person, is_owner}], svc_bp, vat_bp, total_minor, owner_name }
    * คืน { people:[{name, is_owner, items:[id], sub, est, final|null}], unclaimed:[id], unclaimedSub, complete, alloc,
@@ -175,7 +189,7 @@
   }
 
   var api = {
-    alloc: alloc, estimate: estimate, grossOf: grossOf, summarize: summarize, billCheck: billCheck, splitParts: splitParts,
+    alloc: alloc, estimate: estimate, grossOf: grossOf, summarize: summarize, billCheck: billCheck, splitParts: splitParts, equalSplit: equalSplit,
     parseList: parseList, validateItems: validateItems,
     MAX_ITEMS: MAX_ITEMS, MAX_PRICE_MINOR: MAX_PRICE_MINOR
   };
