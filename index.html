@@ -599,6 +599,7 @@
   .bs-vtop{display:flex;align-items:center;gap:10px;min-height:56px;padding:0 14px;border-bottom:1px solid #28303b}.bs-vtop .close{border:0;background:transparent;color:#dbe4ee;font:26px inherit;cursor:pointer}.bs-vtop .title{font-size:14px;font-weight:750;flex:1}.bs-vzoom{border:1px solid var(--cy-bd2);color:var(--cy);border-radius:99px;padding:5px 9px;font-size:11px;font-weight:700}
   .bs-vstage{position:relative;flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#020304}.bs-vstage img{position:absolute;left:0;top:0;max-width:none;max-height:none;display:block;user-select:none;-webkit-user-select:none;-webkit-user-drag:none;pointer-events:none}
   .bs-crop{position:absolute;border:3px solid var(--cy);box-sizing:border-box;z-index:2;box-shadow:0 0 0 9999px rgba(0,0,0,.49)}.bs-crop i{touch-action:none}.bs-crop i{position:absolute;width:26px;height:26px;background:var(--cy);border:2px solid #062026;border-radius:3px;box-sizing:border-box}.bs-crop .tl{left:-14px;top:-14px}.bs-crop .tr{right:-14px;top:-14px}.bs-crop .bl{left:-14px;bottom:-14px}.bs-crop .br{right:-14px;bottom:-14px}
+  .bs-crop i:not(.eh){z-index:2}.bs-crop .eh{background:transparent;border:0;border-radius:0;z-index:1}.bs-crop .eh::before{content:'';position:absolute;background:var(--cy);border:2px solid #062026;border-radius:7px;box-sizing:border-box}.bs-crop .eh.l,.bs-crop .eh.r{top:50%;width:44px;height:72px;margin-top:-36px}.bs-crop .eh.l{left:-23px}.bs-crop .eh.r{right:-23px}.bs-crop .eh.l::before,.bs-crop .eh.r::before{left:15px;top:4px;width:14px;height:64px}.bs-crop .eh.t,.bs-crop .eh.b{left:50%;width:72px;height:44px;margin-left:-36px}.bs-crop .eh.t{top:-23px}.bs-crop .eh.b{bottom:-23px}.bs-crop .eh.t::before,.bs-crop .eh.b::before{left:4px;top:15px;width:64px;height:14px}
   .bs-vbottom{border-top:1px solid #28303b;padding:10px 14px calc(14px + env(safe-area-inset-bottom))}.bs-vhint{text-align:center;color:#aeb8c6;font-size:10.5px;line-height:1.5;margin-bottom:9px}.bs-vactions{display:flex;gap:8px}.bs-vactions button{border:1px solid #394350;border-radius:12px;background:transparent;color:#dbe4ee;padding:10px 12px;font:650 12px inherit;cursor:pointer}.bs-vactions .use{flex:1;background:var(--cy);border-color:var(--cy);color:#062026;font-weight:750}
 </style>
 </head>
@@ -690,7 +691,7 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.2.14-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · CC 10 ต.ค. 69: v4.2.14 = แชร์บิล v3.1 ① รายการที่จ่ายไปล่าสุด (5/ชุด + ปัดเปลี่ยนชุด + กรองเฉพาะที่เริ่มบิลได้ · TASK_cc_billshare_v31_picker) · v4.2.13 = แชร์บิล v3 (จดต่อเนื่อง + ⋮ แผงล่าง แยก 2/3/กำหนดเอง + เพื่อนเป็น + + ซูม/ครอปภาพบิล · TASK_cc_billshare_v3) · CC 9 ต.ค. 69: v4.2.12 = บิลแชร์ เพื่อนติ๊กเอง + แถวปุ่มลัดหน้าหลัก (TASK_cc_billbox_share) · v4.2.11 = บิลรอคืน รอบ 2 (ปุ่มบิลในหน้ารายการ + แยกเอง + ส่วนของเรา · TASK_cc_bill_return_app2) · v4.2.10 = บิลรอคืนบน Supabase (TASK_cc_bill_return_app) · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
+var APP_BUILD = 'v4.2.15-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · CC 10 ต.ค. 69: v4.2.15 = ซูม/ครอปภาพบิล v2 (ลากขอบปรับด้านเดียว + บีบ 2 โหมด: กลาง=ซูม · ขอบซ้าย/ขวา=ปรับกรอบ · TASK_cc_zoomcrop_v1) · v4.2.14 = แชร์บิล v3.1 ① รายการที่จ่ายไปล่าสุด (5/ชุด + ปัดเปลี่ยนชุด + กรองเฉพาะที่เริ่มบิลได้ · TASK_cc_billshare_v31_picker) · v4.2.13 = แชร์บิล v3 (จดต่อเนื่อง + ⋮ แผงล่าง แยก 2/3/กำหนดเอง + เพื่อนเป็น + + ซูม/ครอปภาพบิล · TASK_cc_billshare_v3) · CC 9 ต.ค. 69: v4.2.12 = บิลแชร์ เพื่อนติ๊กเอง + แถวปุ่มลัดหน้าหลัก (TASK_cc_billbox_share) · v4.2.11 = บิลรอคืน รอบ 2 (ปุ่มบิลในหน้ารายการ + แยกเอง + ส่วนของเรา · TASK_cc_bill_return_app2) · v4.2.10 = บิลรอคืนบน Supabase (TASK_cc_bill_return_app) · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
 var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, budForm:null, budOpen:{}, view:null, imp:null, pMonth:null, recLumpOpen:false, catForm:null, shortForm:null };  // catForm/shortForm: Hermes 7 ต.ค. 69 — ฟอร์มหมวดทำเอง/รายการลัด (หน้าแยก v4.2.8)  // pMonth: แก้โดย Hermes 5 ต.ค. 69 — เดือนที่เลือกในแท็บรอยืนยัน (แยกเดือน) · recLumpOpen: Hermes 7 ต.ค. 69 (§16) — กาง "ก้อนรายจ่ายประจำ" ในงบรายหมวด
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
@@ -2199,7 +2200,7 @@ function htmlSettings(d){
     + cardMyCats(d)        // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หมวดทำเอง
     + cardMyShortcuts(d)   // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): รายการลัด
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.14-supabase</span></div>'  // CC 10 ต.ค. 69: v4.2.14 = แชร์บิล v3.1 picker ① · v4.2.13 = แชร์บิล v3 · CC 9 ต.ค. 69: v4.2.11 = บิลรอคืน รอบ 2 · v4.2.10 = บิลรอคืนบน Supabase · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.15-supabase</span></div>'  // CC 10 ต.ค. 69: v4.2.15 = ซูม/ครอปภาพบิล v2 · v4.2.14 = แชร์บิล v3.1 picker ① · v4.2.13 = แชร์บิล v3 · CC 9 ต.ค. 69: v4.2.11 = บิลรอคืน รอบ 2 · v4.2.10 = บิลรอคืนบน Supabase · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -4723,7 +4724,7 @@ function bsFriendDel(i){
 /* ---------- ภาพบิล: ซูม/ครอปเต็มจอ (ในเครื่องเท่านั้น · ไม่อัปโหลด) ----------
    ภาพวางแบบ contain ใน stage แล้วขยาย zoom (1–4×) รอบกลางจอ + เลื่อน pan · กรอบครอปเก็บเป็นพิกัดภาพ 0..1 (l,t,r,b)
    → ซูม/เลื่อนแล้วกรอบติดภาพเสมอ · ครอปจริงด้วย canvas ตามพิกัดภาพต้นฉบับ */
-var BS_ZMAX = 4, BS_CMIN = 0.06;
+var BS_ZMAX = 4, BS_CMIN = 0.06, BS_EDGE = 28;   // BS_EDGE = โซนขอบ (px แกน x) ที่บีบ 2 นิ้วแล้วเป็น «ปรับกรอบซ้าย-ขวา»
 function bsVGeom(stW, stH, natW, natH, zoom, panX, panY){  // ตำแหน่งภาพบนจอ (px ใน stage)
   if (!(stW > 0 && stH > 0 && natW > 0 && natH > 0)) return { x: 0, y: 0, w: 0, h: 0 };
   var fit = Math.min(stW / natW, stH / natH), w = natW * fit * zoom, h = natH * fit * zoom;
@@ -4737,16 +4738,33 @@ function bsClampPan(stW, stH, natW, natH, zoom, panX, panY){  // เลื่อ
 function bsPinchPan(mid0, pan0, z0, mid, z, center){  // จุดใต้นิ้วคงที่ระหว่างหุบ–กาง
   return { x: mid.x - center.x - (mid0.x - center.x - pan0.x) * z / z0, y: mid.y - center.y - (mid0.y - center.y - pan0.y) * z / z0 };
 }
-function bsCropMove(c, mode, dx, dy){  // ลากกรอบ: dx/dy = สัดส่วนของภาพ · mode = move|tl|tr|bl|br → กรอบใหม่ (อยู่ในภาพ · ไม่เล็กกว่าขั้นต่ำ)
+var BS_CROP_SIDES = { tl: 'lt', tr: 'rt', bl: 'lb', br: 'rb', l: 'l', r: 'r', t: 't', b: 'b' };   // มุม = แก้ 2 ด้าน · ขอบ = ด้านเดียว
+function bsCropMove(c, mode, dx, dy){  // ลากกรอบ: dx/dy = สัดส่วนของภาพ · mode = move|tl|tr|bl|br|l|r|t|b → กรอบใหม่ (อยู่ในภาพ · ไม่เล็กกว่าขั้นต่ำ)
   var l = c.l, t = c.t, r = c.r, b = c.b;
   if (mode === 'move'){
     var w = r - l, h = b - t;
     l = Math.max(0, Math.min(1 - w, l + dx)); t = Math.max(0, Math.min(1 - h, t + dy));
     return { l: l, t: t, r: l + w, b: t + h };
   }
-  if (mode.charAt(1) === 'l') l = Math.max(0, Math.min(r - BS_CMIN, l + dx)); else r = Math.min(1, Math.max(l + BS_CMIN, r + dx));
-  if (mode.charAt(0) === 't') t = Math.max(0, Math.min(b - BS_CMIN, t + dy)); else b = Math.min(1, Math.max(t + BS_CMIN, b + dy));
+  var sd = BS_CROP_SIDES[mode] || '';
+  if (sd.indexOf('l') >= 0) l = Math.max(0, Math.min(r - BS_CMIN, l + dx));
+  if (sd.indexOf('r') >= 0) r = Math.min(1, Math.max(l + BS_CMIN, r + dx));
+  if (sd.indexOf('t') >= 0) t = Math.max(0, Math.min(b - BS_CMIN, t + dy));
+  if (sd.indexOf('b') >= 0) b = Math.min(1, Math.max(t + BS_CMIN, b + dy));
   return { l: l, t: t, r: r, b: b };
+}
+function bsPinchKind(pA, pB, g, c){  // บีบ 2 นิ้ว: นิ้วหนึ่งในโซนขอบซ้าย + อีกนิ้วในโซนขอบขวา (วัดแกน x · ใน/นอกกรอบ) = 'lr' · นอกนั้น = 'zoom'
+  var xl = g.x + c.l * g.w, xr = g.x + c.r * g.w;
+  function nl(p){ return Math.abs(p.x - xl) <= BS_EDGE; }
+  function nr(p){ return Math.abs(p.x - xr) <= BS_EDGE; }
+  return ((nl(pA) && nr(pB)) || (nl(pB) && nr(pA))) ? 'lr' : 'zoom';
+}
+function bsPinchLR(c0, xL0, xR0, xL, xR, gw){  // บีบจากขอบ: นิ้วซ้ายคุม l · นิ้วขวาคุม r (ตามนิ้ว 1:1) · ไม่แตะ t/b · ไขว้กัน = ชน BS_CMIN
+  if (!(gw > 0)) return { l: c0.l, t: c0.t, r: c0.r, b: c0.b };
+  var rr = Math.max(BS_CMIN, Math.min(1, c0.r + (xR - xR0) / gw));
+  var l = Math.max(0, Math.min(rr - BS_CMIN, c0.l + (xL - xL0) / gw));
+  var r = Math.min(1, Math.max(l + BS_CMIN, c0.r + (xR - xR0) / gw));
+  return { l: l, t: c0.t, r: r, b: c0.b };
 }
 function bsCropSrc(c, natW, natH){  // กรอบ (0..1) → พิกัด drawImage บนภาพต้นฉบับ (px เต็ม · อยู่ในภาพ)
   var sx = Math.max(0, Math.min(natW - 1, Math.round(c.l * natW))), sy = Math.max(0, Math.min(natH - 1, Math.round(c.t * natH)));
@@ -4759,8 +4777,8 @@ function bsViewerHtml(f){
   return '<div class="bs-viewer" id="bsViewer" role="dialog" aria-modal="true">'
     + '<div class="bs-vtop"><button class="close" type="button" data-act="bsViewerClose" aria-label="ปิด">✕</button><div class="title">📷 ภาพบิล · ซูม/ครอป</div><div class="bs-vzoom" id="bsVZoom">ซูม '+f.imgView.z.toFixed(1)+'×</div></div>'
     + '<div class="bs-vstage" id="bsVStage"><img id="bsVImg" src="'+esc(f.img)+'" alt="ภาพบิล" draggable="false">'
-    + '<div class="bs-crop" id="bsVCrop"><i class="tl" data-c="tl"></i><i class="tr" data-c="tr"></i><i class="bl" data-c="bl"></i><i class="br" data-c="br"></i></div></div>'
-    + '<div class="bs-vbottom"><div class="bs-vhint">หุบ–กางนิ้ว = ซูม · ลาก = เลื่อน · ลากมุมกรอบ = ครอป</div>'
+    + '<div class="bs-crop" id="bsVCrop"><i class="tl" data-c="tl"></i><i class="tr" data-c="tr"></i><i class="bl" data-c="bl"></i><i class="br" data-c="br"></i><i class="eh l" data-c="l"></i><i class="eh r" data-c="r"></i><i class="eh t" data-c="t"></i><i class="eh b" data-c="b"></i></div></div>'
+    + '<div class="bs-vbottom"><div class="bs-vhint">ลากขอบ = ปรับด้านนั้น · บีบกลางภาพ = ซูม · บีบจากขอบซ้าย-ขวา = ปรับกรอบ · ลากในกรอบ = เลื่อน</div>'
     + '<div class="bs-vactions"><button type="button" data-act="bsViewerReset">↺ รีเซ็ต</button><button class="use" type="button" data-act="bsViewerUse">✓ ใช้ภาพนี้ (ครอปแล้ว)</button></div></div></div>';
 }
 function bsViewNew(){ return { z: 1, px: 0, py: 0, c: { l: 0, t: 0, r: 1, b: 1 } }; }
@@ -4803,6 +4821,11 @@ function bsViewerInit(){  // เรียกหลังวาด #detail ทุ
     var g = bsVGeom(d.w, d.h, d.nw, d.nh, v.z, v.px, v.py);
     if (list.length >= 2){
       var a = pt(list[0]), b = pt(list[1]);
+      if (bsPinchKind(a, b, g, v.c) === 'lr'){   // แบบ ②: เริ่มจากขอบซ้าย+ขวา = ปรับกรอบ (นิ้วที่อยู่ซ้ายกว่าคุม l)
+        var aL = Math.abs(a.x - (g.x + v.c.l * g.w)) + Math.abs(b.x - (g.x + v.c.r * g.w)) <= Math.abs(b.x - (g.x + v.c.l * g.w)) + Math.abs(a.x - (g.x + v.c.r * g.w));
+        var iL = aL ? 0 : 1, iR = 1 - iL;
+        return { mode: 'pinchLR', idL: list[iL].identifier, idR: list[iR].identifier, xL0: (aL ? a : b).x, xR0: (aL ? b : a).x, c0: { l: v.c.l, t: v.c.t, r: v.c.r, b: v.c.b }, gw: g.w };
+      }
       return { mode: 'pinch', d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, z0: v.z, mid0: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, pan0: { x: v.px, y: v.py }, c: { x: d.w / 2, y: d.h / 2 } };
     }
     var p = pt(list[0]), corner = target && target.getAttribute && target.getAttribute('data-c');
@@ -4813,7 +4836,13 @@ function bsViewerInit(){  // เรียกหลังวาด #detail ทุ
   }
   function move(list){
     var v = S.bsForm && S.bsForm.imgView; if (!v || !g0) return;
-    if (g0.mode === 'pinch'){
+    if (g0.mode === 'pinchLR'){
+      if (list.length < 2) return;
+      var tL = null, tR = null;
+      for (var k = 0; k < list.length; k++){ if (list[k].identifier === g0.idL) tL = list[k]; else if (list[k].identifier === g0.idR) tR = list[k]; }
+      if (!tL || !tR) return;
+      v.c = bsPinchLR(g0.c0, g0.xL0, g0.xR0, pt(tL).x, pt(tR).x, g0.gw);
+    } else if (g0.mode === 'pinch'){
       if (list.length < 2) return;
       var a = pt(list[0]), b = pt(list[1]), dd = Math.hypot(a.x - b.x, a.y - b.y);
       var z = Math.max(1, Math.min(BS_ZMAX, g0.z0 * dd / g0.d0));
@@ -4833,7 +4862,7 @@ function bsViewerInit(){  // เรียกหลังวาด #detail ทุ
     else { var c = { x: d.w / 2, y: d.h / 2 }, pp = bsPinchPan(p, { x: v.px, y: v.py }, v.z, c, 2.5, c); v.z = 2.5; v.px = pp.x; v.py = pp.y; }
     bsViewerApply();
   }
-  var CORNERS = { tl: 1, tr: 1, bl: 1, br: 1 };
+  var CORNERS = { tl: 1, tr: 1, bl: 1, br: 1, l: 1, r: 1, t: 1, b: 1 };   // เริ่มบนมุม/ขอบ = ไม่นับเป็นแตะ
   // แตะ = นิ้วเดียว ไม่ขยับ ไม่เคยเป็น 2 นิ้ว · นับตอนยกนิ้ว (2 นิ้วบางเครื่องส่ง touchstart ทีละนิ้ว → ห้ามนับตอนแตะลง)
   var tap = null;
   st.addEventListener('touchstart', function(e){
@@ -4843,9 +4872,9 @@ function bsViewerInit(){  // เรียกหลังวาด #detail ทุ
   }, { passive: false });
   st.addEventListener('touchmove', function(e){
     e.preventDefault(); e.stopPropagation();
-    if (g0 && g0.mode !== 'pinch' && e.touches.length >= 2) g0 = begin(e.touches, null);
+    if (g0 && g0.mode !== 'pinch' && g0.mode !== 'pinchLR' && e.touches.length >= 2) g0 = begin(e.touches, null);
     move(e.touches);
-    if (tap && (!g0 || g0.mode === 'pinch' || g0.moved)) tap = null;
+    if (tap && (!g0 || g0.mode === 'pinch' || g0.mode === 'pinchLR' || g0.moved)) tap = null;
   }, { passive: false });
   st.addEventListener('touchend', function(e){
     e.stopPropagation();
