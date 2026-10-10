@@ -371,6 +371,7 @@
   .mpick b{font-size:13.5px;font-weight:700;min-width:86px;text-align:center}
   .mpick button{background:var(--inset);border:1px solid var(--bd2);border-radius:10px;width:36px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--mut)}
   .mpick button svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .mpick .mct{color:var(--dim);font-weight:500;font-size:12px}
   .dt-hero{background:linear-gradient(180deg,var(--dtg1),var(--dtg2));border:1px solid var(--bd);border-radius:16px;padding:13px 15px;margin-top:8px}
   .dt-hero .l2{font-size:11px;color:var(--mut)}
   .dt-hero .v2{font-size:25px;font-weight:750;font-variant-numeric:tabular-nums;margin-top:2px}
@@ -704,8 +705,8 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.2.16-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · CC 10 ต.ค. 69: v4.2.16 = อ่านอัตโนมัติจากภาพ (Edge Function readbill · เหลือง = ไม่ชัวร์ · ชิปเซอร์วิส/VAT ตามบิล) + โหมดหารเท่า (TASK_cc_readauto_party_v1) · v4.2.15 = ซูม/ครอปภาพบิล v2 (ลากขอบปรับด้านเดียว + บีบ 2 โหมด: กลาง=ซูม · ขอบซ้าย/ขวา=ปรับกรอบ · TASK_cc_zoomcrop_v1) · v4.2.14 = แชร์บิล v3.1 ① รายการที่จ่ายไปล่าสุด (5/ชุด + ปัดเปลี่ยนชุด + กรองเฉพาะที่เริ่มบิลได้ · TASK_cc_billshare_v31_picker) · v4.2.13 = แชร์บิล v3 (จดต่อเนื่อง + ⋮ แผงล่าง แยก 2/3/กำหนดเอง + เพื่อนเป็น + + ซูม/ครอปภาพบิล · TASK_cc_billshare_v3) · CC 9 ต.ค. 69: v4.2.12 = บิลแชร์ เพื่อนติ๊กเอง + แถวปุ่มลัดหน้าหลัก (TASK_cc_billbox_share) · v4.2.11 = บิลรอคืน รอบ 2 (ปุ่มบิลในหน้ารายการ + แยกเอง + ส่วนของเรา · TASK_cc_bill_return_app2) · v4.2.10 = บิลรอคืนบน Supabase (TASK_cc_bill_return_app) · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
-var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, budForm:null, budOpen:{}, view:null, imp:null, pMonth:null, recLumpOpen:false, catForm:null, shortForm:null };  // catForm/shortForm: Hermes 7 ต.ค. 69 — ฟอร์มหมวดทำเอง/รายการลัด (หน้าแยก v4.2.8)  // pMonth: แก้โดย Hermes 5 ต.ค. 69 — เดือนที่เลือกในแท็บรอยืนยัน (แยกเดือน) · recLumpOpen: Hermes 7 ต.ค. 69 (§16) — กาง "ก้อนรายจ่ายประจำ" ในงบรายหมวด
+var APP_BUILD = 'v4.2.17-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · CC 10 ต.ค. 69: v4.2.17 = ประวัติรายการ แยกเดือน + ปุ่ม ‹ › (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติจากภาพ (Edge Function readbill · เหลือง = ไม่ชัวร์ · ชิปเซอร์วิส/VAT ตามบิล) + โหมดหารเท่า (TASK_cc_readauto_party_v1) · v4.2.15 = ซูม/ครอปภาพบิล v2 (ลากขอบปรับด้านเดียว + บีบ 2 โหมด: กลาง=ซูม · ขอบซ้าย/ขวา=ปรับกรอบ · TASK_cc_zoomcrop_v1) · v4.2.14 = แชร์บิล v3.1 ① รายการที่จ่ายไปล่าสุด (5/ชุด + ปัดเปลี่ยนชุด + กรองเฉพาะที่เริ่มบิลได้ · TASK_cc_billshare_v31_picker) · v4.2.13 = แชร์บิล v3 (จดต่อเนื่อง + ⋮ แผงล่าง แยก 2/3/กำหนดเอง + เพื่อนเป็น + + ซูม/ครอปภาพบิล · TASK_cc_billshare_v3) · CC 9 ต.ค. 69: v4.2.12 = บิลแชร์ เพื่อนติ๊กเอง + แถวปุ่มลัดหน้าหลัก (TASK_cc_billbox_share) · v4.2.11 = บิลรอคืน รอบ 2 (ปุ่มบิลในหน้ารายการ + แยกเอง + ส่วนของเรา · TASK_cc_bill_return_app2) · v4.2.10 = บิลรอคืนบน Supabase (TASK_cc_bill_return_app) · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
+var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, budForm:null, budOpen:{}, view:null, imp:null, pMonth:null, hMonth:null, recLumpOpen:false, catForm:null, shortForm:null };  // catForm/shortForm: Hermes 7 ต.ค. 69 — ฟอร์มหมวดทำเอง/รายการลัด (หน้าแยก v4.2.8)  // hMonth: CC 10 ต.ค. 69 — เดือนที่เลือกในแท็บรายการ (แยกจาก pMonth ของรอยืนยัน)  // pMonth: แก้โดย Hermes 5 ต.ค. 69 — เดือนที่เลือกในแท็บรอยืนยัน (แยกเดือน) · recLumpOpen: Hermes 7 ต.ค. 69 (§16) — กาง "ก้อนรายจ่ายประจำ" ในงบรายหมวด
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
 var SW = { OPEN:112, COMMIT:160, MAX:210, EASE:'cubic-bezier(.22,.8,.24,1)' };
@@ -1808,8 +1809,7 @@ function categoryGrid(d, it){
 /* แก้โดย Hermes 4 ต.ค. 69 (P สั่ง · เธรด "ประวัติรายการ"): 3 อย่าง —
    ① แถวบันทึกแล้วแตะแก้ได้ (หมวด/ชื่อ) ② แยกเดือน (เดิมรวมทุกเดือนเป็นลิสต์เดียว) ③ ในแต่ละเดือนเรียง "เวลาล่าสุดขึ้นก่อน"
    — แต่ละเดือนเรียงของตัวเอง ไม่รวมเป็นก้อนเดียว · เดือนล่าสุดขึ้นก่อน */
-function htmlHistory(d){
-  if (!d.history.length) return '<div class="empty">ยังไม่มีรายการที่บันทึก — ปัดขวาหรือกดหมวดได้เลย</div>';
+function histMonths(d){
   var groups = {}, order = [];
   for (var i = 0; i < d.history.length; i++){
     var mk = (d.history[i].at || '').slice(0, 7);
@@ -1817,16 +1817,24 @@ function htmlHistory(d){
     groups[mk].push(d.history[i]);
   }
   order.sort(function(a, b){ return a > b ? -1 : (a < b ? 1 : 0); }); // เดือนล่าสุดก่อน
-  var hid = 0;
+  return { groups: groups, order: order };
+}
+/* CC 10 ต.ค. 69 (TASK_cc_histmonth_v1 · P เคาะ ①): แสดงทีละเดือน + แถบ ‹ › (แบบหน้ารายละเอียดเดือน) */
+function htmlHistory(d){
+  if (!d.history.length) return '<div class="empty">ยังไม่มีรายการที่บันทึก — ปัดขวาหรือกดหมวดได้เลย</div>';
+  var mm = histMonths(d);
+  if (!mm.groups[S.hMonth]) S.hMonth = mm.order[0];   // ยังไม่เลือก/เดือนเดิมหาย → เดือนล่าสุด
+  var idx = mm.order.indexOf(S.hMonth);
+  var older = mm.order[idx + 1], newer = mm.order[idx - 1];
+  var items = mm.groups[S.hMonth].slice().sort(function(a, b){ return a.at > b.at ? -1 : (a.at < b.at ? 1 : 0); }); // ในเดือนนี้: ล่าสุดขึ้นก่อน
   var out = '<div class="list-hd"><div class="l"><div class="t1">ประวัติรายการ</div>'
-    + '<div class="t2">บันทึกแล้ว '+d.meta.savedCount+' รายการ · '+order.length+' เดือน · แตะแถวเพื่อแก้หมวด/ชื่อ</div></div></div>';
-  for (var gi = 0; gi < order.length; gi++){
-    var items = groups[order[gi]].slice().sort(function(a, b){ return a.at > b.at ? -1 : (a.at < b.at ? 1 : 0); }); // ในเดือนนี้: ล่าสุดขึ้นก่อน
-    out += '<div class="mgroup-t"><span class="mt">'+monthLabelOf(order[gi])+'</span><span class="mn">'+items.length+' รายการ</span></div>';
-    for (var ri = 0; ri < items.length; ri++) out += historyRow(d, items[ri]);
-    hid += items.length;
-  }
-  if (d.meta.savedCount > hid) out += '<div class="hint" style="margin:4px 3px">แสดง '+hid+' รายการล่าสุด · ทั้งหมด '+d.meta.savedCount+' รายการ</div>';
+    + '<div class="t2">บันทึกแล้ว '+d.meta.savedCount+' รายการ · '+mm.order.length+' เดือน · แตะแถวเพื่อแก้หมวด/ชื่อ</div></div></div>';
+  out += '<div class="mpick" style="margin-bottom:10px">'
+    + '<button data-act="hstep" data-d="1"' + (older ? '' : ' style="opacity:.3"') + '><svg><use href="#i-back"/></svg></button>'
+    + '<b>' + monthLabelOf(S.hMonth) + '<span class="mct"> · ' + items.length + ' รายการ</span></b>'
+    + '<button data-act="hstep" data-d="-1"' + (newer ? '' : ' style="opacity:.3"') + '><svg><use href="#i-next"/></svg></button></div>';
+  for (var ri = 0; ri < items.length; ri++) out += historyRow(d, items[ri]);
+  if (d.meta.savedCount > d.history.length) out += '<div class="hint" style="margin:4px 3px">แสดง '+d.history.length+' รายการล่าสุด · ทั้งหมดที่บันทึก '+d.meta.savedCount+' รายการ</div>';
   return out;
 }
 function histShareBtn(it){
@@ -2213,7 +2221,7 @@ function htmlSettings(d){
     + cardMyCats(d)        // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หมวดทำเอง
     + cardMyShortcuts(d)   // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): รายการลัด
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.16-supabase</span></div>'  // CC 10 ต.ค. 69: v4.2.16 = อ่านอัตโนมัติ + หารเท่า · v4.2.15 = ซูม/ครอปภาพบิล v2 · v4.2.14 = แชร์บิล v3.1 picker ① · v4.2.13 = แชร์บิล v3 · CC 9 ต.ค. 69: v4.2.11 = บิลรอคืน รอบ 2 · v4.2.10 = บิลรอคืนบน Supabase · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.17-supabase</span></div>'  // CC 10 ต.ค. 69: v4.2.17 = ประวัติรายการ แยกเดือน (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติ + หารเท่า · v4.2.15 = ซูม/ครอปภาพบิล v2 · v4.2.14 = แชร์บิล v3.1 picker ① · v4.2.13 = แชร์บิล v3 · CC 9 ต.ค. 69: v4.2.11 = บิลรอคืน รอบ 2 · v4.2.10 = บิลรอคืนบน Supabase · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -2416,6 +2424,12 @@ document.addEventListener('click', function(e){
   if (act === 'more') { if (ref) { S.ext[ref] = !S.ext[ref]; paint(); } return; }
   if (act === 'goitem') { S.tab = 1; if (ref){ S.open[ref] = true; var gi = findItem(ref); if (gi) S.pMonth = (gi.at || '').slice(0, 7); } paint(); el('main').scrollTop = 0; return; }  // แก้โดย Hermes 5 ต.ค. 69: พาไปเดือนของแถวนั้นด้วย (แท็บรอยืนยันแยกเดือน)
   if (act === 'pmon') { var pm = t.getAttribute('data-m'); if (pm && pm !== S.pMonth){ S.pMonth = pm; paint(); el('main').scrollTop = 0; } return; }  // แก้โดย Hermes 5 ต.ค. 69: กดชิปเลือกเดือนในแท็บรอยืนยัน
+  if (act === 'hstep') {  // CC 10 ต.ค. 69: ‹ › เปลี่ยนเดือนในแท็บรายการ (แพตเทิร์น vstep)
+    var hm = histMonths(S.data).order;
+    var hn = hm[hm.indexOf(S.hMonth) + parseInt(t.getAttribute('data-d'), 10)];
+    if (hn) { S.hMonth = hn; paint(); el('main').scrollTop = 0; }
+    return;
+  }
   if (act === 'tmTrack') { tmTrackFlip(); return; }  // แก้โดย Hermes 5 ต.ค. 69: ปุ่มเปิด-ปิดติดตามรายการย่อยของกระเป๋า TrueMoney
   if (act === 'pick') { pick(ref, t.getAttribute('data-cat')); return; }
   if (act === 'rename') { openRename(ref); return; }
@@ -2588,7 +2602,7 @@ document.addEventListener('click', function(e){
   if (act === 'bsLock') { bsLock(t.getAttribute('data-id')); return; }
   if (act === 'bsCancel') { bsCancel(t.getAttribute('data-id')); return; }
   if (act === 'bsRefresh') { e.preventDefault(); reload(false); return; }
-  if (act === 'bsGoBill') { S.view = null; S.tab = 3; if (ref) S.open[ref] = true; paint(); el('main').scrollTop = 0; setTimeout(function(){ var hr = document.querySelector('.hitem[data-ref="' + ref + '"]'); if (hr && hr.scrollIntoView) try { hr.scrollIntoView({ block: 'start' }); } catch (e3) {} }, 60); return; }
+  if (act === 'bsGoBill') { S.view = null; S.tab = 3; if (ref) S.open[ref] = true; for (var gi = 0; gi < S.data.history.length; gi++) if (S.data.history[gi].ref === ref) { S.hMonth = (S.data.history[gi].at || '').slice(0, 7); break; } paint(); el('main').scrollTop = 0; setTimeout(function(){ var hr = document.querySelector('.hitem[data-ref="' + ref + '"]'); if (hr && hr.scrollIntoView) try { hr.scrollIntoView({ block: 'start' }); } catch (e3) {} }, 60); return; }
   if (act === 'skip' || act === 'delGo') {
     var it = findItem(ref);
     var rowItem = sw ? sw.querySelector('.item') : null;
