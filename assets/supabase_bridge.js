@@ -683,7 +683,8 @@
       sb.from('bill_returns').select('bill_ref,amount_minor'), // 10) เงินคืนของบิล (CC 9 ต.ค. 69 · migration 0011) — ล้มได้
       sb.from('bill_shares').select('*'),                      // 11) บิลแชร์ (CC 9 ต.ค. 69 · TASK_cc_billbox_share · migration 0012) — ล้มได้ (ยังไม่ apply = ไม่มี)
       sb.from('bill_share_ticks').select('share_id,item_id,person,is_owner'),       // 12) ใครติ๊กบรรทัดไหน — ล้มได้
-      sb.from('bill_share_people').select('id,share_id,name,done,joined_at')        // 13) รายชื่อ/เสร็จแล้ว (ไม่ดึง key_hash) — ล้มได้
+      sb.from('bill_share_people').select('id,share_id,name,done,joined_at'),       // 13) รายชื่อ/เสร็จแล้ว (ไม่ดึง key_hash) — ล้มได้
+      softRpc('bill_share_ack_counts')                                              // 14) หารเท่าไม่มีชื่อ: จำนวนรับทราบต่อบิล (CC 10 ต.ค. 69 · 0015) — ล้มได้ (ยังไม่ apply = 0)
     ]).then(function (results) {
       for (var i = 0; i < 5; i++) if (results[i].error) throw results[i].error;  // 5 ตัวแรกห้ามพัง · 6–8 ปล่อยผ่านได้
       var myCatRows = (results[6] && !results[6].error) ? (results[6].data || []) : [];
@@ -716,6 +717,7 @@
       var shareRows = (results[10] && !results[10].error) ? (results[10].data || []) : [];
       var shareTickRows = (results[11] && !results[11].error) ? (results[11].data || []) : [];
       var sharePeopleRows = (results[12] && !results[12].error) ? (results[12].data || []) : [];
+      var shareAcks = (results[13] && !results[13].error && results[13].data) || {};
       var shares = shareRows.filter(function (s) { return strv(s.status) !== 'cancelled'; }).map(function (s) {
         var sid = numv(s.id);
         return {
@@ -723,6 +725,7 @@
           items: (Array.isArray(s.items) ? s.items : []).map(function (it) { return { id: numv(it.id), name: strv(it.name), price_minor: numv(it.price_minor) }; }),
           svc_bp: numv(s.svc_bp), vat_bp: numv(s.vat_bp), total_minor: numv(s.total_minor), status: strv(s.status),
           split_mode: strv(s.split_mode) === 'equal' ? 'equal' : 'tick',   // CC 10 ต.ค. 69 (TASK_cc_readauto_party_v1 · 0013): ไม่มีคอลัมน์ = tick
+          party_n: s.party_n == null ? null : numv(s.party_n), ack_count: numv(shareAcks[String(sid)]),   // CC 10 ต.ค. 69 (TASK_cc_billshare_people_v1 · 0015): หารเท่าไม่มีชื่อ
           result: Array.isArray(s.result) ? s.result : null, at: toThaiLocal(s.created_at), locked_at: s.locked_at ? toThaiLocal(s.locked_at) : '',
           ticks: shareTickRows.filter(function (x) { return numv(x.share_id) === sid; }).map(function (x) { return { item_id: numv(x.item_id), person: strv(x.person), is_owner: !!x.is_owner }; }),
           people: sharePeopleRows.filter(function (x) { return numv(x.share_id) === sid; }).sort(function (a, b) { return numv(a.id) - numv(b.id); })
@@ -1288,6 +1291,10 @@
     if (/bill_shares_active_tx|duplicate key/i.test(m)) return 'รายการจ่ายนี้มีบิลแชร์อยู่แล้ว';
     return billErr(e);
   }
+  // rpc ที่ล้มได้ (ฟังก์ชันยังไม่ apply / ตัวปลอมไม่มี rpc) → { error } แทนการโยน — ไม่ทำ getData/getShare พัง
+  function softRpc(fn, args) {
+    return new Promise(function (res) { res(sb.rpc(fn, args || {})); }).then(null, function (e) { return { data: null, error: e || true }; });
+  }
   function cleanName(s, max) { return strv(s).replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max || 30); }
   function getShare(id) {
     var sid = Number(id);
@@ -1295,7 +1302,8 @@
     return Promise.all([
       sb.from('bill_shares').select('*').eq('id', sid).limit(1),
       sb.from('bill_share_ticks').select('item_id,person,is_owner').eq('share_id', sid),
-      sb.from('bill_share_people').select('id,name').eq('share_id', sid)   // หารเท่า: รายชื่อตามลำดับ id (CC 10 ต.ค. 69)
+      sb.from('bill_share_people').select('id,name').eq('share_id', sid),  // หารเท่า: รายชื่อตามลำดับ id (CC 10 ต.ค. 69)
+      softRpc('bill_share_ack_counts')                                      // 0015: จำนวนรับทราบ (ล้มได้)
     ]).then(function (rs) {
       if (rs[0].error) throw rs[0].error;
       if (rs[1].error) throw rs[1].error;
@@ -1304,6 +1312,7 @@
       if (!s) return null;
       s.ticks = rs[1].data || [];
       s.people = (rs[2].data || []).slice().sort(function (a, b) { return numv(a.id) - numv(b.id); }).map(function (x) { return strv(x.name); });
+      s.ack_count = numv(((!rs[3].error && rs[3].data) || {})[String(sid)]);
       return s;
     });
   }
@@ -1317,7 +1326,17 @@
     return names.map(function (nm, i) { return { name: nm, is_owner: i === 0, minor: per[i] }; });
   }
 
-  // payload = { tx_ref, title, owner_name, items:[{name, price_minor}], svc_bp, vat_bp, friends:[ชื่อ], own:[index ของ items], split_mode:'tick'|'equal' }
+  // หารเท่าไม่มีชื่อ (CC 10 ต.ค. 69 · TASK_cc_billshare_people_v1 · 0015): [เรา (ดูดเศษ)] + (N−1) × [เพื่อน เท่ากันเป๊ะ] · ยอดไม่พอ = null
+  function partyResult(B, ownerName, n, totalMinor) {
+    var ps = B.partySplit(totalMinor, n);
+    if (!ps) return null;
+    var out = [{ name: ownerName, is_owner: true, minor: ps.own }];
+    for (var i = 1; i < n; i++) out.push({ name: 'เพื่อน', is_owner: false, minor: ps.friend });
+    return out;
+  }
+
+  // payload = { tx_ref, title, owner_name, items:[{name, price_minor}], svc_bp, vat_bp, friends:[ชื่อ], own:[index ของ items], split_mode:'tick'|'equal', party_n }
+  //   หารเท่าแบบใหม่ (0015) = party_n 2..31 + ไม่มีรายชื่อ · หารเท่าแบบมีชื่อ (legacy) = friends ไม่มี party_n
   function createShare(payload) {
     if (!CURRENT_UID) return Promise.resolve({ ok: false, msg: 'ยังไม่ได้ล็อกอิน — เข้าสู่ระบบก่อน' });
     var B = bsCalc();
@@ -1338,8 +1357,10 @@
       .filter(function (x) { if (!x || seen[x]) return false; seen[x] = 1; return true; }).slice(0, 30);
     var own = (Array.isArray(p.own) ? p.own : []).map(Number).filter(function (i) { return isIntIn(i, 0, items.length - 1); });
     var equal = strv(p.split_mode) === 'equal';
-    if (equal && !friends.length) return Promise.resolve({ ok: false, msg: 'หารเท่าต้องมีชื่อเพื่อนอย่างน้อย 1 คน' });
+    var partyN = (equal && p.party_n != null) ? Number(p.party_n) : null;
+    if (equal && (partyN === null ? !friends.length : !isIntIn(partyN, 2, 31))) return Promise.resolve({ ok: false, msg: 'หารเท่าต้องระบุจำนวนคน (2–31)' });
     if (equal) own = [];   // หารเท่า = ไม่ใช้ติ๊ก
+    if (partyN !== null) friends = [];   // ไม่มีชื่อ = ไม่สร้างแถวรายชื่อเลย
     return sb.from('transactions').select('ref,direction,amount_minor,at,counterparty').eq('ref', ref).limit(1).then(function (r) {
       if (r.error) throw r.error;
       var tx = (r.data && r.data[0]) || null;
@@ -1362,6 +1383,7 @@
           owner_name: owner, items: items, svc_bp: svc, vat_bp: vat, total_minor: total, status: 'open'
         };
         if (equal) row0.split_mode = 'equal';   // tick = ไม่ส่งคอลัมน์ (default ของ 0013 · DB ที่ยังไม่ apply 0013 ก็สร้างแบบเดิมได้)
+        if (partyN !== null) row0.party_n = partyN;
         return sb.from('bill_shares').insert(row0).select('id,token').then(function (ins) {
           if (ins.error) throw ins.error;
           var row = ins.data && ins.data[0];
@@ -1429,7 +1451,8 @@
     }
     function proceed(s) {
       if (strv(s.split_mode) === 'equal') {   // หารเท่า: ไม่ต้องรอติ๊ก — ยอดต่อคนจากสูตรเดียวกับ SQL
-        var eqr = equalResult(B, strv(s.owner_name) || 'เรา', s.people, numv(s.total_minor));
+        var eqr = s.party_n != null ? partyResult(B, strv(s.owner_name) || 'เรา', numv(s.party_n), numv(s.total_minor))
+          : equalResult(B, strv(s.owner_name) || 'เรา', s.people, numv(s.total_minor));
         if (!eqr) return unlock({ ok: false, msg: 'ยังไม่มีเพื่อนในบิล — หารเท่าไม่ได้' });
         var eqExpect = eqr.slice(1).reduce(function (a, r) { return a + r.minor; }, 0);
         return markBill(strv(s.tx_ref), eqExpect).then(function (mr) {
@@ -1476,6 +1499,52 @@
       if (!u.data || !u.data.length) return { ok: false, msg: 'สลับได้เฉพาะบิลแชร์ที่ยังไม่ล็อก' };
       return { ok: true };
     }).catch(function (e) { return { ok: false, msg: shareErr(e) }; });
+  }
+
+  // จัดการรายชื่อ + จำนวนคน (CC 10 ต.ค. 69 · TASK_cc_billshare_people_v1 · 0015) — เฉพาะบิลที่ยัง open · RLS เดิมกันบิลคนอื่น
+  function shareOpen(id, fn) {
+    if (!CURRENT_UID) return Promise.resolve({ ok: false, msg: 'ยังไม่ได้ล็อกอิน — เข้าสู่ระบบก่อน' });
+    return getShare(id).then(function (s) {
+      if (!s) return { ok: false, msg: 'ไม่พบบิลแชร์นี้' };
+      if (strv(s.status) !== 'open') return { ok: false, msg: 'บิลแชร์นี้ล็อกแล้ว — แก้ไม่ได้' };
+      return fn(s, numv(s.id));
+    }).catch(function (e) { return { ok: false, msg: shareErr(e) }; });
+  }
+  function okOr(r) { if (r.error) throw r.error; return { ok: true }; }
+  function sharePeopleAdd(id, name) {
+    var nm = cleanName(name, 999);
+    if (!nm || nm.length > 30) return Promise.resolve({ ok: false, msg: 'ใส่ชื่อ 1–30 ตัวอักษร' });
+    return shareOpen(id, function (s, sid) {
+      if (nm === strv(s.owner_name) || s.people.indexOf(nm) >= 0) return { ok: false, msg: 'ชื่อนี้มีอยู่ในบิลแล้ว' };
+      if (s.people.length >= 30) return { ok: false, msg: 'บิลนี้คนเต็มแล้ว (30 คน)' };
+      return sb.from('bill_share_people').insert({ user_id: CURRENT_UID, share_id: sid, name: nm }).then(okOr);
+    });
+  }
+  function sharePeopleRelease(id, name) {   // ปล่อยชื่อให้เลือกใหม่ — ติ๊กของชื่อนั้นคงไว้ (เพื่อนเปลี่ยนเครื่องกลับมาจองต่อได้)
+    var nm = strv(name);
+    return shareOpen(id, function (s, sid) {
+      return sb.from('bill_share_people').update({ key_hash: null, done: false, joined_at: null }).eq('share_id', sid).eq('name', nm).select('id').then(function (u) {
+        if (u.error) throw u.error;
+        return (u.data && u.data.length) ? { ok: true } : { ok: false, msg: 'ไม่พบชื่อนี้ในบิล' };
+      });
+    });
+  }
+  function sharePeopleDelete(id, name) {   // ลบชื่อ + ติ๊กของชื่อนั้น (แอปถามยืนยันก่อนเมื่อมีติ๊ก)
+    var nm = strv(name);
+    return shareOpen(id, function (s, sid) {
+      if (s.people.indexOf(nm) < 0) return { ok: false, msg: 'ไม่พบชื่อนี้ในบิล' };
+      return sb.from('bill_share_ticks').delete().eq('share_id', sid).eq('person', nm).eq('is_owner', false).then(function (d) {
+        if (d.error) throw d.error;
+        return sb.from('bill_share_people').delete().eq('share_id', sid).eq('name', nm);
+      }).then(okOr);
+    });
+  }
+  function shareParty(id, n) {   // จำนวนคนหารเท่าไม่มีชื่อ (รวมเรา) — ตอนสลับ ติ๊ก→หารเท่า แอปตั้งค่าเริ่มต้นผ่านตัวนี้ด้วย (DB กันหลังล็อกด้วย trigger)
+    var k = Number(n);
+    if (!isIntIn(k, 2, 31)) return Promise.resolve({ ok: false, msg: 'จำนวนคนต้อง 2–31' });
+    return shareOpen(id, function (s, sid) {
+      return sb.from('bill_shares').update({ party_n: k }).eq('id', sid).eq('status', 'open').then(okOr);
+    });
   }
 
   // อ่านอัตโนมัติจากภาพบิล (CC 10 ต.ค. 69 · TASK_cc_readauto_party_v1) — Edge Function `readbill` (คีย์ตัวอ่านอยู่ฝั่งเซิร์ฟเวอร์)
@@ -1848,6 +1917,10 @@
     lockShare: lockShare,          // แก้โดย CC 9 ต.ค. 69: สรุป → ล็อก + เข้าบิลรอคืนเดิม (markBill)
     cancelShare: cancelShare,      // แก้โดย CC 9 ต.ค. 69: ยกเลิก (ยังไม่ล็อก)
     setShareMode: setShareMode,    // แก้โดย CC 10 ต.ค. 69 (TASK_cc_readauto_party_v1): ติ๊กเอง ⇄ หารเท่า (จนกว่าล็อก)
+    sharePeopleAdd: sharePeopleAdd,          // แก้โดย CC 10 ต.ค. 69 (TASK_cc_billshare_people_v1): หน้าติดตาม — เพิ่มชื่อเพื่อน (จนกว่าล็อก)
+    sharePeopleRelease: sharePeopleRelease,  // แก้โดย CC 10 ต.ค. 69: ปล่อยชื่อที่ถูกจอง (ติ๊กคงไว้)
+    sharePeopleDelete: sharePeopleDelete,    // แก้โดย CC 10 ต.ค. 69: ลบชื่อ + ติ๊กของชื่อนั้น
+    shareParty: shareParty,                  // แก้โดย CC 10 ต.ค. 69: จำนวนคน หารเท่าไม่มีชื่อ (0015 party_n)
     readBill: readBill,            // แก้โดย CC 10 ต.ค. 69 (TASK_cc_readauto_party_v1): อ่านอัตโนมัติจากภาพ → Edge Function readbill
     appendIncome: appendIncome,
     ackFixed: ackFixed,

@@ -87,6 +87,16 @@
     return out;
   }
 
+  /* หารเท่าแบบไม่มีชื่อ (CC 10 ต.ค. 69 · TASK_cc_billshare_people_v1 · 0015): N คน (รวมเจ้าของ) → { friend, own }
+   *   เพื่อนทุกคนเท่ากันเป๊ะ = round-half-up(total/N) · ส่วนเราดูดเศษ = total − (N−1)×เพื่อน → 2,923.24 ÷ 5 = เพื่อน 584.65 · เรา 584.64
+   *   สูตรเดียวกับ SQL bill_share_public_json_ (round(total::numeric / N)) · N<2 / ยอด 0 / ยอดน้อยจนส่วนเราติดลบ = null */
+  function partySplit(totalMinor, n) {
+    var t = Math.round(Number(totalMinor) || 0), k = Math.floor(Number(n) || 0);
+    if (k < 2 || !(t > 0)) return null;
+    var friend = Math.round(t / k), own = t - (k - 1) * friend;
+    return own < 0 ? null : { friend: friend, own: own };
+  }
+
   /* สรุปบิลแชร์จากรายการ + ติ๊ก
    *   share = { items:[{id,name,price_minor}], ticks:[{item_id, person, is_owner}], svc_bp, vat_bp, total_minor, owner_name }
    * คืน { people:[{name, is_owner, items:[id], sub, est, final|null}], unclaimed:[id], unclaimedSub, complete, alloc,
@@ -189,7 +199,7 @@
   }
 
   var api = {
-    alloc: alloc, estimate: estimate, grossOf: grossOf, summarize: summarize, billCheck: billCheck, splitParts: splitParts, equalSplit: equalSplit,
+    alloc: alloc, estimate: estimate, grossOf: grossOf, summarize: summarize, billCheck: billCheck, splitParts: splitParts, equalSplit: equalSplit, partySplit: partySplit,
     parseList: parseList, validateItems: validateItems,
     MAX_ITEMS: MAX_ITEMS, MAX_PRICE_MINOR: MAX_PRICE_MINOR
   };

@@ -555,6 +555,7 @@
   .bs-qr svg{width:200px;height:200px;border-radius:10px;background:#fff}
   .bsp{border:1px solid var(--bd2);border-radius:14px;background:var(--card);padding:10px 12px;margin-bottom:7px;display:flex;justify-content:space-between;gap:10px}
   .bsp.done{border-color:var(--grn-bd)}
+  .bsp[data-act]{cursor:pointer}
   .bsp .l{min-width:0}
   .bsp .n{font-size:12.5px;font-weight:700}
   .bsp .d{font-size:10.5px;color:var(--dim);margin-top:3px}
@@ -705,7 +706,7 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.2.17-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · CC 10 ต.ค. 69: v4.2.17 = ประวัติรายการ แยกเดือน + ปุ่ม ‹ › (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติจากภาพ (Edge Function readbill · เหลือง = ไม่ชัวร์ · ชิปเซอร์วิส/VAT ตามบิล) + โหมดหารเท่า (TASK_cc_readauto_party_v1) · v4.2.15 = ซูม/ครอปภาพบิล v2 (ลากขอบปรับด้านเดียว + บีบ 2 โหมด: กลาง=ซูม · ขอบซ้าย/ขวา=ปรับกรอบ · TASK_cc_zoomcrop_v1) · v4.2.14 = แชร์บิล v3.1 ① รายการที่จ่ายไปล่าสุด (5/ชุด + ปัดเปลี่ยนชุด + กรองเฉพาะที่เริ่มบิลได้ · TASK_cc_billshare_v31_picker) · v4.2.13 = แชร์บิล v3 (จดต่อเนื่อง + ⋮ แผงล่าง แยก 2/3/กำหนดเอง + เพื่อนเป็น + + ซูม/ครอปภาพบิล · TASK_cc_billshare_v3) · CC 9 ต.ค. 69: v4.2.12 = บิลแชร์ เพื่อนติ๊กเอง + แถวปุ่มลัดหน้าหลัก (TASK_cc_billbox_share) · v4.2.11 = บิลรอคืน รอบ 2 (ปุ่มบิลในหน้ารายการ + แยกเอง + ส่วนของเรา · TASK_cc_bill_return_app2) · v4.2.10 = บิลรอคืนบน Supabase (TASK_cc_bill_return_app) · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
+var APP_BUILD = 'v4.2.18-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · CC 10 ต.ค. 69: v4.2.18 = บิลแชร์ จัดการรายชื่อ («ไม่ใช่ฉัน» หน้าเพื่อน + ปล่อย/ลบ/เพิ่มชื่อหน้าติดตาม) + หารเท่าไม่มีชื่อ (ตั้งจำนวนคน · TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน + ปุ่ม ‹ › (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติจากภาพ (Edge Function readbill · เหลือง = ไม่ชัวร์ · ชิปเซอร์วิส/VAT ตามบิล) + โหมดหารเท่า (TASK_cc_readauto_party_v1) · v4.2.15 = ซูม/ครอปภาพบิล v2 (ลากขอบปรับด้านเดียว + บีบ 2 โหมด: กลาง=ซูม · ขอบซ้าย/ขวา=ปรับกรอบ · TASK_cc_zoomcrop_v1) · v4.2.14 = แชร์บิล v3.1 ① รายการที่จ่ายไปล่าสุด (5/ชุด + ปัดเปลี่ยนชุด + กรองเฉพาะที่เริ่มบิลได้ · TASK_cc_billshare_v31_picker) · v4.2.13 = แชร์บิล v3 (จดต่อเนื่อง + ⋮ แผงล่าง แยก 2/3/กำหนดเอง + เพื่อนเป็น + + ซูม/ครอปภาพบิล · TASK_cc_billshare_v3) · CC 9 ต.ค. 69: v4.2.12 = บิลแชร์ เพื่อนติ๊กเอง + แถวปุ่มลัดหน้าหลัก (TASK_cc_billbox_share) · v4.2.11 = บิลรอคืน รอบ 2 (ปุ่มบิลในหน้ารายการ + แยกเอง + ส่วนของเรา · TASK_cc_bill_return_app2) · v4.2.10 = บิลรอคืนบน Supabase (TASK_cc_bill_return_app) · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
 var S = { data:null, tab:0, open:{}, ext:{}, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, budForm:null, budOpen:{}, view:null, imp:null, pMonth:null, hMonth:null, recLumpOpen:false, catForm:null, shortForm:null };  // catForm/shortForm: Hermes 7 ต.ค. 69 — ฟอร์มหมวดทำเอง/รายการลัด (หน้าแยก v4.2.8)  // hMonth: CC 10 ต.ค. 69 — เดือนที่เลือกในแท็บรายการ (แยกจาก pMonth ของรอยืนยัน)  // pMonth: แก้โดย Hermes 5 ต.ค. 69 — เดือนที่เลือกในแท็บรอยืนยัน (แยกเดือน) · recLumpOpen: Hermes 7 ต.ค. 69 (§16) — กาง "ก้อนรายจ่ายประจำ" ในงบรายหมวด
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
@@ -2221,7 +2222,7 @@ function htmlSettings(d){
     + cardMyCats(d)        // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หมวดทำเอง
     + cardMyShortcuts(d)   // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): รายการลัด
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.17-supabase</span></div>'  // CC 10 ต.ค. 69: v4.2.17 = ประวัติรายการ แยกเดือน (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติ + หารเท่า · v4.2.15 = ซูม/ครอปภาพบิล v2 · v4.2.14 = แชร์บิล v3.1 picker ① · v4.2.13 = แชร์บิล v3 · CC 9 ต.ค. 69: v4.2.11 = บิลรอคืน รอบ 2 · v4.2.10 = บิลรอคืนบน Supabase · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.18-supabase</span></div>'  // CC 10 ต.ค. 69: v4.2.18 = บิลแชร์ จัดการรายชื่อ + หารเท่าไม่มีชื่อ (TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติ + หารเท่า · v4.2.15 = ซูม/ครอปภาพบิล v2 · v4.2.14 = แชร์บิล v3.1 picker ① · v4.2.13 = แชร์บิล v3 · CC 9 ต.ค. 69: v4.2.11 = บิลรอคืน รอบ 2 · v4.2.10 = บิลรอคืนบน Supabase · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -2593,8 +2594,15 @@ document.addEventListener('click', function(e){
   if (act === 'bsRead') { bsReadStart(); return; }   // CC 10 ต.ค. 69 (TASK_cc_readauto_party_v1): อ่านอัตโนมัติจากภาพ
   if (act === 'bsMode') { bsSyncInputs(); S.bsForm.split = t.getAttribute('data-v') === 'equal' ? 'equal' : 'tick'; paint(); return; }   // หน้าสร้าง: ติ๊กเอง ⇄ หารเท่า
   if (act === 'bsShMode') { bsShMode(t.getAttribute('data-id'), t.getAttribute('data-v')); return; }   // หน้าติดตาม: สลับได้จนกว่าล็อก
+  if (act === 'bsPartyN') { bsSyncInputs(); S.bsForm.partyN = bsPartyClamp(S.bsForm.partyN + parseInt(t.getAttribute('data-d'), 10)); paint(); return; }   // หน้าสร้าง: หารเท่ากี่คน
+  if (act === 'bsShParty') { bsShParty(t.getAttribute('data-id'), parseInt(t.getAttribute('data-d'), 10)); return; }   // หน้าติดตาม: แก้จำนวนคนจนล็อก
+  if (act === 'bsPpl') { bsPplOpen(t.getAttribute('data-id'), t.getAttribute('data-name')); return; }   // CC 10 ต.ค. 69 (TASK_cc_billshare_people_v1): แผงรายชื่อ
+  if (act === 'bsPplRelease') { bsPplRelease(); return; }
+  if (act === 'bsPplDel') { bsPplDel(); return; }
+  if (act === 'bsPplAdd') { bsPplAdd(t.getAttribute('data-id')); return; }
+  if (act === 'bsPplAddGo') { bsPplAddGo(t.getAttribute('data-id')); return; }
   if (act === 'bsCreate') { bsCreate(); return; }
-  if (act === 'bsView') { S.bsQr = null; openView({ t: 'bsView', id: Number(t.getAttribute('data-id')) }, null); return; }
+  if (act === 'bsView') { S.bsQr = null; S.bsPpl = null; S.bsAddName = null; openView({ t: 'bsView', id: Number(t.getAttribute('data-id')) }, null); return; }
   if (act === 'bsTick') { bsOwnTick(t.getAttribute('data-id'), t.getAttribute('data-item')); return; }
   if (act === 'bsCopy') { bsCopy(t.getAttribute('data-id')); return; }
   if (act === 'bsShareLink') { bsShareLink(t.getAttribute('data-id')); return; }
@@ -4389,7 +4397,7 @@ function bsTxCands(){
   return all;
 }
 function bsFormDefault(mode){ return { mode: mode || 'type', tx: '', owner: 'เรา', items: [{ name:'', price:'' }], svc: 0, vat: 700, friends: [], img: '', imgOrig: '', imgView: null, sheet: null, page: 0,
-  split: 'tick', read: null }; }   // CC 10 ต.ค. 69 (TASK_cc_readauto_party_v1): split = วิธีแบ่ง (tick/equal) · read = สถานะอ่านอัตโนมัติ
+  split: 'tick', read: null, partyN: 2 }; }   // CC 10 ต.ค. 69 (TASK_cc_readauto_party_v1): split = วิธีแบ่ง (tick/equal) · read = สถานะอ่านอัตโนมัติ · partyN = หารเท่ากี่คน (รวมเรา · TASK_cc_billshare_people_v1)
 function bsOpen(mode, txRef){
   S.bsForm = bsFormDefault(mode);
   if (txRef) S.bsForm.tx = txRef;
@@ -4426,7 +4434,7 @@ function bsCheck(f){  // สถานะเช็คดุลของหน้�
   if (bad) return { ok: false, cls: 'bad', html: lines + '<br><span class="st">✗ ' + esc(bad) + '</span>' };
   var ck = B.billCheck(items, f.svc, f.vat, tx.amount_minor);
   if (!ck.ok) return { ok: false, cls: 'bad', html: lines + '<br><span class="st">✗ ไม่ตรงบิลจริง — ต่าง '+(ck.diff > 0 ? '+' : '−')+fmtBaht(Math.abs(ck.diff))+'฿ · แก้รายการ/ราคา/เปอร์เซ็นต์ให้ตรงก่อน (ระบบไม่โปะเศษเอง)</span>' };
-  if (f.split === 'equal' && !bsEqFriends(f).names.length) return { ok: false, cls: '', html: lines + '<br><span class="st">✓ ตรงยอดจ่ายจริง · หารเท่า: ยังไม่มีเพื่อนในบิล — เพิ่มชื่อเพื่อนใน ④ ก่อน</span>' };
+  if (f.split === 'equal' && bsEqualOf(f).warn) return { ok: false, cls: '', html: lines + '<br><span class="st">✓ ตรงยอดจ่ายจริง · หารเท่า: ตั้งจำนวนคน 2–31 คน (รวมเรา) ใน ④ ก่อน</span>' };
   return { ok: true, cls: 'ok', html: lines + '<br><span class="st">✓ ตรงยอดจ่ายจริงเป๊ะ — ส่วนต่าง 0.00</span>' };
 }
 function bsRowHtml(it, i){
@@ -4434,9 +4442,8 @@ function bsRowHtml(it, i){
     + '<input class="pr" data-bs="price:'+i+'" type="text" inputmode="decimal" enterkeyhint="next" value="'+esc(it.price)+'" placeholder="ราคา">'
     + '<button class="bs-dot" type="button" data-act="bsDot" data-i="'+i+'" aria-label="จัดการบรรทัด">⋮</button></div>';
 }
-function bsFriendHtml(nm, i, eq){  // eq = ผลหารเท่าของหน้าสร้าง (โหมด tick = ไม่ส่ง) → ยอดต่อคนท้ายชื่อ
+function bsFriendHtml(nm, i){
   return '<div class="bs-friend"><input class="bs-in" data-bs="friend:'+i+'" type="text" maxlength="30" value="'+esc(nm)+'" placeholder="ชื่อเพื่อน">'
-    + (eq ? '<span class="sh" id="bsFs'+i+'">'+bsEqShareTxt(eq, i)+'</span>' : '')
     + '<button class="x" type="button" data-act="bsFriendDel" data-i="'+i+'" aria-label="ลบชื่อเพื่อน">✕</button></div>';
 }
 /* ---------- ① v3.1 (TASK_cc_billshare_v31_picker · P เคาะ "แบบ ก" 10 ต.ค. 69): 5 รายการ/ชุด + ปัดซ้าย-ขวา/ลูกศร = เปลี่ยนชุด ---------- */
@@ -4502,7 +4509,7 @@ function bsNewHtml(){
     : (pin ? '' : '<div class="hint">ยังไม่มีรายการจ่ายที่ผูกได้ — รออีเมลธนาคารของบิลนี้เข้าก่อน</div>'));
   var rows = f.items.map(bsRowHtml).join('');
   var eq = f.split === 'equal' ? bsEqualOf(f) : null;
-  var friends = (f.friends || []).map(function(nm, i){ return bsFriendHtml(nm, i, eq); }).join('');
+  var friends = (f.friends || []).map(bsFriendHtml).join('');
   var img = f.img ? '<div class="bs-img" data-act="bsImgZoom"><img src="'+esc(f.img)+'" alt="ภาพบิล"></div>' : '';
   var ck = bsCheck(f);
   return '<div class="dt-top"><button class="dt-back" data-act="vclose"><svg><use href="#i-back"/></svg></button><div class="ttl">'+(f.mode === 'scan' ? '📷 สแกนบิล' : '🧾 แชร์บิล')+' — ให้เพื่อนติ๊กเอง</div></div>'
@@ -4520,14 +4527,15 @@ function bsNewHtml(){
     + '<button class="bs-chip'+(f.vat === 700 ? ' on' : '')+'" type="button" data-act="bsVat" data-v="700">VAT 7%</button>'
     + '<button class="bs-chip'+(f.vat === 0 ? ' on' : '')+'" type="button" data-act="bsVat" data-v="0">ราคารวม VAT แล้ว</button></div>'
     + (f.read && f.read.done && f.read.chips ? '<div class="hint" style="margin:6px 2px 0">อ่านจากบิล: '+esc(f.read.chips)+' → ตั้งชิปให้ตรงบิล (แตะเปลี่ยนได้ตลอด)</div>' : '')
-    + '<div class="bs-lbl">④ ชื่อเรา · ชื่อเพื่อน'+(f.split === 'equal' ? ' — หารเท่า: ทุกคนจ่ายเท่ากัน (รวมเรา)' : ' (ไม่บังคับ — ให้เพื่อนกดเลือกชื่อ) · "ของเรา" ไปติ๊กพร้อมเพื่อนในหน้าติดตาม')+'</div>'
+    + '<div class="bs-lbl">④ '+(f.split === 'equal' ? 'ชื่อเรา · หารเท่ากี่คน — ไม่ต้องใส่ชื่อเพื่อน' : 'ชื่อเรา · ชื่อเพื่อน (ไม่บังคับ — ให้เพื่อนกดเลือกชื่อ) · "ของเรา" ไปติ๊กพร้อมเพื่อนในหน้าติดตาม')+'</div>'
     + '<div class="bs-chips" style="margin-bottom:8px">'
     + '<button class="bs-chip'+(f.split !== 'equal' ? ' on' : '')+'" type="button" data-act="bsMode" data-v="tick">ติ๊กเอง (ของใครของมัน)</button>'
     + '<button class="bs-chip'+(f.split === 'equal' ? ' on' : '')+'" type="button" data-act="bsMode" data-v="equal">🎉 หารเท่า</button></div>'
     + '<div class="bsrow"><input class="nm" data-bs="owner" type="text" maxlength="30" value="'+esc(f.owner)+'" placeholder="ชื่อเรา"></div>'
-    + '<div class="bs-friends" id="bsFriends">'+friends+'</div>'
-    + '<button class="miniact dash" type="button" data-act="bsFriendAdd" style="margin-top:6px">＋ เพิ่มเพื่อน</button>'
-    + (eq ? bsEqHtml(eq) + '<div class="hint" style="margin:6px 2px 0">เพื่อนเปิดลิงก์ → เห็นยอดของตัวเอง → กดรับทราบ (ไม่ต้องติ๊กรายการ) · สลับกลับ «ติ๊กเอง» ได้จนกว่าจะสรุป</div>' : '')
+    + (eq ? bsPartyNHtml('หารเท่ากี่คน (รวมเรา)', f.partyN, 'data-act="bsPartyN"') + bsEqHtml(eq)
+          + '<div class="hint" style="margin:6px 2px 0">เพื่อนเปิดลิงก์ → เห็นยอดของตัวเอง → กดรับทราบ (ไม่ต้องเลือกชื่อ/ติ๊กรายการ) · สลับกลับ «ติ๊กเอง» ได้จนกว่าจะสรุป</div>'
+      : '<div class="bs-friends" id="bsFriends">'+friends+'</div>'   // หารเท่า = ซ่อนรายชื่อ (f.friends คงไว้ — สลับกลับติ๊กเองไม่หาย)
+        + '<button class="miniact dash" type="button" data-act="bsFriendAdd" style="margin-top:6px">＋ เพิ่มเพื่อน</button>')
     + '<div class="bs-check '+ck.cls+'" id="bsCheck">'+ck.html+'</div>'
     + '<button class="bs-go'+(ck.ok ? '' : ' off')+'" id="bsGo" type="button" data-act="bsCreate">🔗 สร้างลิงก์ให้เพื่อน</button>'
     + '<div class="hint" style="margin:8px 2px">หลังสร้างลิงก์ รายการ/ราคาแก้ไม่ได้ (เพื่อนติ๊กอิงบรรทัดเดิม) — ผิดให้ยกเลิกแล้วสร้างใหม่</div>'
@@ -4538,47 +4546,36 @@ function bsLiveCheck(){
   var ck = bsCheck(f), box = el('bsCheck'), go = el('bsGo');
   if (box){ box.className = 'bs-check ' + ck.cls; box.innerHTML = ck.html; }
   if (go) go.className = 'bs-go' + (ck.ok ? '' : ' off');
-  if (f.split === 'equal'){   // หารเท่า: คำนวณใหม่สดทุกครั้งที่พิมพ์ราคา/ชื่อเพื่อน
+  if (f.split === 'equal'){   // หารเท่า: คำนวณใหม่สดทุกครั้งที่พิมพ์ราคา
     var eq = bsEqualOf(f), eb = el('bsEq');
     if (eb && eq){ eb.className = 'bs-eq' + (eq.warn ? ' warn' : ''); eb.innerHTML = bsEqInner(eq); }
-    (f.friends || []).forEach(function(x, i){ var s = el('bsFs' + i); if (s && eq) s.textContent = bsEqShareTxt(eq, i); });
   }
 }
-/* ---------- โหมด «หารเท่า» (CC 10 ต.ค. 69 · TASK_cc_readauto_party_v1 · P เคาะ ม็อก readauto2) ----------
- * N = เรา 1 + เพื่อนใน ④ (ชื่อซ้ำ/ว่าง/ชื่อเดียวกับเรา ไม่นับ — กติกาเดียวกับ bridge createShare)
- * ยอดที่หาร = ยอดจากรายการ (อาหาร + เซอร์วิส + VAT ตาม ③) = ยอดจ่ายจริงเมื่อเช็คดุลผ่าน · ต่อคน = NKF_BS.equalSplit (สูตรเดียวกับ SQL 0013)
- * เศษสตางค์: เราได้ก่อน แล้วเพื่อนตามลำดับรายชื่อ → Σ = ยอดเป๊ะ */
-function bsEqFriends(f){
-  var owner = String(f.owner || '').replace(/\s+/g, ' ').trim() || 'เรา', seen = {}, idx = [], names = [];
-  seen[owner] = 1;
-  (Array.isArray(f.friends) ? f.friends : []).forEach(function(x, i){
-    var s = String(x || '').replace(/\s+/g, ' ').trim().slice(0, 30);
-    if (!s || seen[s]) return;
-    seen[s] = 1; idx.push(i); names.push(s);
-  });
-  return { owner: owner, idx: idx, names: names };
+/* ---------- โหมด «หารเท่า» (CC 10 ต.ค. 69 · TASK_cc_readauto_party_v1) — แบบไม่มีชื่อ (TASK_cc_billshare_people_v1 · P เคาะ «1» · 0015) ----------
+ * N = ตัวนับ «หารเท่ากี่คน (รวมเรา)» 2–31 (ไม่พิมพ์ชื่อเพื่อน) · ยอดที่หาร = ยอดจากรายการ (= ยอดจ่ายจริงเมื่อเช็คดุลผ่าน)
+ * เพื่อนทุกคนเท่ากันเป๊ะ = NKF_BS.partySplit (สูตรเดียวกับ SQL 0015) · ส่วนเราดูดเศษ → Σ = ยอดเป๊ะ */
+var BS_PARTY_MIN = 2, BS_PARTY_MAX = 31;
+function bsPartyClamp(n){ n = Math.round(Number(n) || 0); return Math.max(BS_PARTY_MIN, Math.min(BS_PARTY_MAX, n)); }
+function bsPartyNHtml(label, n, attrs){  // ตัวนับ [−] N [+] (สไตล์ตัวนับส่วนในแผง ⋮ เดิม)
+  return '<div class="bs-custom-n" id="bsParty" style="margin:2px 0 4px"><span>'+label+'</span><button type="button" '+attrs+' data-d="-1" aria-label="ลดจำนวนคน"'+(n <= BS_PARTY_MIN ? ' disabled' : '')+'>−</button>'
+    + '<b style="color:var(--tx);font-size:15px">'+n+' คน</b><button type="button" '+attrs+' data-d="1" aria-label="เพิ่มจำนวนคน"'+(n >= BS_PARTY_MAX ? ' disabled' : '')+'>＋</button></div>';
 }
-function bsEqualOf(f){  // → { n, total, per[], byIdx{index ช่องเพื่อน: สตางค์}, own, friends, warn:''|'nofriend'|'nototal' }
-  var B = BSX(), fr = bsEqFriends(f);
+function bsEqualOf(f){  // → { n, total, friend, own, friends (รอคืนรวม), warn:''|'badn'|'nototal' }
+  var B = BSX(), n = Number(f.partyN);
   var sub = bsItemsOf(f).reduce(function(a, it){ return a + (it.price_minor > 0 ? it.price_minor : 0); }, 0);
-  var total = B ? B.grossOf(sub, f.svc, f.vat) : 0, n = fr.names.length + 1;
-  var q = { n: n, total: total, per: [], byIdx: {}, own: 0, friends: 0, warn: '' };
-  if (!fr.names.length){ q.warn = 'nofriend'; return q; }
-  if (!(total > 0) || !B){ q.warn = 'nototal'; return q; }
-  q.per = B.equalSplit(total, n);
-  fr.idx.forEach(function(fi, k){ q.byIdx[fi] = q.per[k + 1]; });
-  q.own = q.per[0]; q.friends = total - q.per[0];
+  var total = B ? B.grossOf(sub, f.svc, f.vat) : 0;
+  var q = { n: n, total: total, friend: 0, own: 0, friends: 0, warn: '' };
+  if (!(n >= BS_PARTY_MIN && n <= BS_PARTY_MAX && Math.floor(n) === n)){ q.warn = 'badn'; return q; }
+  var ps = (B && total > 0) ? B.partySplit(total, n) : null;
+  if (!ps){ q.warn = 'nototal'; return q; }
+  q.friend = ps.friend; q.own = ps.own; q.friends = (n - 1) * ps.friend;
   return q;
 }
-function bsEqShareTxt(q, i){ return (q && !q.warn && (i in q.byIdx)) ? '— ' + fmtBaht(q.byIdx[i]) + '฿' : ''; }
 function bsEqInner(q){
-  if (q.warn === 'nofriend') return '⚠ ยังไม่มีเพื่อนในบิล — เพิ่มชื่อเพื่อนด้านบนก่อน (หารเท่า = เรา + เพื่อนอย่างน้อย 1 คน)';
+  if (q.warn === 'badn') return '⚠ ตั้งจำนวนคน 2–31 คน (รวมเรา)';
   if (q.warn === 'nototal') return 'ใส่รายการ/ราคาในบิลก่อน — ยังไม่มียอดให้หาร';
-  var base = q.per[q.per.length - 1];
-  var odd = q.per.filter(function(x){ return x !== base; });
-  return '🎉 <b>หารเท่า '+q.n+' คน (รวมเรา)</b>: คนละ ≈<b>'+fmtBaht(base)+'฿</b> · เศษกระจายให้ Σ เป๊ะ '+fmtBaht(q.total)
-    + (odd.length ? ' ('+odd.length+' คนได้ '+fmtBaht(odd[0])+')' : '')
-    + ' · รอคืนจากเพื่อน '+(q.n - 1)+' คน = <b>'+fmtBaht(q.friends)+'฿</b> · ส่วนเรา '+fmtBaht(q.own)+'฿ (ไม่ต้องรอคืน)';
+  return '🎉 <b>หารเท่า '+q.n+' คน (รวมเรา)</b>: เพื่อนคนละ <b>'+fmtBaht(q.friend)+'฿</b> ทุกคนเท่ากัน · รอคืนจากเพื่อน '+(q.n - 1)+' คน = <b>'+fmtBaht(q.friends)+'฿</b>'
+    + ' · ส่วนเรา '+fmtBaht(q.own)+'฿ (ไม่ต้องรอคืน · Σ เป๊ะ '+fmtBaht(q.total)+')';
 }
 function bsEqHtml(q){ return '<div class="bs-eq'+(q.warn ? ' warn' : '')+'" id="bsEq">'+bsEqInner(q)+'</div>'; }
 function bsShareEqual(sh){  // บิลแชร์ที่สร้างแล้ว (หน้าติดตาม/สรุป) → [{name,is_owner,minor}] · ไม่มีเพื่อน = null
@@ -4593,9 +4590,21 @@ function bsShMode(id, mode){  // หน้าติดตาม: สลับ �
   mode = mode === 'equal' ? 'equal' : 'tick';
   if ((sh.split_mode || 'tick') === mode) return;
   sh.split_mode = mode;
+  var setN = mode === 'equal' && sh.party_n == null;   // ติ๊ก→หารเท่าครั้งแรก = หารเท่าไม่มีชื่อ · เริ่มที่ จำนวนชื่อที่แสดง + เรา (ปรับต่อได้)
+  if (setN) sh.party_n = bsPartyClamp((sh.people || []).length + 1);
   paint();
   if (IS_DEMO) return;
+  if (setN) callAction('shareParty', [sh.id, sh.party_n], '');
   callAction('setShareMode', [sh.id, mode], '');
+}
+function bsShParty(id, d){  // หน้าติดตาม: [−] N [+] หารเท่าไม่มีชื่อ (จนกว่าล็อก) — ยอดอัปเดตสด
+  var sh = bsFind(id); if (!sh || sh.status !== 'open' || sh.party_n == null) return;
+  var n = bsPartyClamp(sh.party_n + d);
+  if (n === sh.party_n) return;
+  sh.party_n = n;
+  paint();
+  if (IS_DEMO) return;
+  callAction('shareParty', [sh.id, n], '');   // shortcut: แตะรัวหลายครั้ง = หลายคำขอ (ค่าสุดท้ายที่ถึง DB ชนะ แล้ว reload ดึงค่าจริงกลับ) — ถ้าเจอเพี้ยนบ่อยค่อย debounce
 }
 /* ---------- อ่านอัตโนมัติจากภาพ (CC 10 ต.ค. 69 · TASK_cc_readauto_party_v1 · OCR เฟส 2 · ม็อก readauto/readauto2) ----------
  * ปุ่มใต้ภาพ → ย่อภาพในเครื่อง (canvas → JPEG ด้านยาวสุด 1600px q0.8) → bridge readBill → Edge Function readbill (คีย์อยู่ฝั่งเซิร์ฟเวอร์)
@@ -4826,6 +4835,7 @@ function bsOpenSheet(i){
   paint();
 }
 function bsCloseSheet(){
+  if (S.bsPpl){ S.bsPpl = null; paint(); return; }   // แผงรายชื่อของหน้าติดตาม
   var f = S.bsForm; if (!f) return;
   bsSyncInputs();
   f.sheet = null;
@@ -5139,9 +5149,10 @@ function bsCreate(){
     tx_ref: f.tx, title: shortName(tx), owner_name: String(f.owner || '').replace(/\s+/g, ' ').trim() || 'เรา',
     items: bsItemsOf(f).map(function(it){ return { name: it.name, price_minor: it.price_minor }; }),
     svc_bp: f.svc, vat_bp: f.vat,
-    friends: bsFriendsOf(f),   // v3: แถวเพื่อนทีละคน (array) · ไม่ส่ง own แล้ว — "ของเรา" ติ๊กในหน้าติดตาม
+    friends: f.split === 'equal' ? [] : bsFriendsOf(f),   // v3: แถวเพื่อนทีละคน (array) · ไม่ส่ง own แล้ว — "ของเรา" ติ๊กในหน้าติดตาม · หารเท่า = ไม่มีชื่อ
     split_mode: f.split === 'equal' ? 'equal' : 'tick'   // CC 10 ต.ค. 69 (TASK_cc_readauto_party_v1)
   };
+  if (f.split === 'equal') payload.party_n = f.partyN;   // CC 10 ต.ค. 69 (TASK_cc_billshare_people_v1 · 0015): หารเท่ากี่คน (รวมเรา)
   if (IS_DEMO){ bsDemoCreate(payload, tx); return; }
   if (S._bsBusy) return;
   S._bsBusy = true;
@@ -5171,6 +5182,7 @@ function bsDemoCreate(p, tx){  // เดโม่: เก็บในหน่�
   S.data.shares.unshift({ id: id, token: bsRandToken(), tx_ref: p.tx_ref, title: p.title, owner_name: p.owner_name,
     items: p.items.map(function(it, i){ return { id: i + 1, name: it.name, price_minor: it.price_minor }; }),
     svc_bp: p.svc_bp, vat_bp: p.vat_bp, total_minor: tx.amount_minor, status: 'open', result: null, at: todayISO() + 'T12:00:00', locked_at: '', split_mode: p.split_mode,
+    party_n: p.party_n || null, ack_count: 0,
     ticks: [],   // v3: ไม่ seed ติ๊กจากหน้าสร้าง — เจ้าของติ๊ก "ของเรา" ในหน้าติดตามพร้อมเพื่อน
     people: p.friends.map(function(n){ return { name: n, done: false, joined: false }; }) });
   S.bsForm = null;
@@ -5179,6 +5191,9 @@ function bsDemoCreate(p, tx){  // เดโม่: เก็บในหน่�
   toast('สร้างลิงก์แล้ว (เดโม่)');
 }
 /* ---------- O) หน้าติดตาม/สรุป ---------- */
+function bsPplAttr(sh, name){  // แถวคนแตะได้ (บิล open) → แผงล่าง ปล่อย/ลบชื่อ (CC 10 ต.ค. 69 · TASK_cc_billshare_people_v1)
+  return sh.status === 'open' ? ' data-act="bsPpl" data-id="'+sh.id+'" data-name="'+esc(name)+'"' : '';
+}
 function bsPeopleRows(sh, sum){
   var B = BSX(), out = [], seen = {};
   var feeLbl = (sh.svc_bp && sh.vat_bp) ? 'เซอร์วิส+VAT' : (sh.svc_bp ? 'เซอร์วิส' : 'VAT');
@@ -5195,12 +5210,12 @@ function bsPeopleRows(sh, sum){
       return;
     }
     var m = meta[p.name] || {};
-    out.push('<div class="bsp'+(m.done ? ' done' : '')+'"><div class="l"><div class="n">'+esc(p.name)+'</div><div class="d">'+det+'</div></div>'
+    out.push('<div class="bsp'+(m.done ? ' done' : '')+'"'+bsPplAttr(sh, p.name)+'><div class="l"><div class="n">'+esc(p.name)+'</div><div class="d">'+det+'</div></div>'
       + '<div class="r"><div class="m">'+(sum.complete ? '' : '≈')+fmtBaht(amt)+'฿</div><div class="st">'+(m.done ? '✓ เสร็จ' : 'กำลังติ๊ก')+'</div></div></div>');
   });
   (sh.people || []).forEach(function(p){
     if (seen['0:' + p.name]) return;
-    out.push('<div class="bsp"><div class="l"><div class="n">'+esc(p.name)+'</div><div class="d">'+(p.joined ? 'เปิดลิงก์แล้ว · ยังไม่ติ๊ก' : 'ยังไม่เปิดลิงก์')+'</div></div>'
+    out.push('<div class="bsp"'+bsPplAttr(sh, p.name)+'><div class="l"><div class="n">'+esc(p.name)+'</div><div class="d">'+(p.joined ? 'เปิดลิงก์แล้ว · ยังไม่ติ๊ก' : 'ยังไม่เปิดลิงก์')+'</div></div>'
       + '<div class="r"><div class="m">—</div><div class="st">'+(p.joined ? (p.done ? '✓ เสร็จ (ไม่มีรายการ)' : 'ยังไม่ติ๊ก') : '— ยังไม่เปิด')+'</div></div></div>');
   });
   return out.join('');
@@ -5242,7 +5257,8 @@ function bsViewHtml(){
   var modeHtml = sh.status === 'open' ? '<div class="bs-lbl">วิธีแบ่งบิล — สลับได้จนกว่าจะสรุป</div><div class="bs-chips">'
     + '<button class="bs-chip'+(sh.split_mode !== 'equal' ? ' on' : '')+'" type="button" data-act="bsShMode" data-id="'+sh.id+'" data-v="tick">ติ๊กเอง (ของใครของมัน)</button>'
     + '<button class="bs-chip'+(sh.split_mode === 'equal' ? ' on' : '')+'" type="button" data-act="bsShMode" data-id="'+sh.id+'" data-v="equal">🎉 หารเท่า</button></div>' : '';
-  if (sh.split_mode === 'equal') return back + head + linkHtml + modeHtml + bsEqViewHtml(sh, tx);
+  if (sh.split_mode === 'equal' && sh.party_n != null) return back + linkHtml + modeHtml + bsPartyViewHtml(sh, tx);
+  if (sh.split_mode === 'equal') return back + head + linkHtml + modeHtml + bsEqViewHtml(sh, tx) + bsPplSheetHtml(sh);
   var ticked = sum.claimedEst;
   var unEst = B.estimate(sum.unclaimedSub, sh.svc_bp, sh.vat_bp);
   var sumBox;
@@ -5262,9 +5278,88 @@ function bsViewHtml(){
       + '<div class="hint" style="margin:8px 2px">เข้าบิลรอคืนเดิม: เพื่อนโอนคืน → 💸 รับคืน / ✏️ แยกเอง → ครบแล้วปิดบิล · รายรับไม่แตะ</div>';
   }
   return back + head + linkHtml + modeHtml
-    + '<div class="bs-lbl">ใครติ๊กแล้ว/ยัง</div>' + bsPeopleRows(sh, sum)
+    + '<div class="bs-lbl">ใครติ๊กแล้ว/ยัง'+(sh.status === 'open' ? ' — แตะชื่อ = ปล่อย/ลบ' : '')+'</div>' + bsPeopleRows(sh, sum) + bsPplAddHtml(sh)
     + '<div class="bs-lbl">รายการในบิล'+(sh.status === 'open' ? ' — แตะบรรทัดว่างเพื่อติ๊ก "ของเรา"' : '')+' · '+(sh.svc_bp ? 'เซอร์วิส '+bsPct(sh.svc_bp)+' · ' : '')+(sh.vat_bp ? 'VAT '+bsPct(sh.vat_bp) : 'รวม VAT แล้ว')+'</div>'
-    + bsItemsHtml(sh) + sumBox;
+    + bsItemsHtml(sh) + sumBox + bsPplSheetHtml(sh);
+}
+/* ---------- หน้าติดตาม: จัดการรายชื่อ (CC 10 ต.ค. 69 · TASK_cc_billshare_people_v1 · P เคาะ ②) — เฉพาะบิล open ----------
+ * แตะแถวคน → แผงล่าง (สไตล์แผง ⋮ v3: มืด/ปัดลง/แตะมืด = ปิด) [📤 ปล่อยชื่อ / 🗑 ลบชื่อ] · ＋ เพิ่มชื่อเพื่อน = ช่องพิมพ์ใต้รายชื่อ */
+function bsPplAddHtml(sh){
+  if (sh.status !== 'open') return '';
+  if (S.bsAddName !== sh.id) return '<button class="miniact dash" type="button" data-act="bsPplAdd" data-id="'+sh.id+'" style="margin:0 0 8px">＋ เพิ่มชื่อเพื่อน</button>';
+  return '<div class="bs-friend" style="margin-bottom:8px"><input class="bs-in" id="bsAddIn" type="text" maxlength="30" placeholder="ชื่อเพื่อน" enterkeyhint="done">'
+    + '<button class="miniact cy2" type="button" data-act="bsPplAddGo" data-id="'+sh.id+'">เพิ่ม</button>'
+    + '<button class="x" type="button" data-act="bsPplAdd" data-id="'+sh.id+'" aria-label="ยกเลิก">✕</button></div>';
+}
+function bsPplSheetHtml(sh){
+  var k = S.bsPpl;
+  if (!k || k.id !== sh.id || sh.status !== 'open') return '';
+  var p = null;
+  (sh.people || []).forEach(function(x){ if (x.name === k.name) p = x; });
+  if (!p) return '';
+  var n = (sh.ticks || []).filter(function(t){ return !t.is_owner && t.person === p.name; }).length;
+  var legacyEq = sh.split_mode === 'equal';   // หารเท่าแบบมีชื่อ (บิลเก่า) = ปล่อยได้อย่างเดียว (ลบ = ยอดต่อหัวเปลี่ยน)
+  return '<div class="bs-sheet-ov" id="bsSheet" data-act="bsSheetClose"><div class="bs-sheet" id="bsSheetBody" data-act="bsSheetStay" role="dialog" aria-modal="true"><div class="bs-sheet-handle"></div>'
+    + '<div class="bs-sheet-title">'+esc(p.name)+'</div><div class="bs-sheet-sub">'+(p.joined ? 'จองชื่อแล้ว (เปิดลิงก์จากเครื่องหนึ่ง)' : 'ยังไม่มีใครเลือกชื่อนี้')+(n ? ' · ติ๊กไว้ '+n+' รายการ' : '')+'</div>'
+    + '<button class="bs-sheet-btn'+(p.joined ? '' : ' off')+'" type="button" data-act="bsPplRelease">📤 ปล่อยชื่อ (ให้กลับไปเลือกใหม่)</button>'
+    + '<div class="bs-sheet-sub">เพื่อนกดชื่อผิด/เปลี่ยนเครื่อง → ปล่อยแล้วเลือกชื่อใหม่ได้'+(n ? ' · ติ๊กของชื่อนี้คงไว้' : '')+'</div>'
+    + (legacyEq ? '' : '<button class="bs-sheet-btn red" type="button" data-act="bsPplDel">🗑 ลบชื่อออกจากบิล'+(n ? ' (ล้างติ๊ก '+n+' รายการ)' : '')+'</button>')
+    + '<button class="bs-sheet-btn clear" type="button" data-act="bsSheetClose">ยกเลิก</button></div></div>';
+}
+function bsPplOpen(id, name){ S.bsPpl = { id: Number(id), name: String(name || '') }; paint(); }
+function bsPplRelease(){
+  var k = S.bsPpl, sh = k && bsFind(k.id); if (!sh || sh.status !== 'open') return;
+  S.bsPpl = null;
+  (sh.people || []).forEach(function(p){ if (p.name === k.name){ p.joined = false; p.done = false; } });
+  paint();
+  if (IS_DEMO){ toast('ปล่อยชื่อ «' + k.name + '» แล้ว (เดโม่)'); return; }
+  callAction('sharePeopleRelease', [sh.id, k.name], 'ปล่อยชื่อ «' + k.name + '» แล้ว — เลือกใหม่ได้');
+}
+function bsPplDel(){
+  var k = S.bsPpl, sh = k && bsFind(k.id); if (!sh || sh.status !== 'open') return;
+  var n = (sh.ticks || []).filter(function(t){ return !t.is_owner && t.person === k.name; }).length;
+  if (n && typeof confirm === 'function' && !confirm('«' + k.name + '» ติ๊กไว้ ' + n + ' รายการ — ลบชื่อพร้อมล้างติ๊กทั้งหมด?')) return;
+  S.bsPpl = null;
+  sh.people = (sh.people || []).filter(function(p){ return p.name !== k.name; });
+  sh.ticks = (sh.ticks || []).filter(function(t){ return t.is_owner || t.person !== k.name; });
+  paint();
+  if (IS_DEMO){ toast('ลบชื่อ «' + k.name + '» แล้ว (เดโม่)'); return; }
+  callAction('sharePeopleDelete', [sh.id, k.name], 'ลบชื่อ «' + k.name + '» แล้ว');
+}
+function bsPplAdd(id){ S.bsAddName = (S.bsAddName === Number(id)) ? null : Number(id); paint(); if (S.bsAddName) bsFocus('#bsAddIn'); }
+function bsPplAddGo(id){
+  var sh = bsFind(id); if (!sh || sh.status !== 'open') return;
+  var nm = String((el('bsAddIn') || {}).value || '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!nm || nm.length > 30){ toast('ใส่ชื่อ 1–30 ตัวอักษร', true); return; }
+  if (nm === sh.owner_name || (sh.people || []).some(function(p){ return p.name === nm; })){ toast('ชื่อนี้มีอยู่ในบิลแล้ว', true); return; }
+  if ((sh.people || []).length >= 30){ toast('บิลนี้คนเต็มแล้ว (30 คน)', true); return; }
+  if (!sh.people) sh.people = [];
+  sh.people.push({ name: nm, done: false, joined: false });
+  S.bsAddName = null;
+  paint();
+  if (IS_DEMO){ toast('เพิ่ม «' + nm + '» แล้ว (เดโม่)'); return; }
+  callAction('sharePeopleAdd', [sh.id, nm], 'เพิ่ม «' + nm + '» แล้ว — ส่งลิงก์เดิมให้ได้เลย');
+}
+/* หน้าติดตาม หารเท่าไม่มีชื่อ (0015 party_n): สรุป N คน + รับทราบแล้ว X/N−1 + ตัวนับ [−] N [+] (จนล็อก) · ล็อกแล้ว = กล่องสรุปเดิม (ยอดจาก result) */
+function bsPartyViewHtml(sh, tx){
+  var B = BSX(), n = sh.party_n, ps = B ? B.partySplit(sh.total_minor, n) : null;
+  var acks = Math.min(Number(sh.ack_count) || 0, n - 1);
+  var head = '<div class="bs-s">🎉 หารเท่า '+n+' คน (รวมเรา) · <b id="bsAcks">รับทราบแล้ว '+acks+'/'+(n - 1)+' คน</b> · เปิดได้ไม่ต้องสมัคร · ไม่ต้องเลือกชื่อ'
+    + (IS_DEMO ? '' : ' · <a href="#" data-act="bsRefresh" style="color:var(--cy2)">↻ อัปเดต</a>')+'</div>';
+  var box;
+  if (sh.status === 'locked' && sh.result) box = bsLockedBox(sh);
+  else if (!ps) box = '<div class="bs-sum"><div class="bs-eq warn" style="margin-top:0">⚠ ยอดบิลน้อยเกินไปสำหรับ '+n+' คน — ลดจำนวนคน</div>'
+    + '<div class="bs-btns"><button class="bs-go off" type="button" data-act="bsLock" data-id="'+sh.id+'">📥 ใช้ยอดนี้ — เข้าบิลรอคืน</button>'
+    + '<button class="miniact" type="button" data-act="bsCancel" data-id="'+sh.id+'">ยกเลิกบิลแชร์</button></div></div>';
+  else box = '<div class="bs-sum"><div class="t1">🎉 '+n+' คน (รวมเรา) · เพื่อนคนละ '+fmtBaht(ps.friend)+'฿ · ไม่ต้องรอติ๊ก</div>'
+    + '<div class="t2">รอคืน (เพื่อน '+(n - 1)+' คน) <b>'+fmtBaht((n - 1) * ps.friend)+'฿</b> · ส่วนของเรา '+fmtBaht(ps.own)+'฿</div>'
+    + '<div class="bs-check ok"><span class="st">✓ เช็คดุลบิลจริง: '+fmtBaht((n - 1) * ps.friend)+' + '+fmtBaht(ps.own)+' = ยอดจ่ายจริง'+(tx ? ' · '+esc(shortName(tx))+' '+fmtWhen(tx.at) : '')+' '+fmtBaht(sh.total_minor)+'฿ — ส่วนต่าง 0.00</span></div>'
+    + '<div class="bs-btns"><button class="bs-go" type="button" data-act="bsLock" data-id="'+sh.id+'">📥 ใช้ยอดนี้ — เข้าบิลรอคืน</button>'
+    + '<button class="miniact" type="button" data-act="bsCancel" data-id="'+sh.id+'">ยกเลิกบิลแชร์</button></div></div>'
+    + '<div class="hint" style="margin:8px 2px">เข้าบิลรอคืนเดิม: เพื่อนโอนคืน → 💸 รับคืน / ✏️ แยกเอง → ครบแล้วปิดบิล · รายรับไม่แตะ</div>';
+  return head + (sh.status === 'open' ? bsPartyNHtml('หารเท่ากี่คน (รวมเรา)', n, 'data-act="bsShParty" data-id="'+sh.id+'"') : '') + box
+    + '<div class="bs-lbl">รายการในบิล (ดูอย่างเดียว — หารเท่าไม่ต้องติ๊ก) · '+(sh.svc_bp ? 'เซอร์วิส '+bsPct(sh.svc_bp)+' · ' : '')+(sh.vat_bp ? 'VAT '+bsPct(sh.vat_bp) : 'รวม VAT แล้ว')+'</div>'
+    + bsItemsHtml(sh);
 }
 function bsLockedBox(sh){  // กล่องสรุปหลังล็อก (ทั้ง 2 โหมด) — ยอดจาก result ที่ล็อกไว้
   var own = 0, fr = 0;
@@ -5283,7 +5378,7 @@ function bsEqViewHtml(sh, tx){  // หน้าติดตาม โหมด�
     if (r.is_owner) return '<div class="bsp"><div class="l"><div class="n">'+esc(r.name)+' (ของเรา)</div><div class="d">หารเท่า · ส่วนเรา — ไม่ต้องรอคืน</div></div>'
       + '<div class="r"><div class="m">'+fmtBaht(r.minor)+'฿</div><div class="st">👤 ของเรา</div></div></div>';
     var m = meta[r.name] || {};
-    return '<div class="bsp'+(m.done ? ' done' : '')+'"><div class="l"><div class="n">'+esc(r.name)+'</div><div class="d">หารเท่า · '+(m.done ? 'กดรับทราบแล้ว' : (m.joined ? 'เปิดลิงก์แล้ว · ยังไม่กดรับทราบ' : 'ยังไม่เปิดลิงก์'))+'</div></div>'
+    return '<div class="bsp'+(m.done ? ' done' : '')+'"'+(locked ? '' : bsPplAttr(sh, r.name))+'><div class="l"><div class="n">'+esc(r.name)+'</div><div class="d">หารเท่า · '+(m.done ? 'กดรับทราบแล้ว' : (m.joined ? 'เปิดลิงก์แล้ว · ยังไม่กดรับทราบ' : 'ยังไม่เปิดลิงก์'))+'</div></div>'
       + '<div class="r"><div class="m">'+fmtBaht(r.minor)+'฿</div><div class="st">'+(m.done ? '✓ รับทราบ' : (m.joined ? 'เปิดแล้ว' : '— ยังไม่เปิด'))+'</div></div></div>';
   }).join('');
   var box;
@@ -5319,7 +5414,13 @@ function bsOwnTick(id, itemId){
 function bsLock(id){
   var sh = bsFind(id), B = BSX(); if (!sh || !B) return;
   var fin;   // { result, own, friends } — หารเท่า = สูตรเดียวกับ SQL/bridge · ติ๊กเอง = summarize เดิม
-  if (sh.split_mode === 'equal'){
+  if (sh.split_mode === 'equal' && sh.party_n != null){   // หารเท่าไม่มีชื่อ (0015) — สูตรเดียวกับ SQL/bridge
+    var ps = B.partySplit(sh.total_minor, sh.party_n);
+    if (!ps){ toast('ยอดบิลน้อยเกินไปสำหรับ ' + sh.party_n + ' คน', true); return; }
+    var pr = [{ name: sh.owner_name || 'เรา', is_owner: true, minor: ps.own }];
+    for (var pi = 1; pi < sh.party_n; pi++) pr.push({ name: 'เพื่อน', is_owner: false, minor: ps.friend });
+    fin = { result: pr, own: ps.own, friends: (sh.party_n - 1) * ps.friend };
+  } else if (sh.split_mode === 'equal'){
     var eqr = bsShareEqual(sh);
     if (!eqr){ toast('ยังไม่มีเพื่อนในบิล — หารเท่าไม่ได้', true); return; }
     fin = { result: eqr, own: eqr[0].minor, friends: sh.total_minor - eqr[0].minor };
@@ -5388,7 +5489,8 @@ function htmlShares(d){  // การ์ดหน้าแรก: บิลแ�
     var sum = B.summarize(s);
     var n = (s.items || []).length, got = n - sum.unclaimed.length;
     var eqTxt = '';
-    if (s.split_mode === 'equal'){   // CC 10 ต.ค. 69: หารเท่า = นับคนกดรับทราบแทนบรรทัด
+    if (s.split_mode === 'equal' && s.party_n != null) eqTxt = '🎉 หารเท่า · รับทราบ ' + Math.min(Number(s.ack_count) || 0, s.party_n - 1) + '/' + (s.party_n - 1) + ' คน';   // 0015: ไม่มีชื่อ
+    else if (s.split_mode === 'equal'){   // CC 10 ต.ค. 69: หารเท่า = นับคนกดรับทราบแทนบรรทัด
       var ppl = s.people || [];
       eqTxt = '🎉 หารเท่า · รับทราบ ' + ppl.filter(function(p){ return p.done; }).length + '/' + ppl.length + ' คน';
     }

@@ -4,6 +4,8 @@
  *  - แตะรายการ = บันทึกทันที (bill_share_set_ticks) · บรรทัดที่คนอื่นติ๊กแล้ว = กดไม่ได้ · ชนกันพร้อมกัน → DB ปฏิเสธ + รีเฟรช
  *  - ยอดของคุณ = ตัวคำนวณชุดเดียวกับแอปเจ้าของ (NKF_BS) · ยอดสุดท้ายหลังเจ้าของปิดบิลมาจาก DB (result)
  *  - ไม่มี NKF_SB (เปิดไฟล์ตรง/ไม่ได้ build) หรือ #demo → โหมดเดโม่ในเครื่อง (ข้อมูลสมมติล้วน)
+ *  CC 10 ต.ค. 69 (TASK_cc_billshare_people_v1 · 0015): ปุ่ม «ไม่ใช่ฉัน — เปลี่ยนชื่อ» (bill_share_leave) ·
+ *    หารเท่าไม่มีชื่อ (party_n) = ไม่ต้องเลือกชื่อ — เห็นยอด + «รับทราบ» (bill_share_ack · key สุ่มในเครื่อง nkf_bs_ack:<token>)
  *  ห้ามใช้ innerHTML กับข้อความจากผู้ใช้โดยไม่ esc() — ชื่อ/รายการมาจากคนนอก
  */
 (function () {
@@ -40,7 +42,8 @@
     too_many_people: 'บิลนี้คนเต็มแล้ว (30 คน)',
     not_in_list: 'บิลนี้หารเท่า — เลือกได้เฉพาะชื่อที่เจ้าของใส่ไว้ (ไม่เจอชื่อ ให้ทักเจ้าของบิล)',
     item_not_found: 'ไม่พบบรรทัดนี้ในบิล',
-    too_many_items: 'ติ๊กได้ไม่เกิน 100 บรรทัด'
+    too_many_items: 'ติ๊กได้ไม่เกิน 100 บรรทัด',
+    leave_gone: 'ชื่อนี้ไม่ได้ผูกกับเครื่องนี้แล้ว (เจ้าของปล่อยชื่อ/เปลี่ยนเครื่อง) — เลือกชื่อใหม่ได้เลย'
   };
   function errMsg(e) {
     var m = String((e && (e.message || e.msg)) || e || '');
@@ -55,9 +58,18 @@
   var DEMO = /(^|&)demo(=1)?($|&)/.test(hash) || !window.NKF_SB || !window.NKF_SB.url || /REPLACE_ME/.test(window.NKF_SB.url || '')
     || typeof window.supabase === 'undefined';
   if (DEMO && !TOKEN) TOKEN = new Array(17).join('dem0').replace(/m/g, 'e');   // 64 hex (เดโม่)
-  var KEY_STORE = 'nkf_bs:' + TOKEN;
+  var KEY_STORE = 'nkf_bs:' + TOKEN, ACK_STORE = 'nkf_bs_ack:' + TOKEN;
   function loadMe() { try { var o = JSON.parse(localStorage.getItem(KEY_STORE) || 'null'); return (o && o.name && o.key) ? o : null; } catch (e) { return null; } }
   function saveMe(o) { try { localStorage.setItem(KEY_STORE, JSON.stringify(o)); } catch (e) {} }
+  function forgetMe() { S.me = null; try { localStorage.removeItem(KEY_STORE); } catch (e) {} }
+  function loadAck() { try { var o = JSON.parse(localStorage.getItem(ACK_STORE) || 'null'); return (o && /^[0-9a-f]{32}$/.test(o.key)) ? o : null; } catch (e) { return null; } }
+  function saveAck(o) { try { localStorage.setItem(ACK_STORE, JSON.stringify(o)); } catch (e) {} }
+  function randHex32() {
+    var a = new Uint8Array(16), out = '';
+    window.crypto.getRandomValues(a);
+    for (var i = 0; i < a.length; i++) out += (a[i] < 16 ? '0' : '') + a[i].toString(16);
+    return out;
+  }
 
   // ---------- ช่องทางคุยกับ DB (RPC 3 ตัว) · เดโม่ = จำลองในเครื่องด้วยกติกาเดียวกัน ----------
   var rpc;
@@ -108,11 +120,12 @@
     }, function (e) {
       S.busy = false;
       toast(errMsg(e), true);
-      if (/bad_key/.test(String(e && e.message))) { S.me = null; try { localStorage.removeItem(KEY_STORE); } catch (x) {} }
+      if (/bad_key/.test(String(e && e.message))) forgetMe();
       return refresh(true);
     });
   }
   function isEqual() { return !!(S.share && S.share.split_mode === 'equal'); }   // CC 10 ต.ค. 69 (TASK_cc_readauto_party_v1 · 0013): บิลหารเท่า
+  function isParty() { return isEqual() && S.share.party_n != null; }   // 0015: หารเท่าไม่มีชื่อ
   function myEqual() {   // ยอดของฉันในบิลหารเท่า — จาก DB (equal_split · สูตร SQL เดียวกับหน้าเจ้าของ) · ไม่เจอ = null
     var out = null;
     if (!S.share || !S.me) return null;
@@ -122,6 +135,37 @@
   function ack() {   // หารเท่า: «รับทราบ» = บันทึกว่าเห็นยอดแล้ว (ไม่ต้องติ๊กรายการ · ใช้ฟังก์ชัน set_ticks เดิม: ติ๊กว่าง + done)
     if (!S.me || !S.share) return;
     save([], true).then(function (res) { if (res && res.ok) toast('รับทราบแล้ว ✓ — โอนคืนเจ้าของได้เลย'); });
+  }
+  // หารเท่าไม่มีชื่อ: «รับทราบ» ครั้งแรกสร้าง key ในเครื่อง → นับ 1 ครั้งต่อเครื่อง (กดซ้ำ = ไม่นับเพิ่ม)
+  function partyAck() {
+    if (!S.share || S.busy) return;
+    var a = loadAck() || { key: randHex32(), done: false };
+    saveAck(a);
+    S.busy = true; render();
+    rpc('bill_share_ack', { p_token: TOKEN, p_key: a.key }).then(function (res) {
+      S.busy = false;
+      a.done = true; saveAck(a);
+      S.share.ack_count = res.count;
+      render();
+      toast('รับทราบแล้ว ✓ — โอนคืนเจ้าของได้เลย');
+    }, function (e) { S.busy = false; render(); toast(errMsg(e), true); });
+  }
+  // «ไม่ใช่ฉัน — เปลี่ยนชื่อ»: ปล่อยชื่อเดิม (key เครื่องนี้) + ล้างติ๊กของชื่อนั้น → กลับไปเลือกชื่อใหม่
+  function leave() {
+    if (!S.me || !S.share || S.busy) return;
+    var n = Object.keys(mineSet()).length;
+    if (n && !window.confirm('ติ๊ก ' + n + ' รายการของคุณจะถูกล้างด้วย — เปลี่ยนชื่อต่อ?')) return;
+    S.busy = true;
+    rpc('bill_share_leave', { p_token: TOKEN, p_name: S.me.name, p_key: S.me.key }).then(function () {
+      S.busy = false;
+      forgetMe();
+      toast('ปล่อยชื่อแล้ว — เลือกชื่อของคุณใหม่ได้เลย');
+      return refresh();
+    }, function (e) {
+      S.busy = false;
+      if (/bad_key/.test(String(e && e.message))) { forgetMe(); toast(ERR.leave_gone, true); return refresh(); }   // ชื่อถูกปล่อยไปแล้ว/อยู่เครื่องอื่น
+      toast(errMsg(e), true);
+    });
   }
   function toggle(itemId) {
     if (!S.share || S.share.status !== 'open' || !S.me || S.busy || isEqual()) return;
@@ -166,6 +210,7 @@
     var head = '<div class="h">🧾 บิลของ "' + esc(sh.owner_name) + '" · ' + esc(sh.title) + '</div>'
       + '<div class="s">' + esc(thDate(sh.at)) + ' · เปิดจากลิงก์ — <b>ไม่ต้องสมัคร</b> · ' + (isEqual() ? 'บิลหารเท่า — ดูยอดของคุณแล้วกดรับทราบ' : 'แตะติ๊กรายการของคุณ')
       + (DEMO ? ' · <b>โหมดเดโม่</b> (ข้อมูลสมมติ)' : '') + '</div>';
+    if (isParty()) { renderParty(sh, locked, head); return; }
     if (isEqual()) { renderEqual(sh, locked, head); return; }
     if (!S.me) {
       if (locked) { app.innerHTML = head + '<div class="msg">เจ้าของปิดบิลนี้แล้ว</div>'; bar.style.display = 'none'; return; }
@@ -194,7 +239,7 @@
     var p = myPerson();
     var parts = 'ของคุณ ' + n + ' รายการ · อาหาร ' + baht(sub)
       + (extra ? ' + ' + (sh.svc_bp ? 'เซอร์วิส ' + sh.svc_bp / 100 + '% ' : '') + (sh.vat_bp ? (sh.svc_bp ? '+ ' : '') + 'VAT ' + sh.vat_bp / 100 + '% ' : '') + baht(extra) : '');
-    bar.innerHTML = '<div class="box"><div class="t1">' + esc(parts) + ' · ชื่อ: ' + esc(S.me.name) + '</div>'
+    bar.innerHTML = '<div class="box"><div class="t1">' + esc(parts) + ' · ชื่อ: ' + esc(S.me.name) + leaveHtml(locked) + '</div>'
       + '<div class="t2">ยอดของคุณ <b>' + baht(est) + '฿</b></div>'
       + (locked ? '' : (p && p.done
           ? '<button class="btn ghost" type="button" id="doneBtn">✓ บันทึกแล้ว — แตะรายการเพื่อแก้ได้จนเจ้าของปิดบิล</button>'
@@ -228,10 +273,30 @@
     app.innerHTML = head + lockBox + '<div class="eqbig" id="eqMine">🎉 บิลนี้หารเท่า — ยอดของคุณ <b>' + amtTxt + '</b></div>' + info
       + '<div class="lbl" style="margin:4px 2px 8px">รายการในบิล (ดูอย่างเดียว)</div>' + itemsHtml(sh, {}, true) + footHtml();
     var p = myPerson();
-    bar.innerHTML = '<div class="box"><div class="t1">บิลหารเท่า' + (n ? ' ' + n + ' คน' : '') + ' · ชื่อ: ' + esc(S.me.name) + '</div>'
+    bar.innerHTML = '<div class="box"><div class="t1">บิลหารเท่า' + (n ? ' ' + n + ' คน' : '') + ' · ชื่อ: ' + esc(S.me.name) + leaveHtml(locked) + '</div>'
       + '<div class="t2">ยอดของคุณ <b>' + amtTxt + '</b></div>'
       + (locked ? '' : (p && p.done
           ? '<button class="btn ghost" type="button" id="ackBtn" disabled>✓ รับทราบแล้ว — โอนคืนเจ้าของได้เลย</button>'
+          : '<button class="btn" type="button" id="ackBtn"' + (S.busy ? ' disabled' : '') + '>รับทราบ</button>'))
+      + '</div>';
+    bar.style.display = '';
+  }
+  function leaveHtml(locked) { return locked ? '' : ' <button class="lv" type="button" id="leaveBtn"' + (S.busy ? ' disabled' : '') + '>ไม่ใช่ฉัน — เปลี่ยนชื่อ</button>'; }
+  // หารเท่าไม่มีชื่อ (0015): ไม่มี picker · ยอดของคุณ = friend_minor (DB) · «รับทราบ» นับต่อเครื่อง · ล็อกแล้ว = ยอดสุดท้าย
+  function renderParty(sh, locked, head) {
+    var app = $('app'), bar = $('bar');
+    var n = Number(sh.party_n), amt = sh.friend_minor == null ? null : Number(sh.friend_minor);
+    var amtTxt = amt === null ? '—' : baht(amt) + '฿';
+    var nAck = (Number(sh.ack_count) || 0) + '/' + (n - 1) + ' คน', cnt = 'รับทราบแล้ว ' + nAck;
+    var lockBox = locked ? '<div class="lock">🔒 เจ้าของปิดบิลแล้ว — ยอดสุดท้ายของคุณ <b>' + amtTxt + '</b> · โอนคืนเจ้าของได้เลย</div>' : '';
+    app.innerHTML = head + lockBox + '<div class="eqbig" id="eqMine">🎉 บิลนี้หารเท่า ' + n + ' คน — ยอดของคุณ <b>' + amtTxt + '</b></div>'
+      + '<div class="eq">🎉 <b>หารเท่า ' + n + ' คน</b> (รวม "' + esc(sh.owner_name) + '") · ยอดรวม ' + baht(sh.total_minor) + '฿ · เพื่อนทุกคนจ่ายเท่ากัน · ไม่ต้องเลือกชื่อ/ติ๊กรายการ</div>'
+      + '<div class="lbl" style="margin:4px 2px 8px">รายการในบิล (ดูอย่างเดียว)</div>' + itemsHtml(sh, {}, true) + footHtml();
+    var mine = loadAck();
+    bar.innerHTML = '<div class="box"><div class="t1">บิลหารเท่า ' + n + ' คน · <span id="ackCnt">' + cnt + '</span></div>'
+      + '<div class="t2">' + (locked ? 'ยอดสุดท้ายของคุณ' : 'ยอดของคุณ') + ' <b>' + amtTxt + '</b></div>'
+      + (locked ? '' : (mine && mine.done
+          ? '<button class="btn ghost" type="button" id="ackBtn" disabled>รับทราบแล้ว ✓ · ' + nAck + '</button>'
           : '<button class="btn" type="button" id="ackBtn"' + (S.busy ? ' disabled' : '') + '>รับทราบ</button>'))
       + '</div>';
     bar.style.display = '';
@@ -261,7 +326,8 @@
     if (t.hasAttribute('data-join')) { join(t.getAttribute('data-join')); return; }
     if (t.id === 'joinBtn') { join(($('nameIn') || {}).value); return; }
     if (t.id === 'doneBtn') { finish(); return; }
-    if (t.id === 'ackBtn') { ack(); return; }
+    if (t.id === 'ackBtn') { if (isParty()) partyAck(); else ack(); return; }
+    if (t.id === 'leaveBtn') { leave(); return; }
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target && e.target.id === 'nameIn') join(e.target.value); });
   window.addEventListener('hashchange', function () { location.reload(); });
@@ -270,8 +336,9 @@
   refresh();
   setInterval(function () { if (!document.hidden && S.share && S.share.status === 'open') refresh(true); }, POLL_MS);
 
-  // ---------- เดโม่ (ไม่มีเน็ต · ข้อมูลสมมติล้วน) — กติกาเดียวกับฟังก์ชันใน 0012 ----------
+  // ---------- เดโม่ (ไม่มีเน็ต · ข้อมูลสมมติล้วน) — กติกาเดียวกับฟังก์ชันใน 0012/0013/0015 · #demo&party = บิลหารเท่าไม่มีชื่อ 5 คน ----------
   function demoRpc() {
+    var party = /(^|&)party($|&)/.test(hash);
     var items = [['อาคามิยากิ จานใหญ่', 198], ['ข้าวญี่ปุ่น', 35], ['เบียร์ Asahi', 49], ['บูตะยากิ จานใหญ่', 169], ['เบียร์ Sapporo', 79], ['คาราเมลคัสตาร์ด', 48],
       ['Set อาคามิ', 324], ['เมนไทโกะ', 119], ['ยุกเกะ (ผักดอง)', 138], ['โค้ก', 25]];
     var db = {
@@ -280,17 +347,40 @@
       ticks: [{ item_id: 7, person: 'เจ้าของบิล', is_owner: true }, { item_id: 8, person: 'เจ้าของบิล', is_owner: true }, { item_id: 10, person: 'เพื่อน B', is_owner: false }],
       people: [{ name: 'เพื่อน A', done: false, joined: false, key: '' }, { name: 'เพื่อน B', done: true, joined: true, key: 'x' }]
     };
+    db.split_mode = 'tick'; db.party_n = null; db.acks = [];
+    if (party) {   // 2,923.24 ÷ 5 → เพื่อน 584.65 × 4 · เรา 584.64
+      db.items = [{ id: 1, name: 'ปาร์ตี้ปิ้งย่าง (รวม)', price_minor: 273200 }];
+      db.ticks = []; db.people = []; db.split_mode = 'equal'; db.party_n = 5;
+    }
     db.total_minor = B ? B.grossOf(db.items.reduce(function (a, it) { return a + it.price_minor; }, 0), 0, 700) : 0;
     function pub() {
+      var ps = db.party_n && B ? B.partySplit(db.total_minor, db.party_n) : null;
       return JSON.parse(JSON.stringify({ title: db.title, owner_name: db.owner_name, at: db.at, items: db.items, svc_bp: db.svc_bp, vat_bp: db.vat_bp,
-        total_minor: db.total_minor, status: db.status, result: db.result, ticks: db.ticks, split_mode: 'tick', equal_split: null, share_minor: null,
+        total_minor: db.total_minor, status: db.status, result: db.result, ticks: db.ticks, split_mode: db.split_mode, equal_split: null,
+        share_minor: ps ? ps.friend : null, party_n: db.party_n, ack_count: db.party_n ? Math.min(db.acks.length, db.party_n - 1) : null,
+        friend_minor: ps ? ps.friend : null, own_minor: ps ? ps.own : null,
         people: db.people.map(function (p) { return { name: p.name, done: p.done, joined: p.joined }; }) }));
     }
     return function (fn, a) {
       return new Promise(function (res, rej) {
         setTimeout(function () {
           if (fn === 'bill_share_view') return res(pub());
+          if (db.status !== 'open' && fn !== 'bill_share_view') return rej(new Error('share_locked'));
+          if (fn === 'bill_share_ack') {
+            if (!db.party_n) return rej(new Error('not_found'));
+            if (!/^[0-9a-f]{16,64}$/.test(a.p_key || '')) return rej(new Error('bad_key'));
+            if (db.acks.indexOf(a.p_key) < 0 && db.acks.length < Math.min(30, db.party_n - 1)) db.acks.push(a.p_key);
+            return res({ ok: true, count: Math.min(db.acks.length, db.party_n - 1) });
+          }
+          if (fn === 'bill_share_leave') {
+            var lp = db.people.filter(function (x) { return x.name === a.p_name && x.joined && x.key === a.p_key; })[0];
+            if (!lp) return rej(new Error('bad_key'));
+            db.ticks = db.ticks.filter(function (t) { return t.is_owner || t.person !== lp.name; });
+            lp.joined = false; lp.done = false; lp.key = '';
+            return res({ ok: true });
+          }
           if (fn === 'bill_share_join') {
+            if (db.party_n) return rej(new Error('not_in_list'));
             var nm = String(a.p_name || '').trim();
             var p = db.people.filter(function (x) { return x.name === nm; })[0];
             if (nm === db.owner_name || (p && p.joined)) return rej(new Error('name_taken'));
