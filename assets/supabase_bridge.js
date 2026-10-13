@@ -683,7 +683,7 @@
       sb.from('cats_custom').select('*').order('created_at', { ascending: true }),  // 7) หมวดทำเอง (Hermes 7 ต.ค. 69 · migration 0010) — ล้มได้ (ยังไม่ apply = ว่าง)
       sb.from('shortcuts').select('*').order('created_at', { ascending: true }),     // 8) รายการลัด (Hermes 7 ต.ค. 69 · migration 0010) — ล้มได้
       sb.from('bill_marks').select('*'),                       // 9) บิลรอคืน (CC 9 ต.ค. 69 · migration 0011) — ล้มได้ (ยังไม่ apply = ไม่มีบิล)
-      sb.from('bill_returns').select('bill_ref,amount_minor'), // 10) เงินคืนของบิล (CC 9 ต.ค. 69 · migration 0011) — ล้มได้
+      sb.from('bill_returns').select('bill_ref,amount_minor,at,source'), // 10) เงินคืนของบิล (CC 9 ต.ค. 69 · migration 0011) — ล้มได้
       sb.from('bill_shares').select('*'),                      // 11) บิลแชร์ (CC 9 ต.ค. 69 · TASK_cc_billbox_share · migration 0012) — ล้มได้ (ยังไม่ apply = ไม่มี)
       sb.from('bill_share_ticks').select('share_id,item_id,person,is_owner'),       // 12) ใครติ๊กบรรทัดไหน — ล้มได้
       sb.from('bill_share_people').select('id,share_id,name,done,joined_at'),       // 13) รายชื่อ/เสร็จแล้ว (ไม่ดึง key_hash) — ล้มได้
@@ -708,17 +708,21 @@
       var billMap = {};
       for (var bi = 0; bi < billRows.length; bi++) {
         var brow = billRows[bi];
-        billMap[strv(brow.ref)] = { expect: numv(brow.expect_minor), returned: 0, status: strv(brow.status) };
+        billMap[strv(brow.ref)] = { expect: numv(brow.expect_minor), returned: 0, status: strv(brow.status), marked_at: toThaiLocal(brow.created_at), returns: [] };
       }
       for (var bj = 0; bj < billRetRows.length; bj++) {
         var bm0 = billMap[strv(billRetRows[bj].bill_ref)];
         if (bm0) bm0.returned += numv(billRetRows[bj].amount_minor);
+        // CC 13 ต.ค. 69 (TASK_cc_billret_page_v1): ประวัติรับคืนรายครั้ง → เพจ «บิลรอคืน»
+        if (bm0) bm0.returns.push({ at: toThaiLocal(billRetRows[bj].at), minor: numv(billRetRows[bj].amount_minor), source: strv(billRetRows[bj].source) });
       }
       for (var bk in billMap) {
+        billMap[bk].returns.sort(function (x, y) { return x.at < y.at ? -1 : (x.at > y.at ? 1 : 0); });
         if (billMap[bk].status === 'open' && billMap[bk].returned >= billMap[bk].expect) billMap[bk].status = 'done';
       }
 
-      // CC 9 ต.ค. 69 (TASK_cc_billbox_share): บิลแชร์ของฉัน (ไม่รวมที่ยกเลิก) + ติ๊ก + รายชื่อ — ใหม่ก่อน
+      // CC 9 ต.ค. 69 (TASK_cc_billbox_share): บิลแชร์ของฉัน + ติ๊ก + รายชื่อ — ใหม่ก่อน
+      //   CC 13 ต.ค. 69 (TASK_cc_billfix_scan_v1): ส่งบิลที่ยกเลิกมาด้วย (status 'cancelled') — แอปกรองเองทุกจุด (bsShares/billLists) · ใช้กู้บิล + ดันรายการกลับขึ้นชุดแรก
       var shareRows = (results[10] && !results[10].error) ? (results[10].data || []) : [];
       var shareTickRows = (results[11] && !results[11].error) ? (results[11].data || []) : [];
       var sharePeopleRows = (results[12] && !results[12].error) ? (results[12].data || []) : [];
@@ -727,10 +731,11 @@
       var acctRows = (results[15] && !results[15].error) ? (results[15].data || []) : [];
       var snap = {};
       for (var si = 0; si < snapRows.length; si++) snap[strv(snapRows[si].account)] = { balance_minor: numv(snapRows[si].balance_minor), as_of: toThaiLocal(snapRows[si].as_of) };
-      var shares = shareRows.filter(function (s) { return strv(s.status) !== 'cancelled'; }).map(function (s) {
+      var shares = shareRows.map(function (s) {
         var sid = numv(s.id);
         return {
           id: sid, token: strv(s.token), tx_ref: strv(s.tx_ref), title: strv(s.title), owner_name: strv(s.owner_name) || 'เรา',
+          src: strv(s.src) === 'manual' ? 'manual' : 'tx',   // CC 13 ต.ค. 69 (0017): บิลกรอกราคาเอง — ไม่มีคอลัมน์ = tx
           items: (Array.isArray(s.items) ? s.items : []).map(function (it) { return { id: numv(it.id), name: strv(it.name), price_minor: numv(it.price_minor) }; }),
           svc_bp: numv(s.svc_bp), vat_bp: numv(s.vat_bp), total_minor: numv(s.total_minor), status: strv(s.status),
           split_mode: strv(s.split_mode) === 'equal' ? 'equal' : 'tick',   // CC 10 ต.ค. 69 (TASK_cc_readauto_party_v1 · 0013): ไม่มีคอลัมน์ = tick
@@ -818,10 +823,12 @@
         // แก้โดย CC 9 ต.ค. 69 (TASK_cc_bill_return_app): ขาออกนับแบบสุทธิหลังหักบิลรอคืน (sp) — แบบเดียวกับ getData ใน Web.gs
         var sp = isIn ? 0 : spendOf(it);
         if (it.bill_status) {
+          var bmk = billMap[it.ref] || {};
           bills.push({
             ref: it.ref, name: it.display_name || it.counterparty, at: it.at, amount_minor: it.amount_minor,
             expect_minor: it.bill_expect, returned_minor: it.bill_returned,
-            remaining_minor: Math.max(0, it.bill_expect - it.bill_returned), status: it.bill_status
+            remaining_minor: Math.max(0, it.bill_expect - it.bill_returned), status: it.bill_status,
+            marked_at: bmk.marked_at || '', returns: bmk.returns || []
           });
         }
         if (!isIn) {
@@ -1385,7 +1392,8 @@
     if (!B) return Promise.resolve({ ok: false, msg: 'โหลดตัวคำนวณบิลไม่ได้ — รีเฟรชหน้า' });
     var p = payload || {};
     var ref = strv(p.tx_ref);
-    if (!ref) return Promise.resolve({ ok: false, msg: 'เลือกรายการจ่ายจริงของบิลนี้ก่อน' });
+    var manual = strv(p.src) === 'manual';   // CC 13 ต.ค. 69 (TASK_cc_billfix_scan_v1 · 0017): กรอกราคาเอง — ไม่ผูกรายการจ่าย · ไม่แตะบิลรอคืน
+    if (!ref && !manual) return Promise.resolve({ ok: false, msg: 'เลือกรายการจ่ายจริงของบิลนี้ก่อน' });
     var items = (Array.isArray(p.items) ? p.items : []).map(function (it, i) {
       return { id: i + 1, name: cleanName(it && it.name, 80), price_minor: Number(it && it.price_minor) };
     });
@@ -1403,6 +1411,36 @@
     if (equal && (partyN === null ? !friends.length : !isIntIn(partyN, 2, 31))) return Promise.resolve({ ok: false, msg: 'หารเท่าต้องระบุจำนวนคน (2–31)' });
     if (equal) own = [];   // หารเท่า = ไม่ใช้ติ๊ก
     if (partyN !== null) friends = [];   // ไม่มีชื่อ = ไม่สร้างแถวรายชื่อเลย
+    function insertShare(row0) {
+      if (equal) row0.split_mode = 'equal';   // tick = ไม่ส่งคอลัมน์ (default ของ 0013 · DB ที่ยังไม่ apply 0013 ก็สร้างแบบเดิมได้)
+      if (partyN !== null) row0.party_n = partyN;
+      return sb.from('bill_shares').insert(row0).select('id,token').then(function (ins) {
+        if (ins.error) throw ins.error;
+        var row = ins.data && ins.data[0];
+        if (!row || !row.id) return { ok: false, msg: 'สร้างบิลแชร์ไม่สำเร็จ' };
+        var sid = numv(row.id);
+        var steps = [];
+        if (friends.length) {
+          steps.push(sb.from('bill_share_people').insert(friends.map(function (nm) { return { user_id: CURRENT_UID, share_id: sid, name: nm }; })));
+        }
+        if (own.length) {
+          steps.push(sb.from('bill_share_ticks').insert(own.map(function (i) { return { user_id: CURRENT_UID, share_id: sid, item_id: i + 1, person: owner, is_owner: true }; })));
+        }
+        return Promise.all(steps).then(function (rr) {
+          for (var k = 0; k < rr.length; k++) if (rr[k].error) throw rr[k].error;
+          return { ok: true, id: sid, token: strv(row.token) };
+        });
+      });
+    }
+    if (manual) {   // ยอดอ้างอิงเช็คดุล = ยอดที่กรอก (กติกา Σ รายการ = ยอดบิลเป๊ะ เหมือนเดิม) · ไม่อ่าน transactions/bill_marks
+      var mt = Number(p.manual_total_minor);
+      if (!isIntIn(mt, 1, 1e11)) return Promise.resolve({ ok: false, msg: 'ใส่ยอดรวมของบิลก่อน' });
+      var mck = B.billCheck(items, svc, vat, mt);
+      if (!mck.ok) return Promise.resolve({ ok: false, msg: 'ยอดจากรายการ ' + bahtTxt(mck.gross) + '฿ ไม่ตรงยอดบิลที่กรอก ' + bahtTxt(mt) + '฿ (ต่าง ' + bahtTxt(mck.diff) + '฿) — แก้รายการก่อน', diff_minor: mck.diff });
+      return insertShare({ user_id: CURRENT_UID, tx_ref: null, src: 'manual', title: cleanName(p.title, 120) || 'บิล',
+        owner_name: owner, items: items, svc_bp: svc, vat_bp: vat, total_minor: mt, status: 'open' })
+        .catch(function (e) { return { ok: false, msg: shareErr(e) }; });
+    }
     return sb.from('transactions').select('ref,direction,amount_minor,at,counterparty').eq('ref', ref).limit(1).then(function (r) {
       if (r.error) throw r.error;
       var tx = (r.data && r.data[0]) || null;
@@ -1420,28 +1458,9 @@
         if (active.length) return { ok: false, msg: 'รายการจ่ายนี้มีบิลแชร์อยู่แล้ว' };
         var bm = (!rs[1].error && rs[1].data && rs[1].data[0]) || null;
         if (bm && strv(bm.status) !== 'open') return { ok: false, msg: 'บิลรอคืนของรายการนี้จบแล้ว — สร้างบิลแชร์ไม่ได้' };
-        var row0 = {
+        return insertShare({
           user_id: CURRENT_UID, tx_ref: ref, title: cleanName(p.title, 120) || strv(tx.counterparty).slice(0, 120),
           owner_name: owner, items: items, svc_bp: svc, vat_bp: vat, total_minor: total, status: 'open'
-        };
-        if (equal) row0.split_mode = 'equal';   // tick = ไม่ส่งคอลัมน์ (default ของ 0013 · DB ที่ยังไม่ apply 0013 ก็สร้างแบบเดิมได้)
-        if (partyN !== null) row0.party_n = partyN;
-        return sb.from('bill_shares').insert(row0).select('id,token').then(function (ins) {
-          if (ins.error) throw ins.error;
-          var row = ins.data && ins.data[0];
-          if (!row || !row.id) return { ok: false, msg: 'สร้างบิลแชร์ไม่สำเร็จ' };
-          var sid = numv(row.id);
-          var steps = [];
-          if (friends.length) {
-            steps.push(sb.from('bill_share_people').insert(friends.map(function (nm) { return { user_id: CURRENT_UID, share_id: sid, name: nm }; })));
-          }
-          if (own.length) {
-            steps.push(sb.from('bill_share_ticks').insert(own.map(function (i) { return { user_id: CURRENT_UID, share_id: sid, item_id: i + 1, person: owner, is_owner: true }; })));
-          }
-          return Promise.all(steps).then(function (rr) {
-            for (var k = 0; k < rr.length; k++) if (rr[k].error) throw rr[k].error;
-            return { ok: true, id: sid, token: strv(row.token) };
-          });
         });
       });
     }).catch(function (e) { return { ok: false, msg: shareErr(e) }; });
@@ -1492,12 +1511,14 @@
       return sb.from('bill_shares').update({ status: 'open', locked_at: null }).eq('id', sid).then(function () { return res; }, function () { return res; });
     }
     function proceed(s) {
+      var manual = strv(s.src) === 'manual';   // CC 13 ต.ค. 69 (0017): บิลกรอกเอง = สรุปยอดอย่างเดียว ไม่เข้าบิลรอคืน (ไม่มีรายการจ่ายให้ผูก · P เคาะ)
+      function mark(expect) { return (manual || !(expect > 0)) ? Promise.resolve({ ok: true }) : markBill(strv(s.tx_ref), expect); }
       if (strv(s.split_mode) === 'equal') {   // หารเท่า: ไม่ต้องรอติ๊ก — ยอดต่อคนจากสูตรเดียวกับ SQL
         var eqr = s.party_n != null ? partyResult(B, strv(s.owner_name) || 'เรา', numv(s.party_n), numv(s.total_minor))
           : equalResult(B, strv(s.owner_name) || 'เรา', s.people, numv(s.total_minor));
         if (!eqr) return unlock({ ok: false, msg: 'ยังไม่มีเพื่อนในบิล — หารเท่าไม่ได้' });
         var eqExpect = eqr.slice(1).reduce(function (a, r) { return a + r.minor; }, 0);
-        return markBill(strv(s.tx_ref), eqExpect).then(function (mr) {
+        return mark(eqExpect).then(function (mr) {
           if (!mr || !mr.ok) return unlock({ ok: false, msg: (mr && mr.msg) || 'เข้าบิลรอคืนไม่สำเร็จ' });
           return sb.from('bill_shares').update({ result: eqr }).eq('id', sid).then(function (w) {
             if (w.error) throw w.error;
@@ -1510,8 +1531,7 @@
       if (!sum.complete) return unlock({ ok: false, msg: 'ยอดต่อคนรวมไม่เท่ายอดจ่ายจริง (ต่าง ' + bahtTxt(sum.alloc.diff) + '฿) — สรุปไม่ได้' });
       var expect = sum.friendsFinal;
       var result = sum.people.map(function (pp) { return { name: pp.name, is_owner: pp.is_owner, minor: pp.final }; });
-      var mark = expect > 0 ? markBill(strv(s.tx_ref), expect) : Promise.resolve({ ok: true });
-      return mark.then(function (mr) {
+      return mark(expect).then(function (mr) {
         if (!mr || !mr.ok) return unlock({ ok: false, msg: (mr && mr.msg) || 'เข้าบิลรอคืนไม่สำเร็จ' });
         return sb.from('bill_shares').update({ result: result }).eq('id', sid).then(function (w) {
           if (w.error) throw w.error;
@@ -1629,6 +1649,39 @@
       if (u.error) throw u.error;
       if (!u.data || !u.data.length) return { ok: false, msg: 'ยกเลิกได้เฉพาะบิลแชร์ที่ยังไม่ล็อก' };
       return { ok: true };
+    }).catch(function (e) { return { ok: false, msg: shareErr(e) }; });
+  }
+
+  // กู้บิลที่ยกเลิก (CC 13 ต.ค. 69 · TASK_cc_billfix_scan_v1 ③) — cancelled → open · token/ติ๊ก/รายชื่อเดิมคงอยู่ (ลิงก์เพื่อนเดิมใช้ได้อีก)
+  //   รายการจ่ายเดียวกันมีบิลใบอื่น active อยู่ = ปฏิเสธ (unique bill_shares_active_tx) · บิลรอคืนของรายการจบแล้ว = ปฏิเสธ (กติกาเดียวกับ createShare)
+  function restoreShare(id) {
+    if (!CURRENT_UID) return Promise.resolve({ ok: false, msg: 'ยังไม่ได้ล็อกอิน — เข้าสู่ระบบก่อน' });
+    var sid = Number(id);
+    if (!isIntIn(sid, 1, Number.MAX_SAFE_INTEGER)) return Promise.resolve({ ok: false, msg: 'ไม่พบบิลแชร์นี้' });
+    return sb.from('bill_shares').select('id,status,tx_ref').eq('id', sid).limit(1).then(function (r) {
+      if (r.error) throw r.error;
+      var s = (r.data && r.data[0]) || null;
+      if (!s) return { ok: false, msg: 'ไม่พบบิลแชร์นี้' };
+      if (strv(s.status) !== 'cancelled') return { ok: false, msg: 'กู้ได้เฉพาะบิลที่ถูกยกเลิก' };
+      var ref = strv(s.tx_ref);
+      var guards = ref ? Promise.all([
+        sb.from('bill_shares').select('id,status').eq('tx_ref', ref),
+        sb.from('bill_marks').select('status').eq('ref', ref).limit(1)
+      ]) : Promise.resolve(null);   // บิลกรอกเอง = ไม่มีรายการให้ชน
+      return guards.then(function (rs) {
+        if (rs) {
+          if (rs[0].error) throw rs[0].error;
+          var other = (rs[0].data || []).filter(function (x) { return numv(x.id) !== sid && strv(x.status) !== 'cancelled'; });
+          if (other.length) return { ok: false, msg: 'รายการจ่ายนี้มีบิลแชร์ใบอื่นอยู่แล้ว — ยกเลิกใบนั้นก่อน ถ้าจะกู้ใบนี้' };
+          var bm = (!rs[1].error && rs[1].data && rs[1].data[0]) || null;
+          if (bm && strv(bm.status) !== 'open') return { ok: false, msg: 'บิลรอคืนของรายการนี้จบแล้ว — กู้บิลแชร์ไม่ได้' };
+        }
+        return sb.from('bill_shares').update({ status: 'open' }).eq('id', sid).eq('status', 'cancelled').select('id').then(function (u) {
+          if (u.error) throw u.error;
+          if (!u.data || !u.data.length) return { ok: false, msg: 'กู้ได้เฉพาะบิลที่ถูกยกเลิก' };
+          return { ok: true, id: sid };
+        });
+      });
     }).catch(function (e) { return { ok: false, msg: shareErr(e) }; });
   }
 
@@ -1985,6 +2038,7 @@
     shareOwnTicks: shareOwnTicks,  // แก้โดย CC 9 ต.ค. 69: ติ๊ก "ส่วนของเรา"
     lockShare: lockShare,          // แก้โดย CC 9 ต.ค. 69: สรุป → ล็อก + เข้าบิลรอคืนเดิม (markBill)
     cancelShare: cancelShare,      // แก้โดย CC 9 ต.ค. 69: ยกเลิก (ยังไม่ล็อก)
+    restoreShare: restoreShare,    // แก้โดย CC 13 ต.ค. 69 (TASK_cc_billfix_scan_v1 ③): กู้บิลที่ยกเลิก → open (token เดิม)
     setShareMode: setShareMode,    // แก้โดย CC 10 ต.ค. 69 (TASK_cc_readauto_party_v1): ติ๊กเอง ⇄ หารเท่า (จนกว่าล็อก)
     sharePeopleAdd: sharePeopleAdd,          // แก้โดย CC 10 ต.ค. 69 (TASK_cc_billshare_people_v1): หน้าติดตาม — เพิ่มชื่อเพื่อน (จนกว่าล็อก)
     sharePeopleRelease: sharePeopleRelease,  // แก้โดย CC 10 ต.ค. 69: ปล่อยชื่อที่ถูกจอง (ติ๊กคงไว้)
