@@ -708,7 +708,8 @@
       var billMap = {};
       for (var bi = 0; bi < billRows.length; bi++) {
         var brow = billRows[bi];
-        billMap[strv(brow.ref)] = { expect: numv(brow.expect_minor), returned: 0, status: strv(brow.status), marked_at: toThaiLocal(brow.created_at), returns: [] };
+        billMap[strv(brow.ref)] = { expect: numv(brow.expect_minor), returned: 0, status: strv(brow.status), marked_at: toThaiLocal(brow.created_at), returns: [],
+          closed_at: brow.closed_at ? toThaiLocal(brow.closed_at) : '' };   // CC 14 ต.ค. 69 (TASK_cc_billreopen_v1): วันที่ปิด → ส่วน «🗂 บิลปิดแล้ว»
       }
       for (var bj = 0; bj < billRetRows.length; bj++) {
         var bm0 = billMap[strv(billRetRows[bj].bill_ref)];
@@ -828,7 +829,7 @@
             ref: it.ref, name: it.display_name || it.counterparty, at: it.at, amount_minor: it.amount_minor,
             expect_minor: it.bill_expect, returned_minor: it.bill_returned,
             remaining_minor: Math.max(0, it.bill_expect - it.bill_returned), status: it.bill_status,
-            marked_at: bmk.marked_at || '', returns: bmk.returns || []
+            marked_at: bmk.marked_at || '', returns: bmk.returns || [], closed_at: bmk.closed_at || ''
           });
         }
         if (!isIn) {
@@ -1310,6 +1311,21 @@
       return sb.from('bill_marks').update({ status: 'closed', closed_at: nowIso() }).eq('ref', ref).then(function (u) {
         if (u.error) throw u.error;
         return billResult(expect, st.returned, 'closed');
+      });
+    }).catch(function (e) { return { ok: false, msg: billErr(e) }; });
+  }
+
+  // กู้บิลที่ปิด: closed → open/done ตามยอดคืนจริง + ล้าง closed_at · ไม่ได้ปิดอยู่ = ok ไม่แตะ (CC 14 ต.ค. 69 · TASK_cc_billreopen_v1)
+  function reopenBill(ref) {
+    if (!ref) return Promise.resolve({ ok: false, msg: 'ไม่พบรายการ' });
+    return billState(ref).then(function (st) {
+      if (!st.bill) return { ok: false, msg: 'รายการนี้ยังไม่ได้ตีตรารอคืน' };
+      var expect = numv(st.bill.expect_minor);
+      if (strv(st.bill.status) !== 'closed') return billResult(expect, st.returned, strv(st.bill.status));
+      var status = st.returned >= expect ? 'done' : 'open';
+      return sb.from('bill_marks').update({ status: status, closed_at: null }).eq('ref', ref).then(function (u) {
+        if (u.error) throw u.error;
+        return billResult(expect, st.returned, status);
       });
     }).catch(function (e) { return { ok: false, msg: billErr(e) }; });
   }
@@ -2032,6 +2048,7 @@
     markBill: markBill,            // แก้โดย CC 9 ต.ค. 69 (TASK_cc_bill_return_app): บิลรอคืน ย้ายมา Supabase แล้ว
     addBillReturn: addBillReturn,  // แก้โดย CC 9 ต.ค. 69 (+ อาร์กิวเมนต์ที่ 3 = ref แถวเงินเข้า · ไม่ส่ง = กรอกเอง แบบเดิม)
     closeBill: closeBill,          // แก้โดย CC 9 ต.ค. 69
+    reopenBill: reopenBill,        // แก้โดย CC 14 ต.ค. 69 (TASK_cc_billreopen_v1): กู้บิลที่ปิด → open/done
     unmarkBill: unmarkBill,        // แก้โดย CC 9 ต.ค. 69
     splitMoneyIn: splitMoneyIn,    // แก้โดย CC 9 ต.ค. 69 (TASK_cc_bill_return_app2 ข้อ B): แยกเอง — เงินเข้า 1 แถว → คืนหลายบิล + รายรับ + ข้าม
     createShare: createShare,      // แก้โดย CC 9 ต.ค. 69 (TASK_cc_billbox_share): บิลแชร์ — สร้าง (เช็คดุลบิลจริง) → ลิงก์เพื่อน
