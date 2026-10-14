@@ -1670,6 +1670,44 @@
 
   // กู้บิลที่ยกเลิก (CC 13 ต.ค. 69 · TASK_cc_billfix_scan_v1 ③) — cancelled → open · token/ติ๊ก/รายชื่อเดิมคงอยู่ (ลิงก์เพื่อนเดิมใช้ได้อีก)
   //   รายการจ่ายเดียวกันมีบิลใบอื่น active อยู่ = ปฏิเสธ (unique bill_shares_active_tx) · บิลรอคืนของรายการจบแล้ว = ปฏิเสธ (กติกาเดียวกับ createShare)
+  // CC 14 ต.ค. 69 (TASK_cc_billmatch_v1 ②): บิลกรอกเอง (open) → ผูกกับรายการจ่ายจริงทีหลัง · ยอดต้องตรงเป๊ะ · ผูกแล้ว src='tx' (ล็อก = เข้าบิลรอคืนเหมือนบิลผูกปกติ)
+  function linkShareTx(id, txRef) {
+    if (!CURRENT_UID) return Promise.resolve({ ok: false, msg: 'ยังไม่ได้ล็อกอิน — เข้าสู่ระบบก่อน' });
+    var sid = Number(id), ref = strv(txRef);
+    if (!isIntIn(sid, 1, Number.MAX_SAFE_INTEGER)) return Promise.resolve({ ok: false, msg: 'ไม่พบบิลแชร์นี้' });
+    if (!ref) return Promise.resolve({ ok: false, msg: 'เลือกรายการจ่ายก่อน' });
+    return Promise.all([
+      sb.from('bill_shares').select('id,status,src,total_minor,title').eq('id', sid).limit(1),
+      sb.from('transactions').select('ref,direction,amount_minor,kind,counterparty').eq('ref', ref).limit(1),
+      sb.from('bill_shares').select('id,status').eq('tx_ref', ref),
+      sb.from('bill_marks').select('status').eq('ref', ref).limit(1)
+    ]).then(function (rs) {
+      for (var k = 0; k < 3; k++) if (rs[k].error) throw rs[k].error;
+      var s = (rs[0].data && rs[0].data[0]) || null;
+      if (!s) return { ok: false, msg: 'ไม่พบบิลแชร์นี้' };
+      if (strv(s.src) !== 'manual') return { ok: false, msg: 'บิลนี้ผูกอยู่แล้ว' };
+      if (strv(s.status) !== 'open') return { ok: false, msg: 'บิลสรุป/ยกเลิกแล้ว ผูกไม่ได้' };
+      var tx = (rs[1].data && rs[1].data[0]) || null;
+      if (!tx) return { ok: false, msg: 'ไม่พบรายการจ่ายนี้ในตาราง' };
+      tx.direction = strv(tx.direction); tx.kind = strv(tx.kind);
+      if (tx.direction !== 'out' || tx.kind === 'money_in_check' || isWalletXfer(tx)) return { ok: false, msg: 'ผูกได้เฉพาะรายการจ่ายออก (ไม่ใช่ย้ายเงินเข้ากระเป๋า)' };
+      var active = (rs[2].data || []).filter(function (x) { return numv(x.id) !== sid && strv(x.status) !== 'cancelled'; });
+      if (active.length) return { ok: false, msg: 'รายการจ่ายนี้มีบิลแชร์อยู่แล้ว' };
+      // มีบิลรอคืนอยู่แล้ว (ทุกสถานะ) = ไม่ผูก — ตรงกับลิสต์ในแอป (bsTxCands ตัดแถวที่มี bill_status)
+      if (!rs[3].error && rs[3].data && rs[3].data[0]) return { ok: false, msg: 'รายการนี้มีบิลรอคืนอยู่แล้ว — ผูกไม่ได้' };
+      var diff = numv(tx.amount_minor) - numv(s.total_minor);
+      if (diff) return { ok: false, msg: 'ยอดไม่ตรง (ต่าง ฿' + bahtTxt(Math.abs(diff)) + ') — ต้องตรงเป๊ะ', diff_minor: diff };
+      return sb.from('bill_shares').update({ tx_ref: ref, src: 'tx' }).eq('id', sid).eq('src', 'manual').eq('status', 'open').select('id').then(function (u) {
+        if (u.error) throw u.error;
+        if (!u.data || !u.data.length) return { ok: false, msg: 'บิลสรุป/ยกเลิกแล้ว ผูกไม่ได้' };
+        return { ok: true, tx_ref: ref };
+      });
+    }).catch(function (e) {   // ชน unique (23505) → «รายการจ่ายนี้มีบิลแชร์อยู่แล้ว»
+      // shortcut: grant update ระดับคอลัมน์ของ 0012 ยังไม่ครอบ tx_ref/src → DB จริงตอบ 42501 จนกว่าจะ apply migration เปิดสิทธิ์ (รอบนี้ห้าม migration)
+      if (e && (e.code === '42501' || /permission denied/i.test(e.message || ''))) return { ok: false, msg: 'ยังผูกไม่ได้ — ฐานข้อมูลยังไม่เปิดสิทธิ์ผูกทีหลัง (รออัปเดตระบบ)' };
+      return { ok: false, msg: shareErr(e) };
+    });
+  }
   function restoreShare(id) {
     if (!CURRENT_UID) return Promise.resolve({ ok: false, msg: 'ยังไม่ได้ล็อกอิน — เข้าสู่ระบบก่อน' });
     var sid = Number(id);
@@ -2055,6 +2093,7 @@
     shareOwnTicks: shareOwnTicks,  // แก้โดย CC 9 ต.ค. 69: ติ๊ก "ส่วนของเรา"
     lockShare: lockShare,          // แก้โดย CC 9 ต.ค. 69: สรุป → ล็อก + เข้าบิลรอคืนเดิม (markBill)
     cancelShare: cancelShare,      // แก้โดย CC 9 ต.ค. 69: ยกเลิก (ยังไม่ล็อก)
+    linkShareTx: linkShareTx,      // แก้โดย CC 14 ต.ค. 69 (TASK_cc_billmatch_v1 ②): บิลกรอกเอง → ผูกรายการจ่ายจริง (ยอดตรงเป๊ะ)
     restoreShare: restoreShare,    // แก้โดย CC 13 ต.ค. 69 (TASK_cc_billfix_scan_v1 ③): กู้บิลที่ยกเลิก → open (token เดิม)
     setShareMode: setShareMode,    // แก้โดย CC 10 ต.ค. 69 (TASK_cc_readauto_party_v1): ติ๊กเอง ⇄ หารเท่า (จนกว่าล็อก)
     sharePeopleAdd: sharePeopleAdd,          // แก้โดย CC 10 ต.ค. 69 (TASK_cc_billshare_people_v1): หน้าติดตาม — เพิ่มชื่อเพื่อน (จนกว่าล็อก)
