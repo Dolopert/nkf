@@ -491,6 +491,7 @@
         if (ad < win[0] || ad > win[1]) continue;
       } else if (it.at.slice(0, 7) !== monthPrefix) continue;
       if (isWalletXfer(it)) continue;
+      if (notIncome(it)) continue;   // §35-B4 H1-3/H6-2: เงินคืน/ย้ายเงิน ไม่ใช่การได้รับรายรับประจำ
       if (refs[it.ref]) continue;
       if (fcat && it.category !== fcat) continue;
       if (Math.abs(it.amount_minor - f.amount_minor) > tol) continue;
@@ -827,7 +828,8 @@
 
       for (var ri = 0; ri < rows.length; ri++) {
         var it = rows[ri];
-        if (it.kind === 'money_in_check' && it.at.slice(0, 7) === monthPrefix) miTotal++;
+        // §35-B3 H2-2: แถวทิ้ง (skipped ไม่ผูกบิล) ไม่อยู่ในตัวหาร · H6-3: ผูกบิล (skipped+refund) ยังนับ แต่ไม่ขึ้นลิสต์ «เคลียร์แล้ว» (known)
+        if (it.kind === 'money_in_check' && it.at.slice(0, 7) === monthPrefix && (it.status !== 'skipped' || it.species === 'refund')) miTotal++;
         if (it.status === 'skipped') { skippedCount++; continue; }
         var isIn = it.direction === 'in';
         var xf = isWalletXfer(it);
@@ -995,6 +997,10 @@
         flow: flow,
         uiAccounts: uiAccounts,  // CC 10 ต.ค. 69 (TASK_cc_tm_accounts_v1): การ์ดบัญชีเพิ่ม (เป๋าตัง/เงินสด/ธนาคารที่เพิ่มเอง)
         fixed: fx,
+        // §35-B4 H4-1: recurring ขาเข้าที่ active ทุก freq/ทุกเดือน ให้ตัวเสนอ (กติกาเดียวกับ moneyin_detect.match_recurring — id น้อย→มาก · weekly ไม่มีวัน = เทียบยอดอย่างเดียว)
+        recIn: recurringRows.filter(function (r) { return r.active !== false && strv(r.direction) === 'in'; })
+          .sort(function (a, b) { return String(a.id) < String(b.id) ? -1 : (String(a.id) > String(b.id) ? 1 : 0); })
+          .map(function (r) { return { label: strv(r.name), amount_minor: numv(r.amount_minor), day: r.day_of_month == null ? null : numv(r.day_of_month), dir: 'in', freq: strv(r.freq) }; }),
         budgets: bud.items,
         budgetTotals: bud.total,
         mdet: det.months,
@@ -1002,7 +1008,7 @@
         recall: recall,  // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69)
         summary: {
           monthSpent: monthSpent, monthIncome: monthIncome, cashflow: monthIncome - monthSpent,
-          monthRefund: monthRefund, miTotal: miTotal,   // CC 15 ต.ค. 69 (§35)
+          monthRefund: monthRefund, miTotal: miTotal, miMonth: monthPrefix,   // CC 15 ต.ค. 69 (§35) · §35-B3 H2-3: เดือนของ miTotal
           pendingCount: pending.length, pendingSum: pendingSum,
           today: daily[dayKeys[dayKeys.length - 1]] || 0, daily: dailyArr,
           monthOut: monthOut, walletIn: walletIn, walletSpent: walletSpent, walletCount: walletCount

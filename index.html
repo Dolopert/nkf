@@ -751,7 +751,7 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.2.32-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · CC 15 ต.ค. 69: v4.2.32 = §35-B1 พันธุ์&เงิน: กู้กลับคิวไม่นับเงินคืน/ล้างพันธุ์ + ไม่นับซ้ำ bill_returns + pendMark/rollback (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.31 = เคลียร์เงินเข้า: พันธุ์ + สมุดรายชื่อ + เพจจับคู่ท้ายเดือน + ตัวเสนอ 3 ทาง (TASK_cc_mi_clear_v1) · Hermes 16 ต.ค. 69: v4.2.30 = ตัวเสนอเงินเข้า→บิลรอคืน: ลดเพดานเสนอ 5%→1% (P: ของจริงต่างแค่ปัดเศษ 1 บาท) · CC 15 ต.ค. 69: v4.2.29 = เงินเข้า → เสนอบิลรอคืนยอดตรง/ใกล้ (กดยืนยันเอง · TASK_cc_moneyin_propose_v1) · CC 14 ต.ค. 69: v4.2.28 = หารบิลที่ร้าน: ลิสต์ว่างชี้ «กรอกเอง» + ผูกทีหลังกับรายการเงินออก (TASK_cc_billmatch_v1) · CC 14 ต.ค. 69: v4.2.27 = บิลรอคืน: กันปิดพลาด + ประวัติ «บิลปิดแล้ว» + กู้คืน (TASK_cc_billreopen_v1) · CC 13 ต.ค. 69: v4.2.26 = รอยืนยัน: ปิดหาง out-of-order (TASK_cc_pendstale_v2) · CC 13 ต.ค. 69: v4.2.25 = รอยืนยัน: กัน response เก่าทับสถานะใหม่ (TASK_cc_pendstale_v1) · CC 13 ต.ค. 69: v4.2.24 = เพิ่มรายการ: enter/Done แค่ปิดพิมพ์ ไม่บันทึก (TASK_cc_enter_v1) · CC 13 ต.ค. 69: v4.2.23 = เพจ «บิลรอคืน» แยกหน้า (TASK_cc_billret_page_v1) · CC 13 ต.ค. 69: v4.2.22 = บิล: ยกเลิกแล้วรายการกลับขึ้นชุดแรก + กรอกราคาเอง + กู้บิล (TASK_cc_billfix_scan_v1) · CC 11 ต.ค. 69: v4.2.21 = ความจำร้านชุดเดียว ใช้ทุกช่องทางเข้า (ชิป «แนะนำ» แถวนำเข้าในแอป + ชื่อโชว์รหัสเทียบ statement · TASK_cc_shopmem_v1) · CC 10 ต.ค. 69: v4.2.20 = หน้า «บิล» + แบดจ์ + กระพริบ 10 วิ (TASK_cc_billlist_v1) · v4.2.19 = TrueMoney คงเหลือจริงจาก statement + บัญชียอดตั้งเอง (เป๋าตัง/เงินสด/ทะเบียนธนาคารไทย · TASK_cc_tm_accounts_v1) · v4.2.18 = บิลแชร์ จัดการรายชื่อ («ไม่ใช่ฉัน» หน้าเพื่อน + ปล่อย/ลบ/เพิ่มชื่อหน้าติดตาม) + หารเท่าไม่มีชื่อ (ตั้งจำนวนคน · TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน + ปุ่ม ‹ › (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติจากภาพ (Edge Function readbill · เหลือง = ไม่ชัวร์ · ชิปเซอร์วิส/VAT ตามบิล) + โหมดหารเท่า (TASK_cc_readauto_party_v1) · v4.2.15 = ซูม/ครอปภาพบิล v2 (ลากขอบปรับด้านเดียว + บีบ 2 โหมด: กลาง=ซูม · ขอบซ้าย/ขวา=ปรับกรอบ · TASK_cc_zoomcrop_v1) · v4.2.14 = แชร์บิล v3.1 ① รายการที่จ่ายไปล่าสุด (5/ชุด + ปัดเปลี่ยนชุด + กรองเฉพาะที่เริ่มบิลได้ · TASK_cc_billshare_v31_picker) · v4.2.13 = แชร์บิล v3 (จดต่อเนื่อง + ⋮ แผงล่าง แยก 2/3/กำหนดเอง + เพื่อนเป็น + + ซูม/ครอปภาพบิล · TASK_cc_billshare_v3) · CC 9 ต.ค. 69: v4.2.12 = บิลแชร์ เพื่อนติ๊กเอง + แถวปุ่มลัดหน้าหลัก (TASK_cc_billbox_share) · v4.2.11 = บิลรอคืน รอบ 2 (ปุ่มบิลในหน้ารายการ + แยกเอง + ส่วนของเรา · TASK_cc_bill_return_app2) · v4.2.10 = บิลรอคืนบน Supabase (TASK_cc_bill_return_app) · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
+var APP_BUILD = 'v4.2.35-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · CC 15 ต.ค. 69: v4.2.35 = §35-B4 ตัวเสนอ+พันธุ์: เงินคืน/ย้ายเงินไม่ใช่ «ได้รับแล้ว» ของรายรับประจำ + ตัวเสนอใช้ recurring ขาเข้าทุก freq/ทุกเดือน + ชิปพันธุ์ในประวัติ (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.34 = §35-B3 เพจจับคู่: ช่องชื่อเล่นต่อแถว + แถวทิ้งไม่นับ X/Y + แบดจ์หักที่ข้าม/เอากลับได้ + ข้ามเดือนไม่ใช้ตัวหารเก่า (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.33 = §35-B2 สมุดรายชื่อ: เพิ่มเพื่อนใหม่ส่งชื่อจริง/X + id จริงจาก personAdd + คำนำหน้าติดชื่อ + แถวมีแต่ X (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.32 = §35-B1 พันธุ์&เงิน: กู้กลับคิวไม่นับเงินคืน/ล้างพันธุ์ + ไม่นับซ้ำ bill_returns + pendMark/rollback (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.31 = เคลียร์เงินเข้า: พันธุ์ + สมุดรายชื่อ + เพจจับคู่ท้ายเดือน + ตัวเสนอ 3 ทาง (TASK_cc_mi_clear_v1) · Hermes 16 ต.ค. 69: v4.2.30 = ตัวเสนอเงินเข้า→บิลรอคืน: ลดเพดานเสนอ 5%→1% (P: ของจริงต่างแค่ปัดเศษ 1 บาท) · CC 15 ต.ค. 69: v4.2.29 = เงินเข้า → เสนอบิลรอคืนยอดตรง/ใกล้ (กดยืนยันเอง · TASK_cc_moneyin_propose_v1) · CC 14 ต.ค. 69: v4.2.28 = หารบิลที่ร้าน: ลิสต์ว่างชี้ «กรอกเอง» + ผูกทีหลังกับรายการเงินออก (TASK_cc_billmatch_v1) · CC 14 ต.ค. 69: v4.2.27 = บิลรอคืน: กันปิดพลาด + ประวัติ «บิลปิดแล้ว» + กู้คืน (TASK_cc_billreopen_v1) · CC 13 ต.ค. 69: v4.2.26 = รอยืนยัน: ปิดหาง out-of-order (TASK_cc_pendstale_v2) · CC 13 ต.ค. 69: v4.2.25 = รอยืนยัน: กัน response เก่าทับสถานะใหม่ (TASK_cc_pendstale_v1) · CC 13 ต.ค. 69: v4.2.24 = เพิ่มรายการ: enter/Done แค่ปิดพิมพ์ ไม่บันทึก (TASK_cc_enter_v1) · CC 13 ต.ค. 69: v4.2.23 = เพจ «บิลรอคืน» แยกหน้า (TASK_cc_billret_page_v1) · CC 13 ต.ค. 69: v4.2.22 = บิล: ยกเลิกแล้วรายการกลับขึ้นชุดแรก + กรอกราคาเอง + กู้บิล (TASK_cc_billfix_scan_v1) · CC 11 ต.ค. 69: v4.2.21 = ความจำร้านชุดเดียว ใช้ทุกช่องทางเข้า (ชิป «แนะนำ» แถวนำเข้าในแอป + ชื่อโชว์รหัสเทียบ statement · TASK_cc_shopmem_v1) · CC 10 ต.ค. 69: v4.2.20 = หน้า «บิล» + แบดจ์ + กระพริบ 10 วิ (TASK_cc_billlist_v1) · v4.2.19 = TrueMoney คงเหลือจริงจาก statement + บัญชียอดตั้งเอง (เป๋าตัง/เงินสด/ทะเบียนธนาคารไทย · TASK_cc_tm_accounts_v1) · v4.2.18 = บิลแชร์ จัดการรายชื่อ («ไม่ใช่ฉัน» หน้าเพื่อน + ปล่อย/ลบ/เพิ่มชื่อหน้าติดตาม) + หารเท่าไม่มีชื่อ (ตั้งจำนวนคน · TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน + ปุ่ม ‹ › (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติจากภาพ (Edge Function readbill · เหลือง = ไม่ชัวร์ · ชิปเซอร์วิส/VAT ตามบิล) + โหมดหารเท่า (TASK_cc_readauto_party_v1) · v4.2.15 = ซูม/ครอปภาพบิล v2 (ลากขอบปรับด้านเดียว + บีบ 2 โหมด: กลาง=ซูม · ขอบซ้าย/ขวา=ปรับกรอบ · TASK_cc_zoomcrop_v1) · v4.2.14 = แชร์บิล v3.1 ① รายการที่จ่ายไปล่าสุด (5/ชุด + ปัดเปลี่ยนชุด + กรองเฉพาะที่เริ่มบิลได้ · TASK_cc_billshare_v31_picker) · v4.2.13 = แชร์บิล v3 (จดต่อเนื่อง + ⋮ แผงล่าง แยก 2/3/กำหนดเอง + เพื่อนเป็น + + ซูม/ครอปภาพบิล · TASK_cc_billshare_v3) · CC 9 ต.ค. 69: v4.2.12 = บิลแชร์ เพื่อนติ๊กเอง + แถวปุ่มลัดหน้าหลัก (TASK_cc_billbox_share) · v4.2.11 = บิลรอคืน รอบ 2 (ปุ่มบิลในหน้ารายการ + แยกเอง + ส่วนของเรา · TASK_cc_bill_return_app2) · v4.2.10 = บิลรอคืนบน Supabase (TASK_cc_bill_return_app) · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
 var S = { data:null, tab:0, open:{}, ext:{}, miPropSkip:{}, miPropMore:{}, micOpen:{}, micSkip:{}, pbEdit:null, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, budForm:null, budOpen:{}, view:null, imp:null, pMonth:null, hMonth:null, recLumpOpen:false, catForm:null, shortForm:null };  // catForm/shortForm: Hermes 7 ต.ค. 69 — ฟอร์มหมวดทำเอง/รายการลัด (หน้าแยก v4.2.8)  // hMonth: CC 10 ต.ค. 69 — เดือนที่เลือกในแท็บรายการ (แยกจาก pMonth ของรอยืนยัน)  // pMonth: แก้โดย Hermes 5 ต.ค. 69 — เดือนที่เลือกในแท็บรอยืนยัน (แยกเดือน) · recLumpOpen: Hermes 7 ต.ค. 69 (§16) — กาง "ก้อนรายจ่ายประจำ" ในงบรายหมวด
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
@@ -1596,7 +1596,7 @@ function htmlPending(d){
     chips += '</div>';
   }
   var rows = items.map(function(it){ return pendingRow(d, it); }).join('');
-  var micN = miClearRows(d).length;   // CC 15 ต.ค. 69 (§35 C4②): ลิงก์จิ๋ว — เปิดเมื่อพี่กดเท่านั้น
+  var micN = miClearModel(d).rows.length;   // CC 15 ต.ค. 69 (§35 C4②): ลิงก์จิ๋ว — เปิดเมื่อพี่กดเท่านั้น · §35-B3 H6-4: หัก «⏭ ข้าม» ให้ตรงกับเพจ
   return '<div class="list-hd"><div class="l"><div class="t1">รอยืนยัน · '+d.summary.pendingCount+'</div><div class="t2">รวม ฿'+fmtBaht(d.summary.pendingSum)+'</div></div></div>'
     + (micN ? '<button class="mic-link" type="button" data-act="fnMiClear">🧹 จับคู่ท้ายเดือน ('+micN+') ›</button>' : '')
     + chips
@@ -1817,15 +1817,15 @@ var MI_SPECIES = { income: '💰 รายรับ', refund: '↩ เงิน�
 function miSpeciesChip(it){ var t = it && MI_SPECIES[it.species]; return t ? ' <span class="mi-sp mi-sp-'+it.species+'">'+t+'</span>' : ''; }
 /* B4 ชุดเทียบชื่อ «เหมือนขุนทอง»: ตัดคำนำหน้า/++/X…/อักขระควบคุม · ชื่อต้นตรง + นามสกุลเป็น prefix ≥ 3 ตัว (statement ตัดกลางคำ)
    · X… ตรง หรือชื่อเล่นตรง = ผู้สมัครเช่นกัน · ได้หลายคน = คืนทุกคน (ห้ามเลือกให้ — มี «ณัฏฐณิชา» สองคนจริง) */
-var PB_PREFIX_RE = /^(?:น\.\s*ส\.|(?:นางสาว|นาย|นาง|นส\.?)(?=\s)|(?:miss|mrs|mr|ms)(?:\.|(?=\s)))\s*/i;
+var PB_PREFIX_RE = /^(?:น\.\s*ส\.|นางสาว|นาย|นส(?:\.|(?=\s))|นาง(?=\s)|(?:miss|mrs|mr|ms)(?:\.|(?=\s)))\s*/i;   // §35-B2 H3-3: นาย/นางสาว ติดชื่อก็ตัด (statement มีทั้งสองแบบ) · นาง/นส ยังต้องมีวรรค/จุด (นางฟ้า · นสรินทร์ = ชื่อ)
 var PB_X_RE = /\bX\d{3,6}\b/i;
 function pbNorm(s){
   return String(s || '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\+\+/g, ' ').replace(new RegExp(PB_X_RE.source, 'ig'), ' ')
     .replace(/\s+/g, ' ').trim().replace(PB_PREFIX_RE, '').trim().toLowerCase();
 }
 function pbMatch(raw, people){
-  var n = pbNorm(raw); if (!n || n === 'เงินเข้า') return [];
   var xm = String(raw || '').match(PB_X_RE), x = xm ? xm[0].toUpperCase() : '';
+  var n = pbNorm(raw); if ((!n || n === 'เงินเข้า') && !x) return [];   // §35-B2 H3-1: แถวมีแต่ X… ยังจับ x_lead ได้
   var t = n.split(' '), f = t[0], l = t.length > 1 ? t[t.length - 1] : '';
   return (people || []).filter(function(p){
     if (x && String(p.x_lead || '').toUpperCase() === x) return true;
@@ -1838,13 +1838,18 @@ function pbMatch(raw, people){
   });
 }
 function miRowName(it){ return it.display_name || (it.counterparty && it.counterparty !== 'เงินเข้า' ? it.counterparty : ''); }
+function miMatchKey(it){ var xm = String(it.note || '').match(PB_X_RE); return miRowName(it) + (xm ? ' ' + xm[0] : ''); }   // §35-B2 H3-1: X… ใน note (ที่ personFill เก็บไว้) ต้องจับกลับได้
+function miRowPerson(it){   // ชื่อจริง/X จากแถว — ชุดเดียวกับ bridge.personFill
+  var raw = String(it.counterparty || ''), xm = (raw + ' ' + String(it.note || '')).match(PB_X_RE), full = raw.replace(PB_X_RE, '').replace(/\+\+/g, '').replace(/\s+/g, ' ').trim();
+  return { full: full !== 'เงินเข้า' ? full : '', x: xm ? xm[0].toUpperCase() : '' };
+}
 function miDay(at){ return parseInt(String(at || '').slice(8, 10), 10) || 0; }
 function miNear(a, b){ return Math.abs(a - b) <= Math.max(Math.round(Math.max(a, b) * 0.02), 500); }   // ±2% (ขั้นต่ำ ฿5) — กติกาเดียวกับ moneyin_detect.py
-/* D1 รายรับประจำ: recurring ขาเข้าที่ active (= S.data.fixed dir 'in') · ยอด ±2% · วันในเดือนห่าง ≤ 3 */
+/* D1 รายรับประจำ: recurring ขาเข้าที่ active (§35-B4 H4-1: S.data.recIn ทุก freq/ทุกเดือน · ไม่มี = fallback S.data.fixed ตัด weekly) · ยอด ±2% · วันในเดือนห่าง ≤ 3 */
 function miRecCands(it){
-  var day = miDay(it.at);
-  return ((S.data && S.data.fixed) || []).filter(function(f){
-    return f.dir === 'in' && f.freq !== 'weekly' && miNear(f.amount_minor, it.amount_minor) && !(f.day && day && Math.abs(f.day - day) > 3);
+  var day = miDay(it.at), rin = S.data && S.data.recIn;
+  return (rin || (S.data && S.data.fixed) || []).filter(function(f){
+    return f.dir === 'in' && (rin || f.freq !== 'weekly') && miNear(f.amount_minor, it.amount_minor) && !(f.day && day && Math.abs(f.day - day) > 3);
   });
 }
 /* D3 ลวดลายจากประวัติ: รายรับที่ยืนยันแล้ว ยอด ±2% + วัน ±3 ซ้ำ ≥ 2 เดือนก่อนหน้า (ไม่มี recurring) → เสนอ «เห็นทุกเดือน» · กด = species income เท่านั้น ไม่สร้าง recurring */
@@ -1860,7 +1865,7 @@ function miHistCand(it){
 }
 function miPropExtra(it, room){
   if (!(room > 0) || !(it.amount_minor > 0)) return [];
-  var out = pbMatch(miRowName(it), S.data && S.data.people).map(function(p){ return { t: 'person', p: p }; });
+  var out = pbMatch(miMatchKey(it), S.data && S.data.people).map(function(p){ return { t: 'person', p: p }; });
   var rec = miRecCands(it);
   rec.forEach(function(f){ out.push({ t: 'rec', name: f.label }); });
   if (!rec.length){ var h = miHistCand(it); if (h) out.push(h); }
@@ -1900,9 +1905,9 @@ function miSetSpecies(ref, species, nick, person){
   if (species === 'refund' && nick) it.counterparty = nick;
   if (bumped) S.data.summary.monthRefund = (S.data.summary.monthRefund || 0) + amt;
   if (person){
-    var xm = (String(raw || '') + ' ' + String(it.note || '')).match(PB_X_RE), full = String(raw || '').replace(PB_X_RE, '').replace(/\+\+/g, '').replace(/\s+/g, ' ').trim();
-    if (!person.full_name && full && full !== 'เงินเข้า') person.full_name = full;
-    if (!person.x_lead && xm) person.x_lead = xm[0].toUpperCase();
+    var rp = miRowPerson({ counterparty: raw, note: it.note });
+    if (!person.full_name && rp.full) person.full_name = rp.full;
+    if (!person.x_lead && rp.x) person.x_lead = rp.x;
   }
   S.open[ref] = false; S.ext[ref] = false; delete S.micOpen[ref];
   recalcSummary(); paint();
@@ -1928,7 +1933,8 @@ function miClearRows(d){
 function miClearModel(d){   // X/Y: Y = เงินเข้าตรวจอัตโนมัติเดือนนี้ทั้งหมด (bridge summary.miTotal) · X = Y − ที่ยังค้าง · «⏭ ข้าม» = ออกจากลิสต์แต่ไม่นับว่าเคลียร์
   var mk = curMonthKey(), open = miClearRows(d);
   var doneLocal = ((d && d.history) || []).filter(function(it){ return it.kind === 'money_in_check' && (it.at || '').slice(0, 7) === mk; });
-  var total = Math.max((d && d.summary && d.summary.miTotal) || 0, open.length + doneLocal.length);
+  var mt = (d && d.summary && d.summary.miMonth === mk) ? (d.summary.miTotal || 0) : 0;   // §35-B3 H2-3: payload เดือนก่อน (ข้ามเดือนกลางเซสชัน) = ไม่ใช้ตัวหารเก่า
+  var total = Math.max(mt, open.length + doneLocal.length);
   return { rows: open.filter(function(it){ return !S.micSkip[it.ref]; }), open: open.length, total: total, done: total - open.length, cleared: doneLocal };
 }
 var MIC_ACTS = { bill: 'micAct', friend: 'micAct', income: 'micInc', xfer: 'micXfer', skip: 'micSkip' };   // ปุ่ม → การกระทำ (เทสต์ map)
@@ -1953,14 +1959,14 @@ function micRow(it){
       + (bl.length && !fit.length ? '<div class="bt">ยอดเกินที่เหลือของทุกบิล — ใช้ «✏️ แยกเอง» ในแท็บรอยืนยัน</div>' : '') + '</div>';
   }
   if (o === 'friend'){
-    var P = (S.data && S.data.people) || [], cand = pbMatch(nm, P), cid = {};
+    var P = (S.data && S.data.people) || [], cand = pbMatch(miMatchKey(it), P), cid = {};
     cand.forEach(function(p){ cid[p.id] = 1; });
     var rest = P.filter(function(p){ return !cid[p.id]; });
     function pb(p, star){ return '<button class="miniact'+(star ? ' cy2' : '')+'" type="button" data-act="micFriend" data-ref="'+ref+'" data-pid="'+esc(p.id)+'">'+(star ? '★ ' : '')+esc(p.nickname)+'</button>'; }
     h += '<div class="billbox open"><div class="bt">👥 เงินคืนจากใคร?'+(cand.length ? ' · ★ = ชื่อตรงกับในรายการ' : '')+'</div>'
       + (P.length ? '<div class="incbtns">' + cand.map(function(p){ return pb(p, true); }).join('') + rest.map(function(p){ return pb(p, false); }).join('') + '</div>'
                   : '<div class="bt">ยังไม่มีรายชื่อ — พิมพ์ชื่อเล่นด้านล่างได้เลย</div>')
-      + '<div class="renbox" style="margin-top:8px"><input id="micNick" type="text" maxlength="30" placeholder="＋ เพิ่มคน (ชื่อเล่น)">'
+      + '<div class="renbox" style="margin-top:8px"><input id="micNick-'+ref+'" type="text" maxlength="30" placeholder="＋ เพิ่มคน (ชื่อเล่น)">'
       + '<button class="save" type="button" data-act="micFriendNew" data-ref="'+ref+'">เพิ่มแล้วเลือก</button></div>'
       + '<div class="incbtns"><button class="miniact" type="button" data-act="micPeople">📒 จัดการรายชื่อ</button></div></div>';
   }
@@ -1974,6 +1980,7 @@ function miClearPageHtml(){
     + '<div class="incbtns" style="margin:0 0 10px"><button class="miniact" type="button" data-act="micPeople">📒 รายชื่อเพื่อน ('+(((S.data && S.data.people) || []).length)+') ›</button></div>';
   h += M.rows.length ? '<div class="card">' + M.rows.map(micRow).join('') + '</div>'
     : '<div class="bl-empty">'+(M.open ? 'ข้ามไว้หมดแล้ว — ค้างอยู่ '+M.open+' ก้อน (ยังอยู่ในแท็บรอยืนยัน)' : 'เคลียร์ครบ 🎉 ไม่มีเงินเข้าค้างเดือนนี้')+'</div>';
+  if (M.open > M.rows.length) h += '<div class="incbtns" style="margin:8px 0"><button class="miniact" type="button" data-act="micUnskip">↩ เอาที่ข้ามไว้กลับมา ('+(M.open - M.rows.length)+')</button></div>';   // §35-B3 H2-5
   if (M.cleared.length) h += '<div class="sec-t">เคลียร์แล้วเดือนนี้</div><div class="card">' + M.cleared.map(function(it){
       return '<div class="bl-row"><span class="l">'+esc(it.counterparty || 'เงินเข้า')+miSpeciesChip(it)+'<span class="sub">'+fmtWhen(it.at)+'</span></span><span class="r ok">+'+fmtBaht(it.amount_minor)+'฿</span></div>';
     }).join('') + '</div>';
@@ -1981,14 +1988,20 @@ function miClearPageHtml(){
 }
 function micFind(nick){ var k = String(nick || '').toLowerCase(); return ((S.data && S.data.people) || []).filter(function(p){ return p.nickname.toLowerCase() === k; })[0] || null; }
 function micFriendNew(ref){
-  var inp = el('micNick'), nick = inp ? String(inp.value || '').replace(/\s+/g, ' ').trim().slice(0, 30) : '';
+  var inp = el('micNick-' + ref), nick = inp ? String(inp.value || '').replace(/\s+/g, ' ').trim().slice(0, 30) : '';   // §35-B3 H2-1: id ต่อแถว — เปิดหลายแถวไม่อ่านช่องแถวอื่น
   if (!nick){ toast('พิมพ์ชื่อเล่นก่อนนะ', true); return; }
   var p = micFind(nick);
-  if (!p){ p = pbAddLocal({ nickname: nick }); if (!IS_DEMO) callAction('personAdd', [{ nickname: nick }], ''); }
+  if (!p){   // §35-B2 H5-1/H2-6: ชื่อจริง/X จากแถวไปกับ insert เลย (id ยังติดลบ → setMoneyInSpecies ส่ง 0 → bridge ไม่ personFill)
+    var rp = miRowPerson(findItem(ref) || {}), f = { nickname: nick, full_name: rp.full, x_lead: rp.x };
+    p = pbAddLocal(f); if (!IS_DEMO) callAction('personAdd', [f], '', null, pbSynced(p));
+  }
   miSetSpecies(ref, 'refund', p.nickname, p);
 }
 /* ---------- B สมุดรายชื่อ (เพจ people) ---------- */
 var PB_SEQ = 0;
+function pbSynced(p){   // §35-B2 H3-2/H5-4: onOk ของ personAdd → id จริง · ถ้าลบไปก่อน insert จบ → ลบตาม (ไม่งั้นโหลดใหม่ฟื้นคืนชีพ)
+  return function(res){ if (!res || !res.id) return; p.id = res.id; if (p.gone) callAction('personDelete', [p.id], ''); };
+}
 function pbAddLocal(f){
   if (!S.data.people) S.data.people = [];
   var p = { id: -(++PB_SEQ), nickname: f.nickname, full_name: f.full_name || '', x_lead: f.x_lead || '', note: f.note || '' };   // id ติดลบ = ยังไม่ sync (โหลดใหม่ได้ id จริง)
@@ -2028,7 +2041,7 @@ function pbSave(id){
   var dup = micFind(f.nickname);
   if (dup && String(dup.id) !== String(id)){ toast('มีชื่อเล่น «' + dup.nickname + '» ในสมุดแล้ว — ใช้ชื่ออื่นหรือแก้คนเดิมนะ', true); return; }
   S.pbEdit = null;
-  if (id === 'new'){ pbAddLocal(f); paint(); toast('เพิ่ม ' + f.nickname + ' แล้ว'); if (!IS_DEMO) callAction('personAdd', [f], ''); return; }
+  if (id === 'new'){ var np = pbAddLocal(f); paint(); toast('เพิ่ม ' + f.nickname + ' แล้ว'); if (!IS_DEMO) callAction('personAdd', [f], '', null, pbSynced(np)); return; }
   var p = ((S.data && S.data.people) || []).filter(function(x){ return String(x.id) === String(id); })[0]; if (!p) return;
   for (var k in f) p[k] = f[k];
   paint(); toast('บันทึก ' + f.nickname + ' แล้ว');
@@ -2039,7 +2052,7 @@ function pbDel(id){
   if (typeof confirm === 'function' && !confirm('ลบ «' + p.nickname + '» ออกจากสมุดรายชื่อ?')) return;
   S.data.people = S.data.people.filter(function(x){ return x !== p; });
   S.pbEdit = null; paint(); toast('ลบ ' + p.nickname + ' แล้ว');
-  if (!IS_DEMO && p.id > 0) callAction('personDelete', [p.id], '');
+  if (!IS_DEMO && p.id > 0) callAction('personDelete', [p.id], ''); else p.gone = 1;   // id ติดลบ = insert ยังไม่จบ → pbSynced ลบให้
 }
 function pbImport(){   // ชื่อ distinct จากบิลแชร์ (bill_share_people) → ชื่อเล่นที่ยังไม่มี · bridge personImport ทำชุดเดียวกันฝั่ง DB
   var seen = {}, add = 0, skip = 0;
@@ -2340,7 +2353,7 @@ function historyRow(d, it){
   }
   return '<div class="item hitem'+(open?' open':'')+'" data-act="toggle" data-ref="'+esc(it.ref)+'">'
     + '<div class="icw">'+rowIcon(it)+'</div>'
-    + '<div class="mid"><div class="nm">'+esc(shortName(it))+'</div><div class="sub">'+fmtWhen(it.at)+' · '+(xf ? 'ย้ายเข้ากระเป๋า' : (KIND[it.kind]||it.kind))+'</div></div>'
+    + '<div class="mid"><div class="nm">'+esc(shortName(it))+'</div><div class="sub">'+fmtWhen(it.at)+' · '+(xf ? 'ย้ายเข้ากระเป๋า' : (KIND[it.kind]||it.kind))+miSpeciesChip(it)+'</div></div>'   // §35-B4 H6-5: โชว์พันธุ์ในประวัติด้วย
     + '<div class="rt"><div class="amt'+(it.direction==='in'?' in':(xf?' amtxf':''))+'">'+fmtBaht(it.amount_minor)+'฿</div>'
     + (xf ? '<div class="cchip xf">ไม่นับรายจ่าย</div>' : '<div class="cchip done">'+m.t+'</div>')
     + billChip+'</div>'
@@ -2688,7 +2701,7 @@ function htmlSettings(d){
     + cardMyCats(d)        // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หมวดทำเอง
     + cardMyShortcuts(d)   // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): รายการลัด
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.32-supabase</span></div>'  // CC 15 ต.ค. 69: v4.2.32 = §35-B1 พันธุ์&เงิน (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.31 = เคลียร์เงินเข้า (TASK_cc_mi_clear_v1) · Hermes 16 ต.ค. 69: v4.2.30 = ตัวเสนอเงินเข้า→บิลรอคืน เพดาน 5%→1% · CC 15 ต.ค. 69: v4.2.29 = เงินเข้า → เสนอบิลรอคืน (TASK_cc_moneyin_propose_v1) · CC 14 ต.ค. 69: v4.2.28 = หารบิลที่ร้าน กรอกเอง/ผูกทีหลัง (TASK_cc_billmatch_v1) · CC 14 ต.ค. 69: v4.2.27 = บิลรอคืน กันปิดพลาด/บิลปิดแล้ว/กู้คืน (TASK_cc_billreopen_v1) · CC 13 ต.ค. 69: v4.2.26 = รอยืนยัน: ปิดหาง out-of-order (TASK_cc_pendstale_v2) · CC 13 ต.ค. 69: v4.2.25 = รอยืนยัน: กัน response เก่าทับสถานะใหม่ (TASK_cc_pendstale_v1) · CC 13 ต.ค. 69: v4.2.24 = เพิ่มรายการ: enter/Done แค่ปิดพิมพ์ ไม่บันทึก (TASK_cc_enter_v1) · CC 13 ต.ค. 69: v4.2.23 = เพจ «บิลรอคืน» แยกหน้า (TASK_cc_billret_page_v1) · CC 13 ต.ค. 69: v4.2.22 = บิล ยกเลิก/กรอกเอง/กู้ (TASK_cc_billfix_scan_v1) · CC 11 ต.ค. 69: v4.2.21 = ความจำร้านชุดเดียว ใช้ทุกช่องทางเข้า (TASK_cc_shopmem_v1) · CC 10 ต.ค. 69: v4.2.20 = หน้า «บิล» (TASK_cc_billlist_v1) · v4.2.19 = TrueMoney คงเหลือจริง + บัญชียอดตั้งเอง (TASK_cc_tm_accounts_v1) · v4.2.18 = บิลแชร์ จัดการรายชื่อ + หารเท่าไม่มีชื่อ (TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติ + หารเท่า · v4.2.15 = ซูม/ครอปภาพบิล v2 · v4.2.14 = แชร์บิล v3.1 picker ① · v4.2.13 = แชร์บิล v3 · CC 9 ต.ค. 69: v4.2.11 = บิลรอคืน รอบ 2 · v4.2.10 = บิลรอคืนบน Supabase · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.35-supabase</span></div>'  // CC 15 ต.ค. 69: v4.2.35 = §35-B4 ตัวเสนอ + แสดงพันธุ์ (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.34 = §35-B3 เพจ/DOM + ตัวนับ X/Y (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.33 = §35-B2 สมุดรายชื่อ (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.32 = §35-B1 พันธุ์&เงิน (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.31 = เคลียร์เงินเข้า (TASK_cc_mi_clear_v1) · Hermes 16 ต.ค. 69: v4.2.30 = ตัวเสนอเงินเข้า→บิลรอคืน เพดาน 5%→1% · CC 15 ต.ค. 69: v4.2.29 = เงินเข้า → เสนอบิลรอคืน (TASK_cc_moneyin_propose_v1) · CC 14 ต.ค. 69: v4.2.28 = หารบิลที่ร้าน กรอกเอง/ผูกทีหลัง (TASK_cc_billmatch_v1) · CC 14 ต.ค. 69: v4.2.27 = บิลรอคืน กันปิดพลาด/บิลปิดแล้ว/กู้คืน (TASK_cc_billreopen_v1) · CC 13 ต.ค. 69: v4.2.26 = รอยืนยัน: ปิดหาง out-of-order (TASK_cc_pendstale_v2) · CC 13 ต.ค. 69: v4.2.25 = รอยืนยัน: กัน response เก่าทับสถานะใหม่ (TASK_cc_pendstale_v1) · CC 13 ต.ค. 69: v4.2.24 = เพิ่มรายการ: enter/Done แค่ปิดพิมพ์ ไม่บันทึก (TASK_cc_enter_v1) · CC 13 ต.ค. 69: v4.2.23 = เพจ «บิลรอคืน» แยกหน้า (TASK_cc_billret_page_v1) · CC 13 ต.ค. 69: v4.2.22 = บิล ยกเลิก/กรอกเอง/กู้ (TASK_cc_billfix_scan_v1) · CC 11 ต.ค. 69: v4.2.21 = ความจำร้านชุดเดียว ใช้ทุกช่องทางเข้า (TASK_cc_shopmem_v1) · CC 10 ต.ค. 69: v4.2.20 = หน้า «บิล» (TASK_cc_billlist_v1) · v4.2.19 = TrueMoney คงเหลือจริง + บัญชียอดตั้งเอง (TASK_cc_tm_accounts_v1) · v4.2.18 = บิลแชร์ จัดการรายชื่อ + หารเท่าไม่มีชื่อ (TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติ + หารเท่า · v4.2.15 = ซูม/ครอปภาพบิล v2 · v4.2.14 = แชร์บิล v3.1 picker ① · v4.2.13 = แชร์บิล v3 · CC 9 ต.ค. 69: v4.2.11 = บิลรอคืน รอบ 2 · v4.2.10 = บิลรอคืนบน Supabase · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -3042,6 +3055,7 @@ document.addEventListener('click', function(e){
   if (act === 'micInc') { var mi2 = findItem(ref); if (mi2) { delete S.micOpen[ref]; moneyInYes(ref, mi2.counterparty || 'เงินเข้า'); } return; }
   if (act === 'micXfer') { miSetSpecies(ref, 'xfer', '', null); return; }
   if (act === 'micSkip') { S.micSkip[ref] = true; delete S.micOpen[ref]; paint(); toast('ข้ามไว้ก่อน — ยังอยู่ในรอยืนยัน ไม่ต้องรีบ'); return; }   // ไม่แตะแถว (คง new)
+  if (act === 'micUnskip') { S.micSkip = {}; paint(); return; }   // §35-B3 H2-5: เลิกข้ามทั้งหมด (session เท่านั้น)
   if (act === 'micPeople') { S.pbEdit = null; openView({ t: 'people' }, S.view); return; }
   if (act === 'pbNew') { S.pbEdit = 'new'; paint(); return; }
   if (act === 'pbEdit') { S.pbEdit = t.getAttribute('data-id'); paint(); return; }
@@ -4906,7 +4920,7 @@ var FN_ICONS = {
 function htmlFns(){
   function fn(act, key, label, n, cls){ return '<button class="fn'+(cls || '')+'" type="button" data-act="'+act+'"><div class="ic"><svg viewBox="0 0 24 24">'+FN_ICONS[key]+'</svg>'+(n > 0 ? '<span class="nb">'+(n > 99 ? '99+' : n)+'</span>' : '')+'</div><div class="lb">'+label+'</div></button>'; }
   return '<div class="fns">' + fn('fnScan', 'scan', 'สแกนบิล') + fn('fnShare', 'share', 'แชร์บิล') + fn('fnBills', 'bills', 'บิล', billCount(S.data), S.billBlink ? ' fn-blink' : '')
-    + fn('fnMiClear', 'clear', 'เคลียร์', miClearRows(S.data).length)   // CC 15 ต.ค. 69 (§35 C4①): เงินเข้าเดือนนี้ที่ยังไม่รู้ที่มา
+    + fn('fnMiClear', 'clear', 'เคลียร์', miClearModel(S.data).rows.length)   // CC 15 ต.ค. 69 (§35 C4①): เงินเข้าเดือนนี้ที่ยังไม่รู้ที่มา · §35-B3 H6-4: หัก «⏭ ข้าม»
     + fn('recNew', 'add', 'เพิ่มรายการ') + fn('fnImp', 'imp', 'นำเข้า') + '</div>';
 }
 function bsShares(){ return ((S.data && S.data.shares) || []).filter(function(s){ return s.status !== 'cancelled'; }); }
@@ -6352,7 +6366,7 @@ var DEMO = {
     truemoney:{ total_minor:0, transfer_minor:0, cats:[] }
   },
   people:[],   // CC 15 ต.ค. 69 (§35): สมุดรายชื่อเดโม่ว่าง — ลองกด «ดึงชื่อจากบิลเก่า» ได้ (บิลแชร์เดโม่มีเพื่อน A–D)
-  summary:{ monthSpent:501050, monthIncome:2500000, cashflow:1998950, pendingCount:10, pendingSum:72200, today:5000, monthRefund:0, miTotal:1,  // CC 11 ต.ค. 69 (TASK_cc_shopmem_v1): +D10 แถวรหัส (9→10 · +฿65) · Hermes 8 ต.ค. 69 (วงเงินเข้า): +D9 — ยังไม่ยืนยัน = ยังไม่นับเป็นรายรับ (นับตอนกด "ใช่")
+  summary:{ monthSpent:501050, monthIncome:2500000, cashflow:1998950, pendingCount:10, pendingSum:72200, today:5000, monthRefund:0, miTotal:1, miMonth:'2026-10',  // CC 11 ต.ค. 69 (TASK_cc_shopmem_v1): +D10 แถวรหัส (9→10 · +฿65) · Hermes 8 ต.ค. 69 (วงเงินเข้า): +D9 — ยังไม่ยืนยัน = ยังไม่นับเป็นรายรับ (นับตอนกด "ใช่")
     monthOut:681050, walletIn:180000, walletSpent:71050, walletCount:4,
     daily:[{d:'2026-09-10',n:10500},{d:'2026-09-11',n:8200},{d:'2026-09-12',n:1000},{d:'2026-09-13',n:7600},{d:'2026-09-14',n:3000},{d:'2026-09-15',n:6800},{d:'2026-09-16',n:2700},{d:'2026-09-17',n:1500},{d:'2026-09-18',n:5000}] },
   meta:{ total:24, savedCount:12, skippedCount:0, sheetUrl:'#', logTail:[{time:'2026-09-18 09:20:00',ok:'OK',scanned:20,parsed:0,dup:19,skipped:1,appended:0}], genAt:'2026-09-18T09:35:00', triggerMinutes:10, memCount:24, llmOn:true,
