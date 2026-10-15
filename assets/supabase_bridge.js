@@ -266,6 +266,9 @@
     return { items: out, total: { spent_minor: totSpent, cap_minor: totCap } };
   }
 
+  // CC 15 ต.ค. 69 (TASK_cc_mi_clear_v1 · §35 · 0019): พันธุ์เงินเข้า 'refund'/'xfer' ไม่นับรายรับ · null/'income' = นับแบบเดิม
+  function notIncome(it) { var sp = strv(it.species); return sp === 'refund' || sp === 'xfer'; }
+
   // ---------- มิเรอร์ computeDetail_ ใน Web.gs ----------
   function computeDetail(rows, monthPrefix) {
     var dmap = {};
@@ -279,7 +282,7 @@
       var mp = it.at.slice(0, 7);
       var m = mm(mp);
       m.count++;
-      if (it.direction === 'in') { if (!(it.status === 'new' && strv(it.kind) === 'money_in_check')) m.income += it.amount_minor; continue; }  // Hermes 8 ต.ค. 69 (วงเงินเข้า): รอยืนยันยังไม่นับรายรับ
+      if (it.direction === 'in') { if (!(it.status === 'new' && strv(it.kind) === 'money_in_check') && !notIncome(it)) m.income += it.amount_minor; continue; }  // CC 15 ต.ค. 69 (§35): เงินคืน/ย้ายเงิน ไม่ใช่รายรับ  // Hermes 8 ต.ค. 69 (วงเงินเข้า): รอยืนยันยังไม่นับรายรับ
       if (isWalletXfer(it)) continue;
       var net = spendOf(it);  // แก้โดย CC 9 ต.ค. 69: สุทธิหลังหักบิลรอคืน (ยอด/หมวด/วัน/ร้าน ของเดือนบิล)
       m.total += net;
@@ -689,7 +692,8 @@
       sb.from('bill_share_people').select('id,share_id,name,done,joined_at'),       // 13) รายชื่อ/เสร็จแล้ว (ไม่ดึง key_hash) — ล้มได้
       softRpc('bill_share_ack_counts'),                                             // 14) หารเท่าไม่มีชื่อ: จำนวนรับทราบต่อบิล (CC 10 ต.ค. 69 · 0015) — ล้มได้ (ยังไม่ apply = 0)
       sb.from('account_snapshots').select('account,balance_minor,as_of'),           // 15) ยอดคงเหลือจาก statement (CC 10 ต.ค. 69 · TASK_cc_tm_accounts_v1 · 0016) — ล้มได้
-      sb.from('accounts').select('*').order('sort', { ascending: true })            // 16) บัญชี/กระเป๋ายอดตั้งเอง (0016) — ล้มได้ (ยังไม่ apply = ไม่มีการ์ดเพิ่ม)
+      sb.from('accounts').select('*').order('sort', { ascending: true }),           // 16) บัญชี/กระเป๋ายอดตั้งเอง (0016) — ล้มได้ (ยังไม่ apply = ไม่มีการ์ดเพิ่ม)
+      sb.from('person_book').select('id,nickname,full_name,x_lead,note')            // 17) สมุดรายชื่อ (CC 15 ต.ค. 69 · §35 · 0020) — ล้มได้ (ยังไม่ apply = ว่าง)
     ]).then(function (results) {
       for (var i = 0; i < 5; i++) if (results[i].error) throw results[i].error;  // 5 ตัวแรกห้ามพัง · 6–8 ปล่อยผ่านได้
       var myCatRows = (results[6] && !results[6].error) ? (results[6].data || []) : [];
@@ -730,6 +734,7 @@
       var shareAcks = (results[13] && !results[13].error && results[13].data) || {};
       var snapRows = (results[14] && !results[14].error) ? (results[14].data || []) : [];
       var acctRows = (results[15] && !results[15].error) ? (results[15].data || []) : [];
+      var peopleRows = (results[16] && !results[16].error) ? (results[16].data || []) : [];
       var snap = {};
       for (var si = 0; si < snapRows.length; si++) snap[strv(snapRows[si].account)] = { balance_minor: numv(snapRows[si].balance_minor), as_of: toThaiLocal(snapRows[si].as_of) };
       var shares = shareRows.map(function (s) {
@@ -789,7 +794,8 @@
           bill_expect: bm ? bm.expect : 0, bill_returned: bm ? bm.returned : 0, bill_status: bm ? bm.status : '',
           balance_minor: numv(r.balance_minor),
           account: strv(r.account),
-          note: strv(r.note)   // Hermes 8 ต.ค. 69 (วงเงินเข้า): บรรทัดที่มา "จากยอดคงเหลือ A → B" ของแถว money_in_check
+          note: strv(r.note),   // Hermes 8 ต.ค. 69 (วงเงินเข้า): บรรทัดที่มา "จากยอดคงเหลือ A → B" ของแถว money_in_check
+          species: strv(r.species)   // CC 15 ต.ค. 69 (§35 · 0019): พันธุ์เงินเข้า ('' = ยังไม่รู้)
         };
       });
 
@@ -806,6 +812,8 @@
 
       var pending = [], history = [], bills = [];
       var pendingSum = 0, monthSpent = 0, monthIncome = 0, skippedCount = 0;
+      var monthRefund = 0, miTotal = 0;   // CC 15 ต.ค. 69 (§35): เงินคืนเดือนนี้ · เงินเข้าตรวจอัตโนมัติของเดือนนี้ทั้งหมด (ตัวหารของ «เคลียร์แล้ว X/Y»)
+      for (var rr = 0; rr < billRetRows.length; rr++) if (toThaiLocal(billRetRows[rr].at).slice(0, 7) === monthPrefix) monthRefund += numv(billRetRows[rr].amount_minor);
       var monthOut = 0, walletIn = 0, walletCount = 0, walletSpent = 0, latestBalance = 0;
       var walletCredit = 0, gwalletIn = 0, gwalletCount = 0, gwRows = [];   // CC 10 ต.ค. 69 (TASK_cc_tm_accounts_v1): เครดิต/คืนเงินเข้ากระเป๋า · เติมเข้าเป๋าตัง
       // แก้โดย Hermes 3 ต.ค. 69 (บัคบัญชีของฉัน): การ์ด K PLUS = ยอดคงเหลือล่าสุดจากแถวจริง (คอลัมน์ balance_minor — เพิ่มใน migration 0008)
@@ -815,6 +823,7 @@
 
       for (var ri = 0; ri < rows.length; ri++) {
         var it = rows[ri];
+        if (it.kind === 'money_in_check' && it.at.slice(0, 7) === monthPrefix) miTotal++;
         if (it.status === 'skipped') { skippedCount++; continue; }
         var isIn = it.direction === 'in';
         var xf = isWalletXfer(it);
@@ -843,7 +852,8 @@
           // CC 10 ต.ค. 69: wallet_credit (เครดิตแคมเปญ/คืนเงินเข้ากระเป๋า) ไม่ใช่รายรับ — รวมในยอดกระเป๋าแทน
           if (isIn) {
             if (it.kind === 'wallet_credit') walletCredit += it.amount_minor;
-            else if (!(it.status === 'new' && it.kind === 'money_in_check')) monthIncome += it.amount_minor;
+            else if (it.species === 'refund') monthRefund += it.amount_minor;   // CC 15 ต.ค. 69 (§35): ผูกบิลแล้ว = skipped → นับทาง bill_returns ทางเดียว
+            else if (!(it.status === 'new' && it.kind === 'money_in_check') && !notIncome(it)) monthIncome += it.amount_minor;
           }
           else {
             monthOut += sp;
@@ -971,6 +981,9 @@
         history: history.slice(0, 400),  // แก้โดย Hermes 4 ต.ค. 69: เพิ่มจาก 80 — แท็บประวัติแยกเดือน+แก้ได้ ต้องเห็นย้อนหลังครบ (ตอนนี้ 165 แถว/2 เดือน) · กันเพดานไว้ 400
         bills: bills,
         shares: shares,  // CC 9 ต.ค. 69 (TASK_cc_billbox_share): บิลแชร์ (เพื่อนติ๊กเอง)
+        people: peopleRows.map(function (p) {   // CC 15 ต.ค. 69 (§35 · 0020): สมุดรายชื่อ — เรียงชื่อเล่น
+          return { id: numv(p.id), nickname: strv(p.nickname), full_name: strv(p.full_name), x_lead: strv(p.x_lead), note: strv(p.note) };
+        }).sort(function (a, b) { return a.nickname.localeCompare(b.nickname); }),
         accts: accts,
         flow: flow,
         uiAccounts: uiAccounts,  // CC 10 ต.ค. 69 (TASK_cc_tm_accounts_v1): การ์ดบัญชีเพิ่ม (เป๋าตัง/เงินสด/ธนาคารที่เพิ่มเอง)
@@ -982,6 +995,7 @@
         recall: recall,  // แก้โดย CC — TASK_v42x_quickadd.md (3 ต.ค. 69)
         summary: {
           monthSpent: monthSpent, monthIncome: monthIncome, cashflow: monthIncome - monthSpent,
+          monthRefund: monthRefund, miTotal: miTotal,   // CC 15 ต.ค. 69 (§35)
           pendingCount: pending.length, pendingSum: pendingSum,
           today: daily[dayKeys[dayKeys.length - 1]] || 0, daily: dailyArr,
           monthOut: monthOut, walletIn: walletIn, walletSpent: walletSpent, walletCount: walletCount
@@ -1085,12 +1099,112 @@
     return getTxByRef(ref).then(function (tx) {
       if (!tx) return { ok: false, msg: 'ไม่พบรายการนี้ในตาราง' };
       if (strv(tx.kind) !== 'money_in_check') return { ok: false, msg: 'รายการนี้ไม่ใช่แถวตรวจเงินเข้า' };
-      return sb.from('transactions').update({ status: 'confirmed', category: 'income', counterparty: label, confirmed_at: nowIso() }).eq('ref', ref)
-        .then(function (r) {
-          if (r.error) throw r.error;
-          return { ok: true };
-        });
+      return updSpecies(ref, { status: 'confirmed', category: 'income', counterparty: label, confirmed_at: nowIso(), species: 'income' })
+        .then(function () { return { ok: true }; });
     }).catch(function (e) { return { ok: false, msg: errText(e) }; });
+  }
+
+  // CC 15 ต.ค. 69 (TASK_cc_mi_clear_v1 · §35): เขียนแถว transactions พร้อม species — DB ยังไม่ apply 0019 (ไม่มีคอลัมน์)
+  //   → เขียนซ้ำโดยไม่ใส่ species (ความหมายเท่า null = แบบเดิม) · ใช้เฉพาะทางที่ species เป็นแค่ป้าย (income / แถว skipped)
+  function updSpecies(ref, patch) {
+    return sb.from('transactions').update(patch).eq('ref', ref).then(function (r) {
+      if (!r.error) return;
+      if (!/species.*column|column.*species/i.test(errText(r.error))) throw r.error;   // แค่ «ไม่มีคอลัมน์» — check ล้มต้องโยนต่อ
+      var p2 = {}; for (var k in patch) if (k !== 'species') p2[k] = patch[k];
+      return sb.from('transactions').update(p2).eq('ref', ref).then(function (r2) { if (r2.error) throw r2.error; });
+    });
+  }
+
+  // CC 15 ต.ค. 69 (§35 ส่วน C/D · พี่กดเอง): เงินเข้า → «👥 คืนจากเพื่อน» (refund + ชื่อเล่น) / «🔁 ย้ายเงิน» (xfer) — ไม่นับรายรับ
+  //   แตะแค่ species/status/confirmed_at/counterparty — ยอด/เวลา/ref ของเงินจริงไม่แตะ · ต้องมี 0019 (ไม่มีคอลัมน์ = ล้มพร้อมข้อความ ไม่เงียบ)
+  //   personId (ไม่บังคับ) = คนในสมุดที่เลือก → ช่องว่าง full_name/x_lead เติมจากชื่อในแถว (จำไว้ เดือนหน้าจับเอง)
+  function setMoneyInSpecies(ref, species, nickname, personId) {
+    nickname = cleanName(nickname, 30);
+    if (!ref) return Promise.resolve({ ok: false, msg: 'ไม่พบรายการ' });
+    if (species !== 'refund' && species !== 'xfer') return Promise.resolve({ ok: false, msg: 'พันธุ์เงินเข้าไม่ถูกต้อง' });
+    return sb.from('transactions').select('ref,kind,direction,status,counterparty,note').eq('ref', ref).limit(1).then(function (r) {
+      if (r.error) throw r.error;
+      var tx = (r.data && r.data[0]) || null;
+      if (!tx) return { ok: false, msg: 'ไม่พบรายการนี้ในตาราง' };
+      if (strv(tx.kind) !== 'money_in_check' || strv(tx.direction) !== 'in') return { ok: false, msg: 'รายการนี้ไม่ใช่แถวตรวจเงินเข้า' };
+      if (strv(tx.status) !== 'new') return { ok: false, msg: 'แถวเงินเข้านี้ถูกจัดการไปแล้ว' };
+      var raw = strv(tx.counterparty), note = strv(tx.note);   // ชื่อเดิมในแถว (จาก statement) — เก็บก่อนทับด้วยชื่อเล่น
+      var patch = { species: species, status: 'confirmed', confirmed_at: nowIso() };
+      if (species === 'refund' && nickname) patch.counterparty = nickname;
+      return sb.from('transactions').update(patch).eq('ref', ref).then(function (u) {
+        if (u.error) throw u.error;
+        if (!personId) return { ok: true };
+        return personFill(numv(personId), raw, note).then(function () { return { ok: true }; }, function () { return { ok: true }; });
+      });
+    }).catch(function (e) { return { ok: false, msg: errText(e) }; });
+  }
+
+  // ---------- สมุดรายชื่อ (person_book · 0020) — CC 15 ต.ค. 69 (§35 ส่วน B) ----------
+  var X_LEAD_RE = /\bX\d{3,6}\b/i;
+  function personErr(e) { return (e && (e.code === '23505' || /duplicate|unique/i.test(errText(e)))) ? 'มีชื่อเล่นนี้ในสมุดแล้ว' : errText(e); }
+  function personFields(p) {
+    p = p || {};
+    return { nickname: cleanName(p.nickname, 30), full_name: cleanName(p.full_name, 80) || null,
+             x_lead: cleanName(p.x_lead, 12).toUpperCase() || null, note: cleanName(p.note, 120) || null };
+  }
+  function personAdd(payload) {
+    var f = personFields(payload);
+    if (!f.nickname) return Promise.resolve({ ok: false, msg: 'ใส่ชื่อเล่นก่อนนะ' });
+    f.user_id = CURRENT_UID;
+    return sb.from('person_book').insert(f).select('id').then(function (r) {
+      if (r.error) throw r.error;
+      return { ok: true, id: numv(r.data && r.data[0] && r.data[0].id) };
+    }).catch(function (e) { return { ok: false, msg: personErr(e) }; });
+  }
+  function personUpdate(id, payload) {
+    var f = personFields(payload);
+    if (!f.nickname) return Promise.resolve({ ok: false, msg: 'ใส่ชื่อเล่นก่อนนะ' });
+    f.updated_at = nowIso();
+    return sb.from('person_book').update(f).eq('id', numv(id)).select('id').then(function (r) {
+      if (r.error) throw r.error;
+      return (r.data && r.data.length) ? { ok: true } : { ok: false, msg: 'ไม่พบคนนี้ในสมุดแล้ว' };
+    }).catch(function (e) { return { ok: false, msg: personErr(e) }; });
+  }
+  function personDelete(id) {
+    return sb.from('person_book').delete().eq('id', numv(id)).then(function (r) {
+      if (r.error) throw r.error;
+      return { ok: true };
+    }).catch(function (e) { return { ok: false, msg: errText(e) }; });
+  }
+  // ดึงชื่อจากบิลเก่า: ชื่อ distinct จาก bill_share_people → เพิ่มเฉพาะชื่อเล่นที่ยังไม่มี (เทียบไม่สนตัวพิมพ์)
+  function personImport() {
+    return Promise.all([sb.from('bill_share_people').select('name'), sb.from('person_book').select('nickname')]).then(function (rs) {
+      if (rs[0].error) throw rs[0].error;
+      if (rs[1].error) throw rs[1].error;
+      var have = {}, add = [], skip = 0;
+      (rs[1].data || []).forEach(function (x) { have[strv(x.nickname).toLowerCase()] = 1; });
+      (rs[0].data || []).forEach(function (x) {
+        var nm = cleanName(x.name, 30), k = nm.toLowerCase();
+        if (!nm) return;
+        if (have[k]) { skip++; return; }
+        have[k] = 1; add.push({ user_id: CURRENT_UID, nickname: nm });
+      });
+      if (!add.length) return { ok: true, added: 0, skipped: skip };
+      return sb.from('person_book').insert(add).then(function (r) {
+        if (r.error) throw r.error;
+        return { ok: true, added: add.length, skipped: skip };
+      });
+    }).catch(function (e) { return { ok: false, msg: personErr(e) }; });
+  }
+  // เติมช่องว่างของคนที่พี่ยืนยัน — ชื่อจริงจากชื่อในแถว (ไม่ใช่ «เงินเข้า») + X… (จากชื่อ/note) · ช่องที่มีค่าแล้วไม่ทับ
+  function personFill(id, rawName, note) {
+    return sb.from('person_book').select('id,full_name,x_lead').eq('id', id).limit(1).then(function (r) {
+      if (r.error) throw r.error;
+      var p = (r.data && r.data[0]) || null;
+      if (!p) return;
+      var xm = (strv(rawName) + ' ' + strv(note)).match(X_LEAD_RE), full = cleanName(strv(rawName).replace(X_LEAD_RE, '').replace(/\+\+/g, ''), 80);
+      var patch = {};
+      if (!strv(p.full_name) && full && full !== 'เงินเข้า') patch.full_name = full;
+      if (!strv(p.x_lead) && xm) patch.x_lead = xm[0].toUpperCase();
+      if (!Object.keys(patch).length) return;
+      patch.updated_at = nowIso();
+      return sb.from('person_book').update(patch).eq('id', id).then(function (u) { if (u.error) throw u.error; });
+    });
   }
 
   // ---------- บิลรอคืน "จ่ายก่อน — รอคืน" — แก้โดย CC 9 ต.ค. 69 (TASK_cc_bill_return_app · ระยะ 1 · P เคาะ 9 ต.ค. 69) ----------
@@ -1164,7 +1278,9 @@
   }
 
   // แถวเงินเข้าที่เป็นเงินคืนจากบิล → skipped (ออกจากคิว · ไม่นับรายรับ) — ร่องรอยอยู่ที่ bill_returns.source_ref
-  function resolveMoneyIn(inRef) {
+  //   CC 15 ต.ค. 69 (§35): species (ไม่บังคับ) — ผูกทั้งก้อน = 'refund' · แยกเอง (ปนรายรับ) ไม่ใส่
+  function resolveMoneyIn(inRef, species) {
+    if (species) return updSpecies(inRef, { status: 'skipped', species: species });
     return sb.from('transactions').update({ status: 'skipped' }).eq('ref', inRef).then(function (r) {
       if (r.error) throw r.error;
     });
@@ -1192,7 +1308,7 @@
         if (numv(src.amount_minor) !== v) return { ok: false, msg: 'ยอดไม่ตรงกับแถวเงินเข้า' };
         for (var i = 0; i < st.rets.length; i++) {
           if (strv(st.rets[i].source_ref) === fromRef) {  // ผูกไปแล้ว (กดซ้ำ/เน็ตหลุดรอบก่อน) → เคลียร์แถวให้จบ ไม่บันทึกซ้ำ
-            return resolveMoneyIn(fromRef).then(function () {
+            return resolveMoneyIn(fromRef, 'refund').then(function () {
               return billResult(expect, st.returned, st.returned >= expect ? 'done' : strv(st.bill.status));
             });
           }
@@ -1212,7 +1328,7 @@
         var p = (status === 'done')
           ? sb.from('bill_marks').update({ status: 'done', closed_at: nowIso() }).eq('ref', ref).then(function (u) { if (u.error) throw u.error; })
           : Promise.resolve();
-        return p.then(function () { return fromRef ? resolveMoneyIn(fromRef) : null; })
+        return p.then(function () { return fromRef ? resolveMoneyIn(fromRef, 'refund') : null; })
           .then(function () { return billResult(expect, after, status); });
       });
     }).catch(function (e) { return { ok: false, msg: billErr(e) }; });
@@ -2083,6 +2199,11 @@
     unsaveItem: unsaveItem,  // แก้โดย Hermes 4 ต.ค. 69: แถวบันทึกแล้ว → กลับเป็นรอยืนยัน (ปุ่ม ↩︎ ในแท็บประวัติ)
     renameMerchant: renameMerchant,
     confirmIncome: confirmIncome,  // แก้โดย Hermes 8 ต.ค. 69 (วงเงินเข้า): "✓ ใช่ — บันทึกเป็นรายรับ" (แถว money_in_check → income)
+    setMoneyInSpecies: setMoneyInSpecies,  // CC 15 ต.ค. 69 (TASK_cc_mi_clear_v1 · §35): คืนจากเพื่อน / ย้ายเงิน
+    personAdd: personAdd,          // CC 15 ต.ค. 69 (§35 · 0020): สมุดรายชื่อ
+    personUpdate: personUpdate,
+    personDelete: personDelete,
+    personImport: personImport,    // ดึงชื่อจากบิลเก่า (bill_share_people)
     markBill: markBill,            // แก้โดย CC 9 ต.ค. 69 (TASK_cc_bill_return_app): บิลรอคืน ย้ายมา Supabase แล้ว
     addBillReturn: addBillReturn,  // แก้โดย CC 9 ต.ค. 69 (+ อาร์กิวเมนต์ที่ 3 = ref แถวเงินเข้า · ไม่ส่ง = กรอกเอง แบบเดิม)
     closeBill: closeBill,          // แก้โดย CC 9 ต.ค. 69
