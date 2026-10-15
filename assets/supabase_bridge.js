@@ -813,7 +813,11 @@
       var pending = [], history = [], bills = [];
       var pendingSum = 0, monthSpent = 0, monthIncome = 0, skippedCount = 0;
       var monthRefund = 0, miTotal = 0;   // CC 15 ต.ค. 69 (§35): เงินคืนเดือนนี้ · เงินเข้าตรวจอัตโนมัติของเดือนนี้ทั้งหมด (ตัวหารของ «เคลียร์แล้ว X/Y»)
-      for (var rr = 0; rr < billRetRows.length; rr++) if (toThaiLocal(billRetRows[rr].at).slice(0, 7) === monthPrefix) monthRefund += numv(billRetRows[rr].amount_minor);
+      var retRefs = {};   // §35-B1 H1-1: แถวเงินเข้าที่ผูก bill_returns แล้ว — นับทาง bill_returns ทางเดียว
+      for (var rr = 0; rr < billRetRows.length; rr++) {
+        if (billRetRows[rr].source_ref) retRefs[strv(billRetRows[rr].source_ref)] = 1;
+        if (toThaiLocal(billRetRows[rr].at).slice(0, 7) === monthPrefix) monthRefund += numv(billRetRows[rr].amount_minor);
+      }
       var monthOut = 0, walletIn = 0, walletCount = 0, walletSpent = 0, latestBalance = 0;
       var walletCredit = 0, gwalletIn = 0, gwalletCount = 0, gwRows = [];   // CC 10 ต.ค. 69 (TASK_cc_tm_accounts_v1): เครดิต/คืนเงินเข้ากระเป๋า · เติมเข้าเป๋าตัง
       // แก้โดย Hermes 3 ต.ค. 69 (บัคบัญชีของฉัน): การ์ด K PLUS = ยอดคงเหลือล่าสุดจากแถวจริง (คอลัมน์ balance_minor — เพิ่มใน migration 0008)
@@ -852,7 +856,10 @@
           // CC 10 ต.ค. 69: wallet_credit (เครดิตแคมเปญ/คืนเงินเข้ากระเป๋า) ไม่ใช่รายรับ — รวมในยอดกระเป๋าแทน
           if (isIn) {
             if (it.kind === 'wallet_credit') walletCredit += it.amount_minor;
-            else if (it.species === 'refund') monthRefund += it.amount_minor;   // CC 15 ต.ค. 69 (§35): ผูกบิลแล้ว = skipped → นับทาง bill_returns ทางเดียว
+            else if (it.species === 'refund') {   // CC 15 ต.ค. 69 (§35): ผูกบิลแล้ว = skipped → นับทาง bill_returns ทางเดียว
+              // §35-B1 H6-1/H1-2: กู้กลับ new = ยังไม่ตัดสิน ไม่นับ · H1-1: มี bill_returns.source_ref แล้ว ไม่นับซ้ำ
+              if (!(it.status === 'new' && it.kind === 'money_in_check') && !retRefs[it.ref]) monthRefund += it.amount_minor;
+            }
             else if (!(it.status === 'new' && it.kind === 'money_in_check') && !notIncome(it)) monthIncome += it.amount_minor;
           }
           else {
@@ -1062,8 +1069,8 @@
 
   function undoSkip(ref) {
     if (!ref) return Promise.resolve({ ok: false, msg: 'ไม่พบรายการ' });
-    return sb.from('transactions').update({ status: 'new' }).eq('ref', ref).then(function (r) {
-      if (r.error) throw r.error;
+    // §35-B1 H5-3: กลับเข้าคิว = ยังไม่ตัดสิน → ล้างพันธุ์ (ไม่มีคอลัมน์ 0019 → updSpecies ตกไปทางเดิม)
+    return updSpecies(ref, { status: 'new', species: null }).then(function () {
       return { ok: true };
     }).catch(function (e) { return { ok: false, msg: errText(e) }; });
   }
@@ -1071,8 +1078,8 @@
   // แก้โดย Hermes 4 ต.ค. 69 (P สั่ง · เธรดประวัติ): คืนแถวที่บันทึกแล้ว → 'new' (กลับเข้าคิว "รอยืนยัน") — ใช้กับปุ่ม ↩︎ ในแท็บประวัติ
   function unsaveItem(ref) {
     if (!ref) return Promise.resolve({ ok: false, msg: 'ไม่พบรายการ' });
-    return sb.from('transactions').update({ status: 'new' }).eq('ref', ref).then(function (r) {
-      if (r.error) throw r.error;
+    // §35-B1 H5-3: กลับเข้าคิว = ยังไม่ตัดสิน → ล้างพันธุ์ (ไม่มีคอลัมน์ 0019 → updSpecies ตกไปทางเดิม)
+    return updSpecies(ref, { status: 'new', species: null }).then(function () {
       return { ok: true };
     }).catch(function (e) { return { ok: false, msg: errText(e) }; });
   }

@@ -751,7 +751,7 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.2.31-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · CC 15 ต.ค. 69: v4.2.31 = เคลียร์เงินเข้า: พันธุ์ + สมุดรายชื่อ + เพจจับคู่ท้ายเดือน + ตัวเสนอ 3 ทาง (TASK_cc_mi_clear_v1) · Hermes 16 ต.ค. 69: v4.2.30 = ตัวเสนอเงินเข้า→บิลรอคืน: ลดเพดานเสนอ 5%→1% (P: ของจริงต่างแค่ปัดเศษ 1 บาท) · CC 15 ต.ค. 69: v4.2.29 = เงินเข้า → เสนอบิลรอคืนยอดตรง/ใกล้ (กดยืนยันเอง · TASK_cc_moneyin_propose_v1) · CC 14 ต.ค. 69: v4.2.28 = หารบิลที่ร้าน: ลิสต์ว่างชี้ «กรอกเอง» + ผูกทีหลังกับรายการเงินออก (TASK_cc_billmatch_v1) · CC 14 ต.ค. 69: v4.2.27 = บิลรอคืน: กันปิดพลาด + ประวัติ «บิลปิดแล้ว» + กู้คืน (TASK_cc_billreopen_v1) · CC 13 ต.ค. 69: v4.2.26 = รอยืนยัน: ปิดหาง out-of-order (TASK_cc_pendstale_v2) · CC 13 ต.ค. 69: v4.2.25 = รอยืนยัน: กัน response เก่าทับสถานะใหม่ (TASK_cc_pendstale_v1) · CC 13 ต.ค. 69: v4.2.24 = เพิ่มรายการ: enter/Done แค่ปิดพิมพ์ ไม่บันทึก (TASK_cc_enter_v1) · CC 13 ต.ค. 69: v4.2.23 = เพจ «บิลรอคืน» แยกหน้า (TASK_cc_billret_page_v1) · CC 13 ต.ค. 69: v4.2.22 = บิล: ยกเลิกแล้วรายการกลับขึ้นชุดแรก + กรอกราคาเอง + กู้บิล (TASK_cc_billfix_scan_v1) · CC 11 ต.ค. 69: v4.2.21 = ความจำร้านชุดเดียว ใช้ทุกช่องทางเข้า (ชิป «แนะนำ» แถวนำเข้าในแอป + ชื่อโชว์รหัสเทียบ statement · TASK_cc_shopmem_v1) · CC 10 ต.ค. 69: v4.2.20 = หน้า «บิล» + แบดจ์ + กระพริบ 10 วิ (TASK_cc_billlist_v1) · v4.2.19 = TrueMoney คงเหลือจริงจาก statement + บัญชียอดตั้งเอง (เป๋าตัง/เงินสด/ทะเบียนธนาคารไทย · TASK_cc_tm_accounts_v1) · v4.2.18 = บิลแชร์ จัดการรายชื่อ («ไม่ใช่ฉัน» หน้าเพื่อน + ปล่อย/ลบ/เพิ่มชื่อหน้าติดตาม) + หารเท่าไม่มีชื่อ (ตั้งจำนวนคน · TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน + ปุ่ม ‹ › (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติจากภาพ (Edge Function readbill · เหลือง = ไม่ชัวร์ · ชิปเซอร์วิส/VAT ตามบิล) + โหมดหารเท่า (TASK_cc_readauto_party_v1) · v4.2.15 = ซูม/ครอปภาพบิล v2 (ลากขอบปรับด้านเดียว + บีบ 2 โหมด: กลาง=ซูม · ขอบซ้าย/ขวา=ปรับกรอบ · TASK_cc_zoomcrop_v1) · v4.2.14 = แชร์บิล v3.1 ① รายการที่จ่ายไปล่าสุด (5/ชุด + ปัดเปลี่ยนชุด + กรองเฉพาะที่เริ่มบิลได้ · TASK_cc_billshare_v31_picker) · v4.2.13 = แชร์บิล v3 (จดต่อเนื่อง + ⋮ แผงล่าง แยก 2/3/กำหนดเอง + เพื่อนเป็น + + ซูม/ครอปภาพบิล · TASK_cc_billshare_v3) · CC 9 ต.ค. 69: v4.2.12 = บิลแชร์ เพื่อนติ๊กเอง + แถวปุ่มลัดหน้าหลัก (TASK_cc_billbox_share) · v4.2.11 = บิลรอคืน รอบ 2 (ปุ่มบิลในหน้ารายการ + แยกเอง + ส่วนของเรา · TASK_cc_bill_return_app2) · v4.2.10 = บิลรอคืนบน Supabase (TASK_cc_bill_return_app) · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
+var APP_BUILD = 'v4.2.32-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · CC 15 ต.ค. 69: v4.2.32 = §35-B1 พันธุ์&เงิน: กู้กลับคิวไม่นับเงินคืน/ล้างพันธุ์ + ไม่นับซ้ำ bill_returns + pendMark/rollback (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.31 = เคลียร์เงินเข้า: พันธุ์ + สมุดรายชื่อ + เพจจับคู่ท้ายเดือน + ตัวเสนอ 3 ทาง (TASK_cc_mi_clear_v1) · Hermes 16 ต.ค. 69: v4.2.30 = ตัวเสนอเงินเข้า→บิลรอคืน: ลดเพดานเสนอ 5%→1% (P: ของจริงต่างแค่ปัดเศษ 1 บาท) · CC 15 ต.ค. 69: v4.2.29 = เงินเข้า → เสนอบิลรอคืนยอดตรง/ใกล้ (กดยืนยันเอง · TASK_cc_moneyin_propose_v1) · CC 14 ต.ค. 69: v4.2.28 = หารบิลที่ร้าน: ลิสต์ว่างชี้ «กรอกเอง» + ผูกทีหลังกับรายการเงินออก (TASK_cc_billmatch_v1) · CC 14 ต.ค. 69: v4.2.27 = บิลรอคืน: กันปิดพลาด + ประวัติ «บิลปิดแล้ว» + กู้คืน (TASK_cc_billreopen_v1) · CC 13 ต.ค. 69: v4.2.26 = รอยืนยัน: ปิดหาง out-of-order (TASK_cc_pendstale_v2) · CC 13 ต.ค. 69: v4.2.25 = รอยืนยัน: กัน response เก่าทับสถานะใหม่ (TASK_cc_pendstale_v1) · CC 13 ต.ค. 69: v4.2.24 = เพิ่มรายการ: enter/Done แค่ปิดพิมพ์ ไม่บันทึก (TASK_cc_enter_v1) · CC 13 ต.ค. 69: v4.2.23 = เพจ «บิลรอคืน» แยกหน้า (TASK_cc_billret_page_v1) · CC 13 ต.ค. 69: v4.2.22 = บิล: ยกเลิกแล้วรายการกลับขึ้นชุดแรก + กรอกราคาเอง + กู้บิล (TASK_cc_billfix_scan_v1) · CC 11 ต.ค. 69: v4.2.21 = ความจำร้านชุดเดียว ใช้ทุกช่องทางเข้า (ชิป «แนะนำ» แถวนำเข้าในแอป + ชื่อโชว์รหัสเทียบ statement · TASK_cc_shopmem_v1) · CC 10 ต.ค. 69: v4.2.20 = หน้า «บิล» + แบดจ์ + กระพริบ 10 วิ (TASK_cc_billlist_v1) · v4.2.19 = TrueMoney คงเหลือจริงจาก statement + บัญชียอดตั้งเอง (เป๋าตัง/เงินสด/ทะเบียนธนาคารไทย · TASK_cc_tm_accounts_v1) · v4.2.18 = บิลแชร์ จัดการรายชื่อ («ไม่ใช่ฉัน» หน้าเพื่อน + ปล่อย/ลบ/เพิ่มชื่อหน้าติดตาม) + หารเท่าไม่มีชื่อ (ตั้งจำนวนคน · TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน + ปุ่ม ‹ › (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติจากภาพ (Edge Function readbill · เหลือง = ไม่ชัวร์ · ชิปเซอร์วิส/VAT ตามบิล) + โหมดหารเท่า (TASK_cc_readauto_party_v1) · v4.2.15 = ซูม/ครอปภาพบิล v2 (ลากขอบปรับด้านเดียว + บีบ 2 โหมด: กลาง=ซูม · ขอบซ้าย/ขวา=ปรับกรอบ · TASK_cc_zoomcrop_v1) · v4.2.14 = แชร์บิล v3.1 ① รายการที่จ่ายไปล่าสุด (5/ชุด + ปัดเปลี่ยนชุด + กรองเฉพาะที่เริ่มบิลได้ · TASK_cc_billshare_v31_picker) · v4.2.13 = แชร์บิล v3 (จดต่อเนื่อง + ⋮ แผงล่าง แยก 2/3/กำหนดเอง + เพื่อนเป็น + + ซูม/ครอปภาพบิล · TASK_cc_billshare_v3) · CC 9 ต.ค. 69: v4.2.12 = บิลแชร์ เพื่อนติ๊กเอง + แถวปุ่มลัดหน้าหลัก (TASK_cc_billbox_share) · v4.2.11 = บิลรอคืน รอบ 2 (ปุ่มบิลในหน้ารายการ + แยกเอง + ส่วนของเรา · TASK_cc_bill_return_app2) · v4.2.10 = บิลรอคืนบน Supabase (TASK_cc_bill_return_app) · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
 var S = { data:null, tab:0, open:{}, ext:{}, miPropSkip:{}, miPropMore:{}, micOpen:{}, micSkip:{}, pbEdit:null, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, budForm:null, budOpen:{}, view:null, imp:null, pMonth:null, hMonth:null, recLumpOpen:false, catForm:null, shortForm:null };  // catForm/shortForm: Hermes 7 ต.ค. 69 — ฟอร์มหมวดทำเอง/รายการลัด (หน้าแยก v4.2.8)  // hMonth: CC 10 ต.ค. 69 — เดือนที่เลือกในแท็บรายการ (แยกจาก pMonth ของรอยืนยัน)  // pMonth: แก้โดย Hermes 5 ต.ค. 69 — เดือนที่เลือกในแท็บรอยืนยัน (แยกเดือน) · recLumpOpen: Hermes 7 ต.ค. 69 (§16) — กาง "ก้อนรายจ่ายประจำ" ในงบรายหมวด
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
@@ -900,11 +900,11 @@ function thToday(){
   var d = new Date();
   return TH_D[d.getDay()] + ' ' + d.getDate() + ' ' + TH_M[d.getMonth()] + ' ' + String(d.getFullYear()+543).slice(2);
 }
-function callAction(method, argsArr, okMsg, onFail){  // onFail: แก้โดย CC — TASK_cc_fix_v42.md (3 ต.ค. 69) — ให้ผู้เรียกกู้สถานะคืนเมื่อ ok:false/เชื่อมต่อไม่ได้
+function callAction(method, argsArr, okMsg, onFail, onOk){  // onFail: แก้โดย CC — TASK_cc_fix_v42.md (3 ต.ค. 69) — ให้ผู้เรียกกู้สถานะคืนเมื่อ ok:false/เชื่อมต่อไม่ได้ · onOk: §35-B1 (ปิด pendMark)
   var r = google.script.run
     .withSuccessHandler(function(res){
       if (res && !res.ok) { toast(res.msg || 'ทำไม่สำเร็จ', true); if (onFail) onFail(res); }
-      else if (okMsg) toast(okMsg);
+      else { if (okMsg) toast(okMsg); if (onOk) onOk(res); }
       reloadSoon();
     })
     .withFailureHandler(function(){ toast('เชื่อมต่อไม่ได้', true); if (onFail) onFail(null); reloadSoon(); });
@@ -1740,10 +1740,12 @@ function moneyInToBill(ref, billRef){
   var amt = it.amount_minor;
   if (amt > (b.remaining_minor || 0)){ toast('รับคืนเกินยอดที่เหลือ (' + fmtBaht(b.remaining_minor || 0) + '฿)', true); return; }
   if (S.miBill) delete S.miBill[ref];
+  var prevSp = it.species, bumped = (it.at || '').slice(0, 7) === curMonthKey();
   it.status = 'skipped'; it.species = 'refund';   // CC 15 ต.ค. 69 (§35): bridge resolveMoneyIn ตั้ง species='refund' คู่กัน
-  if ((it.at || '').slice(0, 7) === curMonthKey()) S.data.summary.monthRefund = (S.data.summary.monthRefund || 0) + amt;
+  var done = pendMark(ref, 'skipped', it);   // §35-B1 H5-2: กันคำตอบ getData ที่ยิงก่อน write ดึงแถวกลับคิว
+  if (bumped) S.data.summary.monthRefund = (S.data.summary.monthRefund || 0) + amt;
   S.open[ref] = false; S.ext[ref] = false;
-  var bit = findItem(billRef);
+  var bit = findItem(billRef), bPrev = { ret: bit ? bit.bill_returned : b.returned_minor, st: bit ? bit.bill_status : b.status };
   if (bit){
     bit.bill_returned = (bit.bill_returned || 0) + amt;
     if (bit.bill_returned >= bit.bill_expect) bit.bill_status = 'done';
@@ -1757,7 +1759,15 @@ function moneyInToBill(ref, billRef){
   recalcSummary(); paint();
   toast('เงินคืน: ' + shortName({ counterparty: b.name }) + ' +' + fmtBaht(amt) + '฿' + (rem === 0 ? ' — ครบแล้ว ✓' : ' · เหลือ ' + fmtBaht(rem) + '฿'));
   if (IS_DEMO) return;
-  callAction('addBillReturn', [billRef, amt, ref], '');
+  callAction('addBillReturn', [billRef, amt, ref], '', function(){   // §35-B1 H5-6: write ล้ม → คืนแถว/บิล/ยอดในเครื่อง
+    it.status = 'new'; it.species = prevSp;
+    pendMark(ref, 'new', it)();
+    if (bumped) S.data.summary.monthRefund = Math.max(0, (S.data.summary.monthRefund || 0) - amt);
+    if (bit){ bit.bill_returned = bPrev.ret; bit.bill_status = bPrev.st; billUpsertLocal(billRef); }
+    else { b.returned_minor = bPrev.ret; b.remaining_minor = Math.max(0, b.expect_minor - b.returned_minor); b.status = bPrev.st; }
+    if (!S.data.pending.some(function(x){ return x.ref === ref; })) S.data.pending.push(it);
+    recalcSummary(); paint();
+  }, done);
 }
 /* ============ CC 15 ต.ค. 69 (TASK_cc_moneyin_propose_v1 · §34 · P: «ไม่ auto-apply»): ตัวเสนออัตโนมัติ เงินเข้า ↔ บิลรอคืน
    เงินเข้าแถว new → หาบิล open ที่ยอดตรงเป๊ะ/ใกล้ → โชว์แถบเสนอในคิว (ไม่ต้องเปิดแถว) · แค่เสนอ — ผูกจริงเมื่อพี่กด ✓ ยืนยัน (= moneyInToBill เดิม)
@@ -1882,10 +1892,13 @@ function miPropXYes(ref, k){   // D2: กด ✓ = apply ตามชนิด (
 /* «👥 คืนจากเพื่อน» / «🔁 ย้ายเงิน» — ไม่นับรายรับ · person (ไม่บังคับ) = คนในสมุด → เติม full_name/x_lead ที่ว่าง (bridge ทำคู่กัน) */
 function miSetSpecies(ref, species, nick, person){
   var it = findItem(ref); if (!it || it.kind !== 'money_in_check' || it.status !== 'new') return;
-  var raw = it.counterparty, amt = it.amount_minor;
+  var raw = it.counterparty, amt = it.amount_minor, prevSp = it.species;
+  var bumped = species === 'refund' && (it.at || '').slice(0, 7) === curMonthKey();
+  var pPrev = person ? { full: person.full_name, x: person.x_lead } : null;
   it.status = 'saved'; it.species = species;
+  var done = pendMark(ref, 'saved', it);   // §35-B1 H5-2/H3-4: กันคำตอบ getData ที่ยิงก่อน write ดึงแถวกลับคิว
   if (species === 'refund' && nick) it.counterparty = nick;
-  if (species === 'refund' && (it.at || '').slice(0, 7) === curMonthKey()) S.data.summary.monthRefund = (S.data.summary.monthRefund || 0) + amt;
+  if (bumped) S.data.summary.monthRefund = (S.data.summary.monthRefund || 0) + amt;
   if (person){
     var xm = (String(raw || '') + ' ' + String(it.note || '')).match(PB_X_RE), full = String(raw || '').replace(PB_X_RE, '').replace(/\+\+/g, '').replace(/\s+/g, ' ').trim();
     if (!person.full_name && full && full !== 'เงินเข้า') person.full_name = full;
@@ -1895,7 +1908,16 @@ function miSetSpecies(ref, species, nick, person){
   recalcSummary(); paint();
   toast(species === 'refund' ? 'เงินคืนจาก ' + nick + ' +' + fmtBaht(amt) + '฿ (ไม่นับรายรับ)' : 'ย้ายเงิน +' + fmtBaht(amt) + '฿ (ไม่นับรายรับ)');
   if (IS_DEMO) return;
-  callAction('setMoneyInSpecies', [ref, species, nick || '', person && person.id > 0 ? person.id : 0], '');
+  callAction('setMoneyInSpecies', [ref, species, nick || '', person && person.id > 0 ? person.id : 0], '', function(){   // §35-B1 H5-6: write ล้ม → คืนค่าในเครื่อง
+    it.status = 'new'; it.species = prevSp; it.counterparty = raw;
+    pendMark(ref, 'new', it)();
+    if (bumped) S.data.summary.monthRefund = Math.max(0, (S.data.summary.monthRefund || 0) - amt);
+    if (pPrev){ person.full_name = pPrev.full; person.x_lead = pPrev.x; }
+    S.data.history = (S.data.history || []).filter(function(x){ return x.ref !== ref; });
+    if (!S.data.pending.some(function(x){ return x.ref === ref; })) S.data.pending.push(it);
+    S.data.meta.savedCount = Math.max(0, (S.data.meta.savedCount || 0) - 1);
+    recalcSummary(); paint();
+  }, done);
 }
 /* ---------- C เพจ «จับคู่ท้ายเดือน» — เงินเข้าเดือนนี้ที่ยังไม่รู้ที่มา (new + money_in_check) ใหม่สุดก่อน ---------- */
 function miClearRows(d){
@@ -2666,7 +2688,7 @@ function htmlSettings(d){
     + cardMyCats(d)        // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หมวดทำเอง
     + cardMyShortcuts(d)   // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): รายการลัด
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.31-supabase</span></div>'  // CC 15 ต.ค. 69: v4.2.31 = เคลียร์เงินเข้า (TASK_cc_mi_clear_v1) · Hermes 16 ต.ค. 69: v4.2.30 = ตัวเสนอเงินเข้า→บิลรอคืน เพดาน 5%→1% · CC 15 ต.ค. 69: v4.2.29 = เงินเข้า → เสนอบิลรอคืน (TASK_cc_moneyin_propose_v1) · CC 14 ต.ค. 69: v4.2.28 = หารบิลที่ร้าน กรอกเอง/ผูกทีหลัง (TASK_cc_billmatch_v1) · CC 14 ต.ค. 69: v4.2.27 = บิลรอคืน กันปิดพลาด/บิลปิดแล้ว/กู้คืน (TASK_cc_billreopen_v1) · CC 13 ต.ค. 69: v4.2.26 = รอยืนยัน: ปิดหาง out-of-order (TASK_cc_pendstale_v2) · CC 13 ต.ค. 69: v4.2.25 = รอยืนยัน: กัน response เก่าทับสถานะใหม่ (TASK_cc_pendstale_v1) · CC 13 ต.ค. 69: v4.2.24 = เพิ่มรายการ: enter/Done แค่ปิดพิมพ์ ไม่บันทึก (TASK_cc_enter_v1) · CC 13 ต.ค. 69: v4.2.23 = เพจ «บิลรอคืน» แยกหน้า (TASK_cc_billret_page_v1) · CC 13 ต.ค. 69: v4.2.22 = บิล ยกเลิก/กรอกเอง/กู้ (TASK_cc_billfix_scan_v1) · CC 11 ต.ค. 69: v4.2.21 = ความจำร้านชุดเดียว ใช้ทุกช่องทางเข้า (TASK_cc_shopmem_v1) · CC 10 ต.ค. 69: v4.2.20 = หน้า «บิล» (TASK_cc_billlist_v1) · v4.2.19 = TrueMoney คงเหลือจริง + บัญชียอดตั้งเอง (TASK_cc_tm_accounts_v1) · v4.2.18 = บิลแชร์ จัดการรายชื่อ + หารเท่าไม่มีชื่อ (TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติ + หารเท่า · v4.2.15 = ซูม/ครอปภาพบิล v2 · v4.2.14 = แชร์บิล v3.1 picker ① · v4.2.13 = แชร์บิล v3 · CC 9 ต.ค. 69: v4.2.11 = บิลรอคืน รอบ 2 · v4.2.10 = บิลรอคืนบน Supabase · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.32-supabase</span></div>'  // CC 15 ต.ค. 69: v4.2.32 = §35-B1 พันธุ์&เงิน (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.31 = เคลียร์เงินเข้า (TASK_cc_mi_clear_v1) · Hermes 16 ต.ค. 69: v4.2.30 = ตัวเสนอเงินเข้า→บิลรอคืน เพดาน 5%→1% · CC 15 ต.ค. 69: v4.2.29 = เงินเข้า → เสนอบิลรอคืน (TASK_cc_moneyin_propose_v1) · CC 14 ต.ค. 69: v4.2.28 = หารบิลที่ร้าน กรอกเอง/ผูกทีหลัง (TASK_cc_billmatch_v1) · CC 14 ต.ค. 69: v4.2.27 = บิลรอคืน กันปิดพลาด/บิลปิดแล้ว/กู้คืน (TASK_cc_billreopen_v1) · CC 13 ต.ค. 69: v4.2.26 = รอยืนยัน: ปิดหาง out-of-order (TASK_cc_pendstale_v2) · CC 13 ต.ค. 69: v4.2.25 = รอยืนยัน: กัน response เก่าทับสถานะใหม่ (TASK_cc_pendstale_v1) · CC 13 ต.ค. 69: v4.2.24 = เพิ่มรายการ: enter/Done แค่ปิดพิมพ์ ไม่บันทึก (TASK_cc_enter_v1) · CC 13 ต.ค. 69: v4.2.23 = เพจ «บิลรอคืน» แยกหน้า (TASK_cc_billret_page_v1) · CC 13 ต.ค. 69: v4.2.22 = บิล ยกเลิก/กรอกเอง/กู้ (TASK_cc_billfix_scan_v1) · CC 11 ต.ค. 69: v4.2.21 = ความจำร้านชุดเดียว ใช้ทุกช่องทางเข้า (TASK_cc_shopmem_v1) · CC 10 ต.ค. 69: v4.2.20 = หน้า «บิล» (TASK_cc_billlist_v1) · v4.2.19 = TrueMoney คงเหลือจริง + บัญชียอดตั้งเอง (TASK_cc_tm_accounts_v1) · v4.2.18 = บิลแชร์ จัดการรายชื่อ + หารเท่าไม่มีชื่อ (TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติ + หารเท่า · v4.2.15 = ซูม/ครอปภาพบิล v2 · v4.2.14 = แชร์บิล v3.1 picker ① · v4.2.13 = แชร์บิล v3 · CC 9 ต.ค. 69: v4.2.11 = บิลรอคืน รอบ 2 · v4.2.10 = บิลรอคืนบน Supabase · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -3291,7 +3313,13 @@ function pickSaved(ref, cat){
    · ปุ่มโชว์เฉพาะ Supabase/เดโม่ (โหมด GAS เก่าไม่มี action unsaveItem) */
 function histUnsave(ref){
   var it = findItem(ref); if (!it) return;
-  it.status = 'new';
+  // §35-B1 H1-4: ยอดเดือนนี้ในเครื่องหักคืนแบบ undo ของ moneyInYes (แถว new money_in_check ไม่นับทั้งรายรับ/เงินคืน — กติกา bridge) · H5-3: ล้างพันธุ์
+  if (it.kind === 'money_in_check' && it.direction === 'in' && (it.at || '').slice(0, 7) === curMonthKey()){
+    var sm = S.data.summary;
+    if (it.species === 'refund') sm.monthRefund = Math.max(0, (sm.monthRefund || 0) - it.amount_minor);
+    else if (it.species !== 'xfer'){ sm.monthIncome = Math.max(0, (sm.monthIncome || 0) - it.amount_minor); sm.cashflow = sm.monthIncome - sm.monthSpent; }
+  }
+  it.status = 'new'; it.species = '';
   var done = pendMark(ref, 'new', it);
   S.open[ref] = false; S.ext[ref] = false; if (S.renaming === ref) S.renaming = null;
   S.data.history = (S.data.history || []).filter(function(x){ return x.ref !== ref; });
