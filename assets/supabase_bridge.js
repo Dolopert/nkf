@@ -2253,6 +2253,8 @@
       // P5: ย้ายมาโหมดใหม่แล้ว — เขียนตรงผ่าน RPC "ingest_statement" (ประตูเดียว: ตรวจแถว/กันซ้ำ ref/ข้ามเงินเข้า/แคป 300)
       if (!CURRENT_UID) return Promise.resolve({ ok: false, msg: 'ยังไม่ได้ล็อกอิน — เข้าสู่ระบบก่อนนำเข้า' });
       if (!rows || !rows.length) return Promise.resolve({ ok: false, msg: 'ไม่มีรายการ' });
+      // §36 ②-3 (TASK_cc_statement_pipe_v1): แอพแบ่งชุดละ ≤ 300 เอง · ชั้นนี้กันซ้ำตามเพดาน RPC (0005) แต่ไม่ตัดเงียบ → บอก truncated กลับ
+      var truncated = Math.max(0, rows.length - 300);
       var payload = rows.slice(0, 300).map(function (r) {
         return {
           at: strv(r.at),
@@ -2275,7 +2277,7 @@
         if (r.error) throw r.error;
         var d = r.data || {};
         if (!d.ok) return { ok: false, msg: d.msg || 'นำเข้าไม่สำเร็จ' };
-        return { ok: true, added: d.added, dup: d.dup, skipped: d.skipped, in_skip: d.in_skip, balance_saved: !!d.balance_saved };
+        return { ok: true, added: d.added, dup: d.dup, skipped: d.skipped, in_skip: d.in_skip, balance_saved: !!d.balance_saved, truncated: truncated };
       }).catch(function (e) { return { ok: false, msg: errText(e) }; });
     },
     notifyText: function () { return legacyCall('notifyText', Array.prototype.slice.call(arguments)); },

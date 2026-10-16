@@ -196,7 +196,10 @@
   .lmp-more{display:block;margin:9px auto 0;background:none;border:0;color:var(--dim);font-size:11px;font-family:inherit;cursor:pointer}
   .lmp-alt{justify-content:center}
   .lmp-none{color:var(--dim);font-size:11px;line-height:1.5}
-  .lmp-stmt{display:block;width:100%;margin:14px 0 0;padding:12px;border-radius:14px;border:1px dashed var(--cy-bd);background:transparent;color:var(--cy2);font-size:13px;font-weight:600;font-family:inherit;opacity:.7;cursor:default}
+  .lmp-stmt{display:block;width:100%;margin:14px 0 0;padding:12px;border-radius:14px;border:1px dashed var(--cy-bd);background:transparent;color:var(--cy2);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
+  .mic-steps{margin:10px 0 4px;font-size:12.5px} .mic-steps div{display:flex;justify-content:space-between;padding:6px 2px;border-top:1px solid var(--bd2);color:var(--mut)} .mic-steps div b{color:var(--tx);font-variant-numeric:tabular-nums}
+  .mic-steps .on{animation:micStep .35s ease-out} @keyframes micStep{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.mic-steps .on{animation:none}}
   .lmp-stmt span{display:block;font-size:10px;font-weight:400;color:var(--dim);margin-top:3px}
   .pb-nick{font-size:14px;font-weight:700;color:var(--tx)}
   .pb-form .ps-inp{margin-top:6px}
@@ -771,7 +774,7 @@
 var FORCE_DEMO = /(^|[?&])demo=1(&|$)/.test(location.search);
 var IS_DEMO = FORCE_DEMO || !(typeof google !== 'undefined' && google.script && google.script.run);
 var IS_SUPA = !IS_DEMO && !!window.NKF_AUTH;
-var APP_BUILD = 'v4.2.36-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · CC 16 ต.ค. 69: v4.2.36 = §36-a ตัวแยกก้อน lowest-diff (≤฿1 · ไม่เดา · กดยืนยันเอง) + จัดเพจจับคู่ท้ายเดือนใหม่ + ที่วางปุ่ม 📄 statement (TASK_cc_lump_split_v1) · CC 15 ต.ค. 69: v4.2.35 = §35-B4 ตัวเสนอ+พันธุ์: เงินคืน/ย้ายเงินไม่ใช่ «ได้รับแล้ว» ของรายรับประจำ + ตัวเสนอใช้ recurring ขาเข้าทุก freq/ทุกเดือน + ชิปพันธุ์ในประวัติ (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.34 = §35-B3 เพจจับคู่: ช่องชื่อเล่นต่อแถว + แถวทิ้งไม่นับ X/Y + แบดจ์หักที่ข้าม/เอากลับได้ + ข้ามเดือนไม่ใช้ตัวหารเก่า (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.33 = §35-B2 สมุดรายชื่อ: เพิ่มเพื่อนใหม่ส่งชื่อจริง/X + id จริงจาก personAdd + คำนำหน้าติดชื่อ + แถวมีแต่ X (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.32 = §35-B1 พันธุ์&เงิน: กู้กลับคิวไม่นับเงินคืน/ล้างพันธุ์ + ไม่นับซ้ำ bill_returns + pendMark/rollback (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.31 = เคลียร์เงินเข้า: พันธุ์ + สมุดรายชื่อ + เพจจับคู่ท้ายเดือน + ตัวเสนอ 3 ทาง (TASK_cc_mi_clear_v1) · Hermes 16 ต.ค. 69: v4.2.30 = ตัวเสนอเงินเข้า→บิลรอคืน: ลดเพดานเสนอ 5%→1% (P: ของจริงต่างแค่ปัดเศษ 1 บาท) · CC 15 ต.ค. 69: v4.2.29 = เงินเข้า → เสนอบิลรอคืนยอดตรง/ใกล้ (กดยืนยันเอง · TASK_cc_moneyin_propose_v1) · CC 14 ต.ค. 69: v4.2.28 = หารบิลที่ร้าน: ลิสต์ว่างชี้ «กรอกเอง» + ผูกทีหลังกับรายการเงินออก (TASK_cc_billmatch_v1) · CC 14 ต.ค. 69: v4.2.27 = บิลรอคืน: กันปิดพลาด + ประวัติ «บิลปิดแล้ว» + กู้คืน (TASK_cc_billreopen_v1) · CC 13 ต.ค. 69: v4.2.26 = รอยืนยัน: ปิดหาง out-of-order (TASK_cc_pendstale_v2) · CC 13 ต.ค. 69: v4.2.25 = รอยืนยัน: กัน response เก่าทับสถานะใหม่ (TASK_cc_pendstale_v1) · CC 13 ต.ค. 69: v4.2.24 = เพิ่มรายการ: enter/Done แค่ปิดพิมพ์ ไม่บันทึก (TASK_cc_enter_v1) · CC 13 ต.ค. 69: v4.2.23 = เพจ «บิลรอคืน» แยกหน้า (TASK_cc_billret_page_v1) · CC 13 ต.ค. 69: v4.2.22 = บิล: ยกเลิกแล้วรายการกลับขึ้นชุดแรก + กรอกราคาเอง + กู้บิล (TASK_cc_billfix_scan_v1) · CC 11 ต.ค. 69: v4.2.21 = ความจำร้านชุดเดียว ใช้ทุกช่องทางเข้า (ชิป «แนะนำ» แถวนำเข้าในแอป + ชื่อโชว์รหัสเทียบ statement · TASK_cc_shopmem_v1) · CC 10 ต.ค. 69: v4.2.20 = หน้า «บิล» + แบดจ์ + กระพริบ 10 วิ (TASK_cc_billlist_v1) · v4.2.19 = TrueMoney คงเหลือจริงจาก statement + บัญชียอดตั้งเอง (เป๋าตัง/เงินสด/ทะเบียนธนาคารไทย · TASK_cc_tm_accounts_v1) · v4.2.18 = บิลแชร์ จัดการรายชื่อ («ไม่ใช่ฉัน» หน้าเพื่อน + ปล่อย/ลบ/เพิ่มชื่อหน้าติดตาม) + หารเท่าไม่มีชื่อ (ตั้งจำนวนคน · TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน + ปุ่ม ‹ › (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติจากภาพ (Edge Function readbill · เหลือง = ไม่ชัวร์ · ชิปเซอร์วิส/VAT ตามบิล) + โหมดหารเท่า (TASK_cc_readauto_party_v1) · v4.2.15 = ซูม/ครอปภาพบิล v2 (ลากขอบปรับด้านเดียว + บีบ 2 โหมด: กลาง=ซูม · ขอบซ้าย/ขวา=ปรับกรอบ · TASK_cc_zoomcrop_v1) · v4.2.14 = แชร์บิล v3.1 ① รายการที่จ่ายไปล่าสุด (5/ชุด + ปัดเปลี่ยนชุด + กรองเฉพาะที่เริ่มบิลได้ · TASK_cc_billshare_v31_picker) · v4.2.13 = แชร์บิล v3 (จดต่อเนื่อง + ⋮ แผงล่าง แยก 2/3/กำหนดเอง + เพื่อนเป็น + + ซูม/ครอปภาพบิล · TASK_cc_billshare_v3) · CC 9 ต.ค. 69: v4.2.12 = บิลแชร์ เพื่อนติ๊กเอง + แถวปุ่มลัดหน้าหลัก (TASK_cc_billbox_share) · v4.2.11 = บิลรอคืน รอบ 2 (ปุ่มบิลในหน้ารายการ + แยกเอง + ส่วนของเรา · TASK_cc_bill_return_app2) · v4.2.10 = บิลรอคืนบน Supabase (TASK_cc_bill_return_app) · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
+var APP_BUILD = 'v4.2.37-supabase';   // ตัวเช็คอัปเดต — build จะแทนที่ -dev ให้ตรงกับ version.json · CC 16 ต.ค. 69: v4.2.37 = §36 ข) 📄 statement → บรรทัดจริงประกอบก้อน 🧩 (แทนที่ ไม่บวกเพิ่ม · กดยืนยันเอง · แอนิเมชันขั้นตอนจริง) + ซ่อมบั๊กนำเข้าตัดเงียบที่ 300 แถว (แบ่งชุด ≤300 · ชุดที่เหลืออยู่จน DB ตอบ ok) (TASK_cc_statement_pipe_v1) · CC 16 ต.ค. 69: v4.2.36 = §36-a ตัวแยกก้อน lowest-diff (≤฿1 · ไม่เดา · กดยืนยันเอง) + จัดเพจจับคู่ท้ายเดือนใหม่ + ที่วางปุ่ม 📄 statement (TASK_cc_lump_split_v1) · CC 15 ต.ค. 69: v4.2.35 = §35-B4 ตัวเสนอ+พันธุ์: เงินคืน/ย้ายเงินไม่ใช่ «ได้รับแล้ว» ของรายรับประจำ + ตัวเสนอใช้ recurring ขาเข้าทุก freq/ทุกเดือน + ชิปพันธุ์ในประวัติ (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.34 = §35-B3 เพจจับคู่: ช่องชื่อเล่นต่อแถว + แถวทิ้งไม่นับ X/Y + แบดจ์หักที่ข้าม/เอากลับได้ + ข้ามเดือนไม่ใช้ตัวหารเก่า (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.33 = §35-B2 สมุดรายชื่อ: เพิ่มเพื่อนใหม่ส่งชื่อจริง/X + id จริงจาก personAdd + คำนำหน้าติดชื่อ + แถวมีแต่ X (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.32 = §35-B1 พันธุ์&เงิน: กู้กลับคิวไม่นับเงินคืน/ล้างพันธุ์ + ไม่นับซ้ำ bill_returns + pendMark/rollback (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.31 = เคลียร์เงินเข้า: พันธุ์ + สมุดรายชื่อ + เพจจับคู่ท้ายเดือน + ตัวเสนอ 3 ทาง (TASK_cc_mi_clear_v1) · Hermes 16 ต.ค. 69: v4.2.30 = ตัวเสนอเงินเข้า→บิลรอคืน: ลดเพดานเสนอ 5%→1% (P: ของจริงต่างแค่ปัดเศษ 1 บาท) · CC 15 ต.ค. 69: v4.2.29 = เงินเข้า → เสนอบิลรอคืนยอดตรง/ใกล้ (กดยืนยันเอง · TASK_cc_moneyin_propose_v1) · CC 14 ต.ค. 69: v4.2.28 = หารบิลที่ร้าน: ลิสต์ว่างชี้ «กรอกเอง» + ผูกทีหลังกับรายการเงินออก (TASK_cc_billmatch_v1) · CC 14 ต.ค. 69: v4.2.27 = บิลรอคืน: กันปิดพลาด + ประวัติ «บิลปิดแล้ว» + กู้คืน (TASK_cc_billreopen_v1) · CC 13 ต.ค. 69: v4.2.26 = รอยืนยัน: ปิดหาง out-of-order (TASK_cc_pendstale_v2) · CC 13 ต.ค. 69: v4.2.25 = รอยืนยัน: กัน response เก่าทับสถานะใหม่ (TASK_cc_pendstale_v1) · CC 13 ต.ค. 69: v4.2.24 = เพิ่มรายการ: enter/Done แค่ปิดพิมพ์ ไม่บันทึก (TASK_cc_enter_v1) · CC 13 ต.ค. 69: v4.2.23 = เพจ «บิลรอคืน» แยกหน้า (TASK_cc_billret_page_v1) · CC 13 ต.ค. 69: v4.2.22 = บิล: ยกเลิกแล้วรายการกลับขึ้นชุดแรก + กรอกราคาเอง + กู้บิล (TASK_cc_billfix_scan_v1) · CC 11 ต.ค. 69: v4.2.21 = ความจำร้านชุดเดียว ใช้ทุกช่องทางเข้า (ชิป «แนะนำ» แถวนำเข้าในแอป + ชื่อโชว์รหัสเทียบ statement · TASK_cc_shopmem_v1) · CC 10 ต.ค. 69: v4.2.20 = หน้า «บิล» + แบดจ์ + กระพริบ 10 วิ (TASK_cc_billlist_v1) · v4.2.19 = TrueMoney คงเหลือจริงจาก statement + บัญชียอดตั้งเอง (เป๋าตัง/เงินสด/ทะเบียนธนาคารไทย · TASK_cc_tm_accounts_v1) · v4.2.18 = บิลแชร์ จัดการรายชื่อ («ไม่ใช่ฉัน» หน้าเพื่อน + ปล่อย/ลบ/เพิ่มชื่อหน้าติดตาม) + หารเท่าไม่มีชื่อ (ตั้งจำนวนคน · TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน + ปุ่ม ‹ › (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติจากภาพ (Edge Function readbill · เหลือง = ไม่ชัวร์ · ชิปเซอร์วิส/VAT ตามบิล) + โหมดหารเท่า (TASK_cc_readauto_party_v1) · v4.2.15 = ซูม/ครอปภาพบิล v2 (ลากขอบปรับด้านเดียว + บีบ 2 โหมด: กลาง=ซูม · ขอบซ้าย/ขวา=ปรับกรอบ · TASK_cc_zoomcrop_v1) · v4.2.14 = แชร์บิล v3.1 ① รายการที่จ่ายไปล่าสุด (5/ชุด + ปัดเปลี่ยนชุด + กรองเฉพาะที่เริ่มบิลได้ · TASK_cc_billshare_v31_picker) · v4.2.13 = แชร์บิล v3 (จดต่อเนื่อง + ⋮ แผงล่าง แยก 2/3/กำหนดเอง + เพื่อนเป็น + + ซูม/ครอปภาพบิล · TASK_cc_billshare_v3) · CC 9 ต.ค. 69: v4.2.12 = บิลแชร์ เพื่อนติ๊กเอง + แถวปุ่มลัดหน้าหลัก (TASK_cc_billbox_share) · v4.2.11 = บิลรอคืน รอบ 2 (ปุ่มบิลในหน้ารายการ + แยกเอง + ส่วนของเรา · TASK_cc_bill_return_app2) · v4.2.10 = บิลรอคืนบน Supabase (TASK_cc_bill_return_app) · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ · §18) · v4.2.8 = แยกหน้าเพิ่มรายการ + หมวดทำเอง + รายการลัด
 var S = { data:null, tab:0, open:{}, ext:{}, miPropSkip:{}, miPropMore:{}, miLumpMore:{}, micOpen:{}, micSkip:{}, pbEdit:null, renaming:null, billEdit:{}, billRet:{}, incForm:false, recForm:null, fxOpen:{}, budForm:null, budOpen:{}, view:null, imp:null, pMonth:null, hMonth:null, recLumpOpen:false, catForm:null, shortForm:null };  // catForm/shortForm: Hermes 7 ต.ค. 69 — ฟอร์มหมวดทำเอง/รายการลัด (หน้าแยก v4.2.8)  // hMonth: CC 10 ต.ค. 69 — เดือนที่เลือกในแท็บรายการ (แยกจาก pMonth ของรอยืนยัน)  // pMonth: แก้โดย Hermes 5 ต.ค. 69 — เดือนที่เลือกในแท็บรอยืนยัน (แยกเดือน) · recLumpOpen: Hermes 7 ต.ค. 69 (§16) — กาง "ก้อนรายจ่ายประจำ" ในงบรายหมวด
 
 /* ค่า swipe — ปัดได้ทันที (สไตล์ iOS Clock) ไม่มีกดค้าง */
@@ -2005,26 +2008,39 @@ function miLumpPool(){
   });
   return out.concat(hist);
 }
+/* §36 ข) (TASK_cc_statement_pipe_v1): statement ที่ถอดในเครื่อง (S.miStmt = { acct, lines }) → บรรทัดเงินเข้าจริงประกอบก้อน
+   ใช้ miLumpSplit ตัวเดิม (≤฿1 · เซตเดียว · ไม่เดา) · คลัง = บรรทัดเข้าบัญชีเดียวกัน เดือนเดียวกัน ไม่หลังวันของก้อน · ไม่มี statement = ไม่คิด */
+function miStmtLines(rows){ return (rows || []).filter(function(r){ return r.direction === 'in' && !impSkip_(r); }); }
+function miStmtSplit(it){
+  var st = S.miStmt; if (!st || (it.account === 'TrueMoney') !== (st.acct === 'truemoney')) return null;
+  var day = (it.at || '').slice(0, 10);
+  var pool = st.lines.filter(function(l){ return l.at.slice(0, 7) === day.slice(0, 7) && l.at.slice(0, 10) <= day; })
+    .map(function(l){ return { label: l.detail, minor: l.amount_minor, src: 'stmt', at: l.at }; });
+  return pool.length ? miLumpSplit(it.amount_minor, pool) : null;
+}
 function miLumpLine(p){
+  if (p.src === 'stmt') return '<div class="lmp-ln"><span class="l">📄 ' + esc(p.label) + '<span class="sub">บรรทัดจริง statement · ' + esc(fmtWhen(p.at)) + '</span></span><span class="r">' + fmtBaht(p.minor) + '</span></div>';
   var ic = p.src === 'rec' ? '💰 ' : (p.src === 'hist' ? '🕘 ' : (p.label === p.from ? '💸 ' : '👥 '));
   var sub = p.src === 'rec' ? 'รายรับประจำ' : (p.src === 'hist' ? 'เคยยืนยันเอง' : (p.label === p.from ? 'ที่เหลือในบิลรอคืน' : 'ส่วนในบิล ' + p.from));
   return '<div class="lmp-ln"><span class="l">' + ic + esc(p.label) + '<span class="sub">' + esc(sub) + '</span></span><span class="r">' + fmtBaht(p.minor) + '</span></div>';
 }
 function miLumpBlock(it){
   if (it.kind !== 'money_in_check' || it.status !== 'new' || miPropCands(it).length) return '';   // ตรงบิล 1:1 แล้ว = ตัวเสนอเดิม (§34/§35) ทำงานแทน
-  var r = miLumpSplit(it.amount_minor, miLumpPool()), ref = esc(it.ref);
-  if (!r) return '<div class="lmp lmp-none">🧩 แยกก้อนนี้ไม่ได้ — ยอดไม่ตรงกับชิ้นไหนที่รู้จัก · เลือกเองด้านล่างได้</div>';
-  if (r.parts.length === 1 && r.parts[0].src === 'rec' && miRecCands(it).length) return '';   // ซ้ำกับข้อเสนอรายรับประจำ 1:1 ด้านล่าง
+  var r = miLumpSplit(it.amount_minor, miLumpPool()), ref = esc(it.ref), s = miStmtSplit(it);   // s: §36 ข) บรรทัดจริงจาก statement (ไม่มี statement = null → บล็อกเดิมเป๊ะ)
+  if (!r && !s) return '<div class="lmp lmp-none">🧩 แยกก้อนนี้ไม่ได้ — ยอดไม่ตรงกับชิ้นไหนที่รู้จัก' + (S.miStmt ? ' และไม่มีบรรทัดเงินเข้าใน statement ที่รวมได้ยอดนี้ (≤฿1)' : '') + ' · เลือกเองด้านล่างได้</div>';
+  if (!s && r.parts.length === 1 && r.parts[0].src === 'rec' && miRecCands(it).length) return '';   // ซ้ำกับข้อเสนอรายรับประจำ 1:1 ด้านล่าง
   var g = {}, ks = [];
-  r.parts.forEach(function(p){ var k = p.src === 'bill' ? 'คืนบิล ' + p.from : p.label; if (!(k in g)){ g[k] = 0; ks.push(k); } g[k]++; });
-  var what = ks.map(function(k){ return k + (g[k] > 1 ? ' (' + g[k] + ' คน)' : ''); }).join(' + ');
+  (r || { parts: [] }).parts.forEach(function(p){ var k = p.src === 'bill' ? 'คืนบิล ' + p.from : p.label; if (!(k in g)){ g[k] = 0; ks.push(k); } g[k]++; });
+  var what = r ? ks.map(function(k){ return k + (g[k] > 1 ? ' (' + g[k] + ' คน)' : ''); }).join(' + ') : 'เงินเข้า ' + s.parts.length + ' บรรทัดจาก statement';
+  var rep = (s && r) ? '<div class="lmp-ln lmp-sum"><span class="l">แทนยอดคาดหวัง (ไม่บวกเพิ่ม)</span><span class="r">' + fmtBaht(r.sumMinor) + '</span></div>' : '';
+  r = s || r;   // มีบรรทัดจริง = โชว์บรรทัดจริงแทนยอดคาดหวัง
   var d = r.diffMinor, tag = d === 0 ? '<span class="lmp-tag ok">ยอดตรงเป๊ะ</span>' : '<span class="lmp-tag">ต่าง ' + (d > 0 ? '+' : '−') + '฿' + fmtBaht(Math.abs(d)) + '</span>';
   var ru = r.runnerUpMinor == null ? '' : '<span class="lmp-tag warn">' + (r.runnerUpMinor ? 'ชุดถัดไปห่างอีก ฿' + fmtBaht(r.runnerUpMinor) : 'มีอีกชุดยอดเท่ากัน (ชิ้นมากกว่า)') + '</span>';
   var back = mspBills().some(function(b){ return b.remaining_minor >= it.amount_minor; }) ? 'bill' : 'friend';   // «↩ คืนเงิน» = ปุ่มเดียวแทน คืนบิล/คืนจากเพื่อน
   var more = S.miLumpMore && S.miLumpMore[it.ref];
   return '<div class="lmp"><div class="lmp-top"><span class="l">🧩 ก้อนนี้คือ <b>' + esc(what) + '</b></span>' + tag + '</div>'
     + r.parts.map(miLumpLine).join('')
-    + '<div class="lmp-ln lmp-sum"><span class="l">รวม ' + r.parts.length + ' ชิ้น' + ru + '</span><span class="r">' + fmtBaht(r.sumMinor) + '</span></div>'
+    + '<div class="lmp-ln lmp-sum"><span class="l">รวม ' + r.parts.length + ' ' + (s ? 'บรรทัด' : 'ชิ้น') + ru + '</span><span class="r">' + fmtBaht(r.sumMinor) + '</span></div>' + rep
     + '<button class="lmp-go" type="button" data-act="miLumpYes" data-ref="' + ref + '">✓ ยืนยัน — แยกตามนี้</button>'
     + '<button class="lmp-more" type="button" data-act="miLumpMore" data-ref="' + ref + '">' + (more ? 'ซ่อนทางอื่น ▴' : 'หรือไม่ใช่แบบนี้? ▾') + '</button>'
     + (more ? '<div class="incbtns lmp-alt"><button class="miniact" type="button" data-act="micAct" data-k="' + back + '" data-ref="' + ref + '">↩ คืนเงิน</button>'
@@ -2034,7 +2050,7 @@ function miLumpBlock(it){
 }
 function miLumpYes(ref){   // กด ✓ = ทางบันทึกเดิมของ «✏️ แยกเอง» (mspSave → bridge splitMoneyIn) · คิดชุดใหม่ตอนกด (ข้อมูลเปลี่ยน = ไม่ใช้ชุดเก่า)
   var it = findItem(ref); if (!it || it.kind !== 'money_in_check' || it.status !== 'new') return;
-  var r = miLumpSplit(it.amount_minor, miLumpPool()); if (!r){ toast('ชุดเดิมใช้ไม่ได้แล้ว — เลือกเองด้านล่างนะ', true); paint(); return; }
+  var r = miLumpSplit(it.amount_minor, miLumpPool()) || miStmtSplit(it); if (!r){ toast('ชุดเดิมใช้ไม่ได้แล้ว — เลือกเองด้านล่างนะ', true); paint(); return; }   // §36 ข): มีชุดที่รู้จัก = จัดสรรตามนั้น (บรรทัดจริงเป็นหลักฐาน) · ไม่มี = บรรทัดจริงเป็นรายรับ · ยอดรวม = ก้อนจริงเสมอ (แทนที่ ไม่บวกเพิ่ม)
   var prop = { bills: {}, inc: 0, skip: 0 }, names = [], d = r.diffMinor;
   r.parts.forEach(function(p){ if (p.src === 'bill') prop.bills[p.bill] = (prop.bills[p.bill] || 0) + p.minor; else { prop.inc += p.minor; names.push(p.label); } });
   if (d < 0) prop.skip = -d;   // รับมาเกินชุด (≤ ฿1) = เศษ «ข้าม» ไม่บันทึก
@@ -2094,7 +2110,7 @@ function miClearPageHtml(){
   if (M.cleared.length) h += '<div class="sec-t">เคลียร์แล้วเดือนนี้</div><div class="card">' + M.cleared.map(function(it){
       return '<div class="bl-row"><span class="l">'+esc(it.counterparty || 'เงินเข้า')+miSpeciesChip(it)+'<span class="sub">'+fmtWhen(it.at)+'</span></span><span class="r ok">+'+fmtBaht(it.amount_minor)+'฿</span></div>';
     }).join('') + '</div>';
-  if (M.open) h += '<button class="lmp-stmt" type="button" data-act="micStmt" aria-disabled="true">📄 อัพ statement ให้ระบบช่วยแยก<span>รอบหน้าจะเปิดใช้</span></button>';   // §36-a: ที่วางท้ายเพจครั้งเดียว — ท่อจริง = รอบ ข)
+  if (M.open) h += '<button class="lmp-stmt" type="button" data-act="micStmt">📄 อัพ statement ให้ระบบช่วยแยก<span>' + (S.miStmt ? 'ใช้อยู่: เงินเข้า ' + S.miStmt.lines.length + ' บรรทัด · กดเพื่อเปลี่ยนไฟล์' : 'ถอดในเครื่อง — ไฟล์/รหัสไม่ออกจากเครื่อง') + '</span></button>';   // §36-a ที่วางท้ายเพจครั้งเดียว · §36 ข) ท่อจริง
   return '<div class="mic-pg">' + h + '<div class="hint" style="margin:12px 3px 18px">ไม่ต้องรีบ — ก้อนพิเศษปล่อยไว้ได้ ท้ายเดือนค่อยเคลียร์</div></div>';
 }
 function micFind(nick){ var k = String(nick || '').toLowerCase(); return ((S.data && S.data.people) || []).filter(function(p){ return p.nickname.toLowerCase() === k; })[0] || null; }
@@ -2812,7 +2828,7 @@ function htmlSettings(d){
     + cardMyCats(d)        // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): หมวดทำเอง
     + cardMyShortcuts(d)   // แก้โดย Hermes 7 ต.ค. 69 (v4.2.8): รายการลัด
     + '<div class="card"><h3 style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:6px">สถานะระบบ (ทดลอง)</h3>'
-    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.36-supabase</span></div>'  // CC 16 ต.ค. 69: v4.2.36 = §36-a ตัวแยกก้อน + จัดเพจจับคู่ (TASK_cc_lump_split_v1) · CC 15 ต.ค. 69: v4.2.35 = §35-B4 ตัวเสนอ + แสดงพันธุ์ (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.34 = §35-B3 เพจ/DOM + ตัวนับ X/Y (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.33 = §35-B2 สมุดรายชื่อ (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.32 = §35-B1 พันธุ์&เงิน (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.31 = เคลียร์เงินเข้า (TASK_cc_mi_clear_v1) · Hermes 16 ต.ค. 69: v4.2.30 = ตัวเสนอเงินเข้า→บิลรอคืน เพดาน 5%→1% · CC 15 ต.ค. 69: v4.2.29 = เงินเข้า → เสนอบิลรอคืน (TASK_cc_moneyin_propose_v1) · CC 14 ต.ค. 69: v4.2.28 = หารบิลที่ร้าน กรอกเอง/ผูกทีหลัง (TASK_cc_billmatch_v1) · CC 14 ต.ค. 69: v4.2.27 = บิลรอคืน กันปิดพลาด/บิลปิดแล้ว/กู้คืน (TASK_cc_billreopen_v1) · CC 13 ต.ค. 69: v4.2.26 = รอยืนยัน: ปิดหาง out-of-order (TASK_cc_pendstale_v2) · CC 13 ต.ค. 69: v4.2.25 = รอยืนยัน: กัน response เก่าทับสถานะใหม่ (TASK_cc_pendstale_v1) · CC 13 ต.ค. 69: v4.2.24 = เพิ่มรายการ: enter/Done แค่ปิดพิมพ์ ไม่บันทึก (TASK_cc_enter_v1) · CC 13 ต.ค. 69: v4.2.23 = เพจ «บิลรอคืน» แยกหน้า (TASK_cc_billret_page_v1) · CC 13 ต.ค. 69: v4.2.22 = บิล ยกเลิก/กรอกเอง/กู้ (TASK_cc_billfix_scan_v1) · CC 11 ต.ค. 69: v4.2.21 = ความจำร้านชุดเดียว ใช้ทุกช่องทางเข้า (TASK_cc_shopmem_v1) · CC 10 ต.ค. 69: v4.2.20 = หน้า «บิล» (TASK_cc_billlist_v1) · v4.2.19 = TrueMoney คงเหลือจริง + บัญชียอดตั้งเอง (TASK_cc_tm_accounts_v1) · v4.2.18 = บิลแชร์ จัดการรายชื่อ + หารเท่าไม่มีชื่อ (TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติ + หารเท่า · v4.2.15 = ซูม/ครอปภาพบิล v2 · v4.2.14 = แชร์บิล v3.1 picker ① · v4.2.13 = แชร์บิล v3 · CC 9 ต.ค. 69: v4.2.11 = บิลรอคืน รอบ 2 · v4.2.10 = บิลรอคืนบน Supabase · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
+    + '<div class="irow"><span class="k">เวอร์ชันแอป</span><span class="v">v4.2.37-supabase</span></div>'  // CC 16 ต.ค. 69: v4.2.37 = §36 ข) statement → ก้อน + ซ่อม 300 แถว (TASK_cc_statement_pipe_v1) · CC 16 ต.ค. 69: v4.2.36 = §36-a ตัวแยกก้อน + จัดเพจจับคู่ (TASK_cc_lump_split_v1) · CC 15 ต.ค. 69: v4.2.35 = §35-B4 ตัวเสนอ + แสดงพันธุ์ (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.34 = §35-B3 เพจ/DOM + ตัวนับ X/Y (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.33 = §35-B2 สมุดรายชื่อ (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.32 = §35-B1 พันธุ์&เงิน (TASK_cc_mi_clear_fix_v1) · CC 15 ต.ค. 69: v4.2.31 = เคลียร์เงินเข้า (TASK_cc_mi_clear_v1) · Hermes 16 ต.ค. 69: v4.2.30 = ตัวเสนอเงินเข้า→บิลรอคืน เพดาน 5%→1% · CC 15 ต.ค. 69: v4.2.29 = เงินเข้า → เสนอบิลรอคืน (TASK_cc_moneyin_propose_v1) · CC 14 ต.ค. 69: v4.2.28 = หารบิลที่ร้าน กรอกเอง/ผูกทีหลัง (TASK_cc_billmatch_v1) · CC 14 ต.ค. 69: v4.2.27 = บิลรอคืน กันปิดพลาด/บิลปิดแล้ว/กู้คืน (TASK_cc_billreopen_v1) · CC 13 ต.ค. 69: v4.2.26 = รอยืนยัน: ปิดหาง out-of-order (TASK_cc_pendstale_v2) · CC 13 ต.ค. 69: v4.2.25 = รอยืนยัน: กัน response เก่าทับสถานะใหม่ (TASK_cc_pendstale_v1) · CC 13 ต.ค. 69: v4.2.24 = เพิ่มรายการ: enter/Done แค่ปิดพิมพ์ ไม่บันทึก (TASK_cc_enter_v1) · CC 13 ต.ค. 69: v4.2.23 = เพจ «บิลรอคืน» แยกหน้า (TASK_cc_billret_page_v1) · CC 13 ต.ค. 69: v4.2.22 = บิล ยกเลิก/กรอกเอง/กู้ (TASK_cc_billfix_scan_v1) · CC 11 ต.ค. 69: v4.2.21 = ความจำร้านชุดเดียว ใช้ทุกช่องทางเข้า (TASK_cc_shopmem_v1) · CC 10 ต.ค. 69: v4.2.20 = หน้า «บิล» (TASK_cc_billlist_v1) · v4.2.19 = TrueMoney คงเหลือจริง + บัญชียอดตั้งเอง (TASK_cc_tm_accounts_v1) · v4.2.18 = บิลแชร์ จัดการรายชื่อ + หารเท่าไม่มีชื่อ (TASK_cc_billshare_people_v1) · v4.2.17 = ประวัติรายการ แยกเดือน (TASK_cc_histmonth_v1) · v4.2.16 = อ่านอัตโนมัติ + หารเท่า · v4.2.15 = ซูม/ครอปภาพบิล v2 · v4.2.14 = แชร์บิล v3.1 picker ① · v4.2.13 = แชร์บิล v3 · CC 9 ต.ค. 69: v4.2.11 = บิลรอคืน รอบ 2 · v4.2.10 = บิลรอคืนบน Supabase · Hermes 8 ต.ค. 69: v4.2.9 = วงเงินเข้า (ตรวจอัตโนมัติ → กด "ใช่" = รายรับ)
     + (isSupa ? '<div class="irow"><span class="k">โหมด</span><span class="v">Supabase (P4)</span></div>' : '')
     + (d.meta.triggerMinutes ? '<div class="irow"><span class="k">เก็บอัตโนมัติ</span><span class="v">ทุก '+d.meta.triggerMinutes+' นาที · บน Google</span></div>' : '')
     + '<div class="irow"><span class="k">รายการทั้งหมด</span><span class="v">'+d.meta.total+'</span></div>'
@@ -3169,7 +3185,8 @@ document.addEventListener('click', function(e){
   if (act === 'micUnskip') { S.micSkip = {}; paint(); return; }   // §35-B3 H2-5: เลิกข้ามทั้งหมด (session เท่านั้น)
   if (act === 'miLumpYes') { miLumpYes(ref); return; }   // §36-a: ยืนยันชุดที่ตัวแยกก้อนเสนอ (พี่กดเอง)
   if (act === 'miLumpMore') { S.miLumpMore[ref] = !S.miLumpMore[ref]; paint(); return; }
-  if (act === 'micStmt') { toast('อัพ statement ให้ระบบช่วยแยก — รอบหน้าจะเปิดใช้'); return; }
+  if (act === 'micStmt') { S.imp = { acct: 'kplus', text: '', rows: null, err: '', mic: true }; el('impov').classList.add('on'); renderImp(); return; }   // §36 ข): ชีตนำเข้าเดิม โหมดหลักฐาน (ไม่ส่งแถวขึ้น DB) · shortcut: K PLUS เท่านั้น — ก้อน TrueMoney ต้องเพิ่มตัวเลือกบัญชี
+  if (act === 'micStmtGo') { if (S.imp && S.imp.micCand) S.miStmt = S.imp.micCand; el('impov').classList.remove('on'); S.imp = null; paint(); return; }
   if (act === 'micPeople') { S.pbEdit = null; openView({ t: 'people' }, S.view); return; }
   if (act === 'pbNew') { S.pbEdit = 'new'; paint(); return; }
   if (act === 'pbEdit') { S.pbEdit = t.getAttribute('data-id'); paint(); return; }
@@ -6617,7 +6634,8 @@ function renderImp(){
       + '<button class="impbtn" data-act="impPwGo">ถอดรหัส</button></div>'
       + '<label class="imp-pwchk"><input type="checkbox" id="impPwSave"' + (imp.pwSave === true ? ' checked' : '') + '> จำรหัสไว้ในเครื่องนี้ (เฉพาะเครื่องนี้)</label>';
   }
-  if (imp.rows && imp.rows.length){
+  if (imp.mic && imp.rows && imp.rows.length) h += micStmtHtml(imp);   // §36 ข) โหมดหลักฐาน: จับคู่ก้อนแทนการนำเข้า
+  else if (imp.rows && imp.rows.length){
     var tot = 0, inN = 0, goN = 0, i, j;
     for (i = 0; i < imp.rows.length; i++){
       if (impSkip_(imp.rows[i])) { inN++; continue; }
@@ -6625,7 +6643,10 @@ function renderImp(){
       if (imp.rows[i].direction !== 'in') tot += imp.rows[i].amount_minor;
     }
     h += '<div class="imp-sum">พบ ' + imp.rows.length + ' รายการ · จะนำเข้า ' + goN + ' · จ่ายรวม ฿' + fmtBaht(tot)
-      + (inN ? ' · ข้ามเงินเข้า ' + inN + ' รายการ (ย้ายเงินตัวเอง)' : '') + '</div><div class="imp-list">';
+      + (inN ? ' · ข้ามเงินเข้า ' + inN + ' รายการ (ย้ายเงินตัวเอง)' : '') + '</div>';
+    var sent = impSent_(imp), nCh = Math.ceil(goN / IMP_CHUNK), ch = Math.floor(sent / IMP_CHUNK) + 1, chN = Math.min(IMP_CHUNK, goN - sent);   // §36 ②-5: นับตามชุดที่จะส่งจริง
+    if (nCh > 1 || sent) h += '<div class="imp-sum">แบ่งส่ง ' + nCh + ' ชุด (ชุดละไม่เกิน ' + IMP_CHUNK + ') · ส่งแล้ว ' + sent + '/' + goN + ' · ต่อไป = ชุดที่ ' + ch + '/' + nCh + '</div>';
+    h += '<div class="imp-list">';
     for (j = 0; j < imp.rows.length && j < 60; j++){
       var r = imp.rows[j];
       var skipIt = impSkip_(r);
@@ -6636,7 +6657,7 @@ function renderImp(){
     }
     if (imp.rows.length > 60) h += '<div class="imp-sum">… และอีก ' + (imp.rows.length - 60) + ' รายการ</div>';
     h += '</div><div class="impbtns"><button class="impbtn" data-act="impClose">ยกเลิก</button>'
-      + '<button class="impbtn pri" data-act="impGo">นำเข้า ' + goN + ' รายการ</button></div>';
+      + '<button class="impbtn pri" data-act="impGo"' + (imp.sending ? ' disabled>กำลังนำเข้า…' : '>' + (sent ? 'นำเข้าชุดถัดไป ' : 'นำเข้า ') + chN + ' รายการ' + (nCh > 1 ? ' (ชุดที่ ' + ch + '/' + nCh + ')' : '')) + '</button></div>';
   }
   if (imp.err) h += '<div class="imp-warn">' + esc(imp.err) + '</div>';
   box.innerHTML = h;
@@ -6645,25 +6666,75 @@ function renderImp(){
   var pwIn = el('impPw');
   if (pwIn && imp.pwVal) pwIn.value = imp.pwVal;
 }
-function impGo(){
-  if (!S.imp || !S.imp.rows || !S.imp.rows.length) return;
-  var acct = S.imp.acct || 'kplus';
-  impSetBal_();
-  var payload = S.imp.rows.filter(function(r){ return !impSkip_(r); }).map(function(r){
+/* §36 ② (TASK_cc_statement_pipe_v1): RPC ingest_statement แคป 300/ครั้ง (0005 — แก้ไม่ได้) ⇒ แอพแบ่งชุดเอง ชุดละ ≤ 300
+   ชุดที่ยังไม่ส่ง/ส่งไม่ครบ อยู่ใน S.imp จน DB ตอบ ok · ล้มเหลว = ยังอยู่ให้กดใหม่ · DB รับไม่ครบ = บอกตรง ๆ แล้วส่วนที่ขาดไปอยู่ชุดถัดไป */
+var IMP_CHUNK = 300;
+function impPayload_(rows){
+  return rows.filter(function(r){ return !impSkip_(r); }).map(function(r){
     return { at: r.at, direction: r.direction, amount_minor: r.amount_minor, detail: r.detail, wallet: !!r.wallet };
   });
-  if (!payload.length){ toast('ไม่มีรายการที่จะนำเข้า (ข้ามเงินเข้า — นับฝั่งบัญชีแล้ว)'); el('impov').classList.remove('on'); S.imp = null; return; }
-  var meta = { source: (S.imp.pdfName || S.imp.fileName) ? 'upload' : 'paste', file: S.imp.pdfName || S.imp.fileName || '' };
-  if (acct === 'truemoney' && S.imp.balanceMinor != null){ meta.balance_minor = S.imp.balanceMinor; meta.balance_at = S.imp.balanceAt; }   // CC 10 ต.ค. 69: คงเหลือจริงจาก statement (0016)
-  el('impov').classList.remove('on');
-  S.imp = null;
-  if (IS_DEMO){ toast('เดโม่: นำเข้า ' + payload.length + ' รายการ (ไม่บันทึกจริง)'); return; }
+}
+function impSent_(imp){ return imp.sentFor === imp.rows ? (imp.sent || 0) : 0; }   // แกะใหม่ (rows เปลี่ยน) = เริ่มนับใหม่
+function impGo(){
+  var imp = S.imp;
+  if (!imp || !imp.rows || !imp.rows.length || imp.sending) return;
+  var acct = imp.acct || 'kplus', rows = imp.rows;
+  impSetBal_();
+  var all = impPayload_(rows), sent = impSent_(imp), payload = all.slice(sent, sent + IMP_CHUNK);
+  if (!all.length){ toast('ไม่มีรายการที่จะนำเข้า (ข้ามเงินเข้า — นับฝั่งบัญชีแล้ว)'); el('impov').classList.remove('on'); S.imp = null; return; }
+  var nCh = Math.ceil(all.length / IMP_CHUNK), ch = Math.floor(sent / IMP_CHUNK) + 1, pre = nCh > 1 ? 'ชุดที่ ' + ch + '/' + nCh + ': ' : '';
+  var meta = { source: (imp.pdfName || imp.fileName) ? 'upload' : 'paste', file: imp.pdfName || imp.fileName || '' };
+  if (acct === 'truemoney' && imp.balanceMinor != null){ meta.balance_minor = imp.balanceMinor; meta.balance_at = imp.balanceAt; }   // CC 10 ต.ค. 69: คงเหลือจริงจาก statement (0016)
+  function done(n){   // n = แถวที่ DB รับรู้แล้ว (เพิ่ม/ซ้ำ/เสีย/ข้าม) · ครบทั้งไฟล์ = ปิดชีต
+    imp.sentFor = rows; imp.sent = sent + n;
+    if (S.imp !== imp) return;
+    if (imp.sent >= all.length){ el('impov').classList.remove('on'); S.imp = null; }
+    else renderImp();
+  }
+  if (IS_DEMO){ toast('เดโม่: ' + pre + 'นำเข้า ' + payload.length + ' รายการ (ไม่บันทึกจริง)'); done(payload.length); return; }
+  imp.sending = true; imp.err = ''; renderImp();
   google.script.run.withSuccessHandler(function(res){
+    imp.sending = false;
     if (res && res.ok){
-      toast('นำเข้า ' + res.added + ' รายการ' + (res.dup ? ' · ข้ามซ้ำ ' + res.dup : '') + (res.in_skip ? ' · ข้ามเงินเข้า ' + res.in_skip : '') + (res.skipped ? ' · รูปแบบเสีย ' + res.skipped : '') + ' ✓');
+      var got = Math.min(payload.length, (res.added || 0) + (res.dup || 0) + (res.skipped || 0) + (res.in_skip || 0)), miss = payload.length - got;
+      if (miss > 0) imp.err = 'ระบบรับไว้ ' + got + '/' + payload.length + ' รายการ — อีก ' + miss + ' รายการยังไม่ถูกบันทึก กด «นำเข้าชุดถัดไป» เพื่อส่งต่อ';
+      toast(pre + 'นำเข้า ' + res.added + ' รายการ' + (res.dup ? ' · ข้ามซ้ำ ' + res.dup : '') + (res.in_skip ? ' · ข้ามเงินเข้า ' + res.in_skip : '') + (res.skipped ? ' · รูปแบบเสีย ' + res.skipped : '')
+        + (miss > 0 ? ' · ⚠️ ขาด ' + miss + ' รายการ' : ' ✓'), miss > 0);
+      done(got);
       reload(true);
-    } else toast((res && res.msg) || 'นำเข้าไม่สำเร็จ', true);
-  }).withFailureHandler(function(){ toast('เชื่อมต่อไม่ได้', true); }).importStatement(acct, payload, meta);
+    } else {
+      imp.err = ((res && res.msg) || 'นำเข้าไม่สำเร็จ') + ' — ชุดนี้ยังอยู่ กดนำเข้าอีกครั้งได้';
+      if (S.imp === imp) renderImp();
+      toast((res && res.msg) || 'นำเข้าไม่สำเร็จ', true);
+    }
+  }).withFailureHandler(function(){
+    imp.sending = false; imp.err = 'เชื่อมต่อไม่ได้ — ชุดนี้ยังอยู่ กดนำเข้าอีกครั้งได้';
+    if (S.imp === imp) renderImp();
+    toast('เชื่อมต่อไม่ได้', true);
+  }).importStatement(acct, payload, meta);
+}
+/* §36 ข) โหมดหลักฐาน (เปิดจาก 📄 ท้ายเพจจับคู่): ตัวเลขทุกขั้นคิดจริงก่อน แล้วค่อยเดินโชว์ทีละขั้น (~1 วิ · ลดการเคลื่อนไหว = โชว์ผลเลย)
+   ไม่ส่งแถวขึ้น DB — กันเงินเข้าซ้ำกับก้อนเดิม (บรรทัดจริงแทนที่ยอดคาดหวัง ไม่บวกเพิ่ม) */
+function micStmtHtml(imp){
+  if (!imp.micRes){
+    var cand = { acct: imp.acct || 'kplus', lines: miStmtLines(imp.rows) }, prev = S.miStmt;
+    S.miStmt = cand;
+    var k = miClearRows(S.data).filter(function(it){ return !miPropCands(it).length && miStmtSplit(it); }).length;   // ก้อนที่บล็อก 🧩 จะโชว์บรรทัดจริง
+    S.miStmt = prev;
+    imp.micCand = cand; imp.micRes = [imp.rows.length, cand.lines.length, k];
+    var rm = false; try { rm = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+    imp.micStep = rm ? 3 : 1;
+    (function tick(){ if (imp.micStep >= 3) return; setTimeout(function(){ if (S.imp !== imp) return; imp.micStep++; renderImp(); tick(); }, 500); })();
+  }
+  var R = imp.micRes, st = imp.micStep, h = '<div class="mic-steps">';
+  [['อ่าน statement', R[0] + ' รายการ'], ['เจอเงินเข้า', R[1] + ' บรรทัด'], ['จับคู่ก้อนได้', R[2] + ' ก้อน']].forEach(function(x, i){
+    if (i < st) h += '<div' + (i === st - 1 ? ' class="on"' : '') + '><span>' + x[0] + '</span><b>' + x[1] + '</b></div>';
+  });
+  h += '</div>';
+  if (st >= 3) h += (R[2] ? '<div class="imp-sum">กดดูหน้ายืนยัน — ยังไม่มีอะไรบันทึกจนกว่าจะกด «✓ ยืนยัน» ทีละก้อน</div>'
+      : '<div class="imp-warn">ไม่มีก้อนไหนที่บรรทัดเงินเข้ารวมได้ตรง (ต่างไม่เกิน ฿1 และมีชุดเดียว) — ระบบไม่เดา</div>')
+    + '<div class="impbtns"><button class="impbtn" data-act="impClose">ยกเลิก</button><button class="impbtn pri" data-act="micStmtGo">ดูหน้ายืนยัน ›</button></div>';
+  return h;
 }
 /* ---------- /v3.2 ---------- */
 
